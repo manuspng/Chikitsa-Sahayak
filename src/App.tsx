@@ -217,7 +217,7 @@ export default function App() {
               setActiveTab("overview");
               setReportsDropdownOpen(false);
             }}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-[14px] text-xs font-bold transition-all whitespace-nowrap cursor-pointer hover:scale-[1.01] active:scale-[0.98] ${
+            className={`flex items-center gap-2 pl-[12px] pr-[17px] pt-[9px] pb-[10px] rounded-[14px] text-xs font-bold transition-all whitespace-nowrap cursor-pointer hover:scale-[1.01] active:scale-[0.98] ${
               activeTab === "overview"
                 ? schemeClasses.badgeActive
                 : "bg-slate-100/90 hover:bg-slate-200/85 dark:bg-slate-800/40 dark:hover:bg-slate-800/80 border border-slate-200/40 dark:border-slate-700/30 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 shadow-sm"
@@ -233,7 +233,7 @@ export default function App() {
                 e.stopPropagation();
                 setReportsDropdownOpen(!reportsDropdownOpen);
               }}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-[14px] text-xs font-bold transition-all whitespace-nowrap cursor-pointer hover:scale-[1.01] active:scale-[0.98] ${
+              className={`flex items-center gap-2 pl-[16px] pr-5 py-2.5 rounded-[14px] text-xs font-bold transition-all whitespace-nowrap cursor-pointer hover:scale-[1.01] active:scale-[0.98] ${
                 ["cbc", "lft", "bmi", "metabolic"].includes(activeTab)
                   ? schemeClasses.tabActive
                   : "bg-slate-100/90 hover:bg-slate-200/85 dark:bg-slate-800/40 dark:hover:bg-slate-800/80 border border-slate-200/40 dark:border-slate-700/30 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 shadow-sm"
@@ -320,21 +320,6 @@ export default function App() {
               </div>
             )}
           </div>
-
-          <button
-            onClick={() => {
-              setActiveTab("history");
-              setReportsDropdownOpen(false);
-            }}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-[14px] text-xs font-bold transition-all whitespace-nowrap ml-auto cursor-pointer hover:scale-[1.01] active:scale-[0.98] ${
-              activeTab === "history"
-                ? schemeClasses.badgeActive
-                : "bg-slate-100/90 hover:bg-slate-200/85 dark:bg-slate-800/40 dark:hover:bg-slate-800/80 border border-slate-200/40 dark:border-slate-700/30 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 shadow-sm"
-            }`}
-          >
-            <History size={14} />
-            <span>Activity Logs ({records.length})</span>
-          </button>
         </div>
 
         {/* Tab Viewport */}

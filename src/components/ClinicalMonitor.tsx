@@ -213,24 +213,24 @@ export default function ClinicalMonitor({ records, onSetTab }: ClinicalMonitorPr
         <div className="bento-card dark:bg-slate-800 md:col-span-5 flex flex-col justify-between">
           <div>
             <h3 className="card-title">Preventative Recommendations</h3>
-            <p className="text-xs text-slate-400 mb-4 font-medium">Standardized clinical guidelines for maintaining healthy metabolic liver balances.</p>
+            <p className="text-xs text-slate-400 mb-4 font-medium text-justify">Standardized clinical guidelines for maintaining healthy metabolic liver balances.</p>
 
             <ul className="space-y-3">
               <li className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed flex items-start gap-2.5">
                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1.5 flex-shrink-0" />
-                <span>
+                <span className="text-justify">
                   <strong>Dietary Balance:</strong> Limit added fructose and simple carbohydrates, as they directly elevate de novo lipogenesis in liver tissue.
                 </span>
               </li>
               <li className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed flex items-start gap-2.5">
                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1.5 flex-shrink-0" />
-                <span>
+                <span className="text-justify">
                   <strong>Aerobic Activity:</strong> 150 minutes of weekly aerobic exercise stimulates fatty acid beta-oxidation and decreases metabolic liver lipids.
                 </span>
               </li>
-              <li className="text-xs text-slate-600 dark:text-[#64748b] dark:text-slate-300 leading-relaxed flex items-start gap-2.5">
+              <li className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed flex items-start gap-2.5">
                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mt-1.5 flex-shrink-0" />
-                <span>
+                <span className="text-justify">
                   <strong>Vigilant Monitoring:</strong> Routine LFT screenings are highly recommended if risk factors like BMI &ge; 28, diabetes, or elevated ALT exist.
                 </span>
               </li>
@@ -239,7 +239,7 @@ export default function ClinicalMonitor({ records, onSetTab }: ClinicalMonitorPr
 
           <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-700/10 p-3 rounded-xl">
             <span className="text-[10px] text-indigo-500 font-bold block uppercase tracking-wide mb-1">Did you know?</span>
-            <span className="text-xs text-slate-500 leading-tight block">
+            <span className="text-xs text-slate-500 leading-tight block text-justify">
               The AST/ALT Ratio (De Ritis ratio) can serve as a primary indicator to distinguish simple steatosis from potential alcoholic hepatitis or established vascular cirrhosis.
             </span>
           </div>
