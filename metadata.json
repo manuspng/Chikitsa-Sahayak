@@ -1,0 +1,6 @@
+{
+  "name": "Chikitsa Sahayak",
+  "description": "Comprehensive liver function analyzer integrating FIB-4, APRI, BARD, MELD, Child-Pugh calculations with Gemini-powered laboratory report OCR and expert clinical insights.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

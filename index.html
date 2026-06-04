@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+    <title>Chikitsa Sahayak - Visceral & Blood Diagnostic Assistant</title>
+    
+    <!-- Home screen and shortcut branding icons -->
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <link rel="apple-touch-icon" href="/logo.svg" />
+    <script>
+      (function() {
+        var img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.src = '/logo.svg';
+        img.onload = function() {
+          try {
+            var canvas = document.createElement('canvas');
+            canvas.width = 180;
+            canvas.height = 180;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, 180, 180);
+            var dataURL = canvas.toDataURL('image/png');
+            
+            // Update apple-touch-icon link
+            var existing = document.querySelector('link[rel="apple-touch-icon"]');
+            if (existing) {
+              existing.setAttribute('href', dataURL);
+            } else {
+              var link = document.createElement('link');
+              link.rel = 'apple-touch-icon';
+              link.href = dataURL;
+              document.head.appendChild(link);
+            }
+          } catch (e) {
+            console.warn('Dynamic apple-touch-icon PNG conversion deferred:', e);
+          }
+        };
+      })();
+    </script>
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Chikitsa" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
