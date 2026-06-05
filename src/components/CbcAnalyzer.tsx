@@ -8,6 +8,7 @@ import MetricCard from "./MetricCard";
 import Tesseract from "tesseract.js";
 import { preprocessImageForOcr } from "../utils/ocrPreprocessing";
 import { parseCbcReport } from "../utils/labReportParser";
+import { runGeminiAnalyze, runGeminiExtractReport } from "../utils/geminiClient";
 
 function getOfflineCbcSummary(inputs: CBCInputs, results: CBCResults): string {
   if (results.abnormalCount === 0) {
@@ -72,8 +73,10 @@ export default function CbcAnalyzer({ onAddRecord }: CbcAnalyzerProps) {
   const [aiInsight, setAiInsight] = useState<string | null>(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [aiErrorStack, setAiErrorStack] = useState<string | null>(null);
   const [isOcrLoading, setIsOcrLoading] = useState(false);
   const [ocrError, setOcrError] = useState<string | null>(null);
+  const [ocrErrorStack, setOcrErrorStack] = useState<string | null>(null);
   const [ocrStatusText, setOcrStatusText] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
   const [patientName, setPatientName] = useState("");
@@ -194,6 +197,7 @@ export default function CbcAnalyzer({ onAddRecord }: CbcAnalyzerProps) {
   const requestAiInsight = async (inputs: CBCInputs, calculated: CBCResults, recordId: string) => {
     setIsAiLoading(true);
     setAiError(null);
+    setAiErrorStack(null);
 
     try {
       const prompt = `Interpret the following Patient Complete Blood Count (CBC) results:
@@ -219,30 +223,9 @@ Calculated Markers:
 Please write an expert, professional clinical interpretation of these results. Mention the implications for hepatic portal hypertension (if platelets are significantly low), iron or nutrient profiles, systemic inflammation flags, or any other findings.`;
 
       const provider = localStorage.getItem("selected_ai_provider") || "gemini";
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      
-      const geminiKey = localStorage.getItem("user_gemini_api_key") || "";
-      const groqKey = localStorage.getItem("user_groq_api_key") || "";
-      const openrouterKey = localStorage.getItem("user_openrouter_api_key") || "";
-      const openaiKey = localStorage.getItem("user_openai_api_key") || "";
-      const claudeKey = localStorage.getItem("user_claude_api_key") || "";
-      const deepseekKey = localStorage.getItem("user_deepseek_api_key") || "";
+      const data = await runGeminiAnalyze("cbc", prompt, provider);
 
-      if (geminiKey) headers["x-user-gemini-api-key"] = geminiKey;
-      if (groqKey) headers["x-user-groq-api-key"] = groqKey;
-      if (openrouterKey) headers["x-user-openrouter-api-key"] = openrouterKey;
-      if (openaiKey) headers["x-user-openai-api-key"] = openaiKey;
-      if (claudeKey) headers["x-user-claude-api-key"] = claudeKey;
-      if (deepseekKey) headers["x-user-deepseek-api-key"] = deepseekKey;
-
-      const response = await fetch("/api/gemini/analyze", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ analysisType: "cbc", prompt, provider }),
-      });
-
-      const data = await response.json();
-      if (response.ok && data.insight) {
+      if (data && data.insight) {
         setAiInsight(data.insight);
         
         // Dynamically update the newly generated record inside history to reflect current AiInsight
@@ -262,10 +245,12 @@ Please write an expert, professional clinical interpretation of these results. M
           riskLevel: calculated.riskLevel,
         });
       } else {
-        setAiError(data.error || "Failed to generate Clinical AI Analysis");
+        setAiError("Failed to generate Clinical AI Analysis");
       }
-    } catch (err) {
-      setAiError("Connection to AI engine failed. Please try again.");
+    } catch (err: any) {
+      console.error("AI Analysis critical failure:", err);
+      setAiError(err.message || "Connection to AI engine failed. Please try again.");
+      setAiErrorStack(err.stack || "No call stack available.");
     } finally {
       setIsAiLoading(false);
     }
@@ -371,6 +356,7 @@ Please write an expert, professional clinical interpretation of these results. M
 
     setIsOcrLoading(true);
     setOcrError(null);
+    setOcrErrorStack(null);
     setOcrStatusText(mode === "offline" ? "Preprocessing images..." : "Reading files for transmission...");
 
     try {
@@ -430,32 +416,18 @@ Please write an expert, professional clinical interpretation of these results. M
         const base64Contents = await Promise.all(base64Promises);
 
         setOcrStatusText("Sending to Clinical AI Extractor...");
-        const userApiKey = localStorage.getItem("user_gemini_api_key") || "";
-        const headers: Record<string, string> = { "Content-Type": "application/json" };
-        if (userApiKey) {
-          headers["x-user-gemini-api-key"] = userApiKey;
-        }
-
-        const response = await fetch("/api/gemini/extract-report", {
-          method: "POST",
-          headers,
-          body: JSON.stringify({
-            imagesBase64: base64Contents,
-            reportType: "cbc",
-          }),
-        });
-
-        const data = await response.json();
+        const data = await runGeminiExtractReport(base64Contents, "cbc");
         
-        if (response.ok && data.values) {
+        if (data && data.values) {
           applyCbcOcrValues(data.values);
         } else {
-          throw new Error(data.error || "The AI model was unable to extract report fields. Please verify image quality.");
+          throw new Error("The AI model was unable to extract report fields. Please verify image quality.");
         }
       }
     } catch (err: any) {
       console.error(`${mode.toUpperCase()} extraction error:`, err);
       setOcrError(err.message || `An error occurred during ${mode} report extraction.`);
+      setOcrErrorStack(err.stack || "No call stack available.");
     } finally {
       setIsOcrLoading(false);
       setOcrStatusText(null);
@@ -735,9 +707,21 @@ Please write an expert, professional clinical interpretation of these results. M
           </div>
 
           {ocrError && (
-            <div className="text-xs text-red-500 bg-red-50 dark:bg-red-500/10 p-2 rounded-xl border border-red-100 dark:border-red-500/20 inline-flex items-center gap-1">
-              <AlertCircle size={12} />
-              <span>{ocrError}</span>
+            <div className="text-xs text-red-500 bg-red-50 dark:bg-red-500/10 p-3 rounded-xl border border-red-100 dark:border-red-500/20 flex flex-col gap-2 max-w-full overflow-hidden">
+              <div className="flex items-center gap-1">
+                <AlertCircle size={12} className="shrink-0" />
+                <span className="font-semibold">{ocrError}</span>
+              </div>
+              {ocrErrorStack && (
+                <details className="mt-1">
+                  <summary className="cursor-pointer text-[10px] text-red-400 font-medium hover:underline">
+                    Show Error Trace (For Safari / Android Debugging)
+                  </summary>
+                  <pre className="mt-2 p-2 bg-slate-900 border border-red-950 text-red-300 font-mono text-[10px] whitespace-pre-wrap rounded-lg overflow-auto max-h-40">
+                    {ocrErrorStack}
+                  </pre>
+                </details>
+              )}
             </div>
           )}
         </div>
@@ -1209,10 +1193,22 @@ Please write an expert, professional clinical interpretation of these results. M
 
               {aiError && (
                 <div className="p-4 bg-red-950/30 border border-red-900/40 rounded-2xl space-y-3">
-                  <p className="text-xs text-red-400 flex items-center gap-1.5 font-bold">
-                    <AlertCircle size={14} />
-                    <span>{aiError}</span>
-                  </p>
+                  <div className="text-xs text-red-400 flex flex-col gap-2 font-medium text-left">
+                    <div className="flex items-center gap-1.5 font-bold">
+                      <AlertCircle size={14} className="shrink-0" />
+                      <span>{aiError}</span>
+                    </div>
+                    {aiErrorStack && (
+                      <details className="mt-1">
+                        <summary className="cursor-pointer text-[10px] text-red-400 font-medium hover:underline">
+                          Show Error Trace (For Safari / Android Debugging)
+                        </summary>
+                        <pre className="mt-2 p-2 bg-slate-900 border border-red-950 text-red-300 font-mono text-[10px] whitespace-pre-wrap rounded-lg overflow-auto max-h-40 text-left">
+                          {aiErrorStack}
+                        </pre>
+                      </details>
+                    )}
+                  </div>
 
                   <label className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-950/40 border border-slate-800/60 cursor-pointer select-none max-w-sm text-left transition-colors hover:bg-slate-950/60">
                     <input

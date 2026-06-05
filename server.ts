@@ -1,11 +1,32 @@
 import express from "express";
 import path from "path";
 import dotenv from "dotenv";
+import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 
 // Load local environment variables
 dotenv.config();
+
+// Standardize high-fidelity PWA icon copies right at server startup
+try {
+  const sourceIcon = path.join(process.cwd(), "src", "assets", "images", "regenerated_image_1779900749774.jpg");
+  const publicDir = path.join(process.cwd(), "public");
+  
+  if (!fs.existsSync(publicDir)) {
+    fs.mkdirSync(publicDir, { recursive: true });
+  }
+
+  if (fs.existsSync(sourceIcon)) {
+    fs.copyFileSync(sourceIcon, path.join(publicDir, "icon-v2.jpg"));
+    fs.copyFileSync(sourceIcon, path.join(publicDir, "apple-touch-icon-v2.jpg"));
+    console.log("✓ Robust PWA Branding Icons Synchronized in public/ directory successfully!");
+  } else {
+    console.warn("⚠️ Warning: Primary branding image src/assets/images/regenerated_image_1779900749774.jpg not found for startup alignment.");
+  }
+} catch (copyErr) {
+  console.error("Failed to copy PWA cache-busting icons at startup:", copyErr);
+}
 
 const app = express();
 const PORT = 3000;

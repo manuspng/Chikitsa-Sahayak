@@ -8,6 +8,7 @@ import MetricCard from "./MetricCard";
 import Tesseract from "tesseract.js";
 import { preprocessImageForOcr } from "../utils/ocrPreprocessing";
 import { parseMetabolicReport } from "../utils/labReportParser";
+import { runGeminiAnalyze } from "../utils/geminiClient";
 
 function getOfflineMetabolicSummary(inputs: MetabolicInputs, results: MetabolicResults): string {
   const segments: string[] = [];
@@ -202,30 +203,9 @@ OFFLINE CRITERIA SYNTHESIS:
 - Aggregated Visceral/Renal Risk: ${results.riskLevel.toUpperCase()}`;
 
       const provider = localStorage.getItem("selected_ai_provider") || "gemini";
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      
-      const geminiKey = localStorage.getItem("user_gemini_api_key") || "";
-      const groqKey = localStorage.getItem("user_groq_api_key") || "";
-      const openrouterKey = localStorage.getItem("user_openrouter_api_key") || "";
-      const openaiKey = localStorage.getItem("user_openai_api_key") || "";
-      const claudeKey = localStorage.getItem("user_claude_api_key") || "";
-      const deepseekKey = localStorage.getItem("user_deepseek_api_key") || "";
+      const data = await runGeminiAnalyze("metabolic", basePrompt, provider);
 
-      if (geminiKey) headers["x-user-gemini-api-key"] = geminiKey;
-      if (groqKey) headers["x-user-groq-api-key"] = groqKey;
-      if (openrouterKey) headers["x-user-openrouter-api-key"] = openrouterKey;
-      if (openaiKey) headers["x-user-openai-api-key"] = openaiKey;
-      if (claudeKey) headers["x-user-claude-api-key"] = claudeKey;
-      if (deepseekKey) headers["x-user-deepseek-api-key"] = deepseekKey;
-
-      const response = await fetch("/api/gemini/analyze", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ analysisType: "metabolic", prompt: basePrompt, provider }),
-      });
-
-      const data = await response.json();
-      if (response.ok && data.insight) {
+      if (data && data.insight) {
         setAiInsight(data.insight);
         
         onAddRecord({
@@ -241,10 +221,10 @@ OFFLINE CRITERIA SYNTHESIS:
           riskLevel: results.riskLevel,
         });
       } else {
-        setAiError(data.error || "Failed to generate Clinical AI Analysis");
+        setAiError("Failed to generate Clinical AI Analysis");
       }
-    } catch (err) {
-      setAiError("Connection to AI engine failed. Please try again.");
+    } catch (err: any) {
+      setAiError(err.message || "Connection to AI engine failed. Please try again.");
     } finally {
       setIsAiLoading(false);
     }

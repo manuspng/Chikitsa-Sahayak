@@ -3,6 +3,7 @@ import { HelpCircle, Save, Check, FileText, AlertCircle, RefreshCw, Layers } fro
 import { BMIInputs, BMIResults, AnalysisRecord } from "../types";
 import { calculateBMI } from "../utils/calculations";
 import { printClinicalReport } from "../utils/printHelper";
+import { runGeminiAnalyze } from "../utils/geminiClient";
 import ScoreGauge from "./ScoreGauge";
 import MetricCard from "./MetricCard";
 
@@ -145,30 +146,9 @@ Calculated Metabolic Markers:
 Please write an expert, professional clinical interpretation of this patient's metabolic risk factors as they pertain to fat deposition, Non-Alcoholic Fatty Liver Disease (NAFLD/MASH), insulin resistance, and overall cardiovascular fitness. Provide physical recommendations for diet changes, weight tracking, or abdominal exercise regimes.`;
 
       const provider = localStorage.getItem("selected_ai_provider") || "gemini";
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      
-      const geminiKey = localStorage.getItem("user_gemini_api_key") || "";
-      const groqKey = localStorage.getItem("user_groq_api_key") || "";
-      const openrouterKey = localStorage.getItem("user_openrouter_api_key") || "";
-      const openaiKey = localStorage.getItem("user_openai_api_key") || "";
-      const claudeKey = localStorage.getItem("user_claude_api_key") || "";
-      const deepseekKey = localStorage.getItem("user_deepseek_api_key") || "";
+      const data = await runGeminiAnalyze("bmi", prompt, provider);
 
-      if (geminiKey) headers["x-user-gemini-api-key"] = geminiKey;
-      if (groqKey) headers["x-user-groq-api-key"] = groqKey;
-      if (openrouterKey) headers["x-user-openrouter-api-key"] = openrouterKey;
-      if (openaiKey) headers["x-user-openai-api-key"] = openaiKey;
-      if (claudeKey) headers["x-user-claude-api-key"] = claudeKey;
-      if (deepseekKey) headers["x-user-deepseek-api-key"] = deepseekKey;
-
-      const response = await fetch("/api/gemini/analyze", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ analysisType: "bmi", prompt, provider }),
-      });
-
-      const data = await response.json();
-      if (response.ok && data.insight) {
+      if (data && data.insight) {
         setAiInsight(data.insight);
         
         // Dynamically update the newly generated record inside history to reflect current AiInsight
@@ -185,10 +165,10 @@ Please write an expert, professional clinical interpretation of this patient's m
           riskLevel: calculated.riskLevel,
         });
       } else {
-        setAiError(data.error || "Failed to generate Clinical AI Analysis");
+        setAiError("Failed to generate Clinical AI Analysis");
       }
-    } catch (err) {
-      setAiError("Connection to AI engine failed. Please try again.");
+    } catch (err: any) {
+      setAiError(err.message || "Connection to AI engine failed. Please try again.");
     } finally {
       setIsAiLoading(false);
     }

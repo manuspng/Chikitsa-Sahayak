@@ -1,0 +1,24 @@
+{
+  "name": "Chikitsa Sahayak - Visceral & Blood Diagnostic Assistant",
+  "short_name": "Chikitsa",
+  "description": "Evidence-Based Visceral & Blood Diagnostic Assistant for RMPs and Patients in India.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#0d9488",
+  "icons": [
+    {
+      "src": "/icon-v2.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-touch-icon-v2.jpg",
+      "sizes": "180x180",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}

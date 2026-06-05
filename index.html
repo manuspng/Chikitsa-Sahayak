@@ -6,13 +6,18 @@
     <title>Chikitsa Sahayak - Visceral & Blood Diagnostic Assistant</title>
     
     <!-- Home screen and shortcut branding icons -->
-    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
-    <link rel="apple-touch-icon" href="/logo.svg" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/jpeg" href="/apple-touch-icon-v2.jpg" />
+    <link rel="shortcut icon" href="/apple-touch-icon-v2.jpg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon-v2.jpg" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon-v2.jpg" />
+    <link rel="apple-touch-icon" sizes="167x167" href="/apple-touch-icon-v2.jpg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-v2.jpg" />
     <script>
       (function() {
         var img = new Image();
         img.crossOrigin = 'anonymous';
-        img.src = '/logo.svg';
+        img.src = '/apple-touch-icon-v2.jpg';
         img.onload = function() {
           try {
             var canvas = document.createElement('canvas');
@@ -22,16 +27,11 @@
             ctx.drawImage(img, 0, 0, 180, 180);
             var dataURL = canvas.toDataURL('image/png');
             
-            // Update apple-touch-icon link
-            var existing = document.querySelector('link[rel="apple-touch-icon"]');
-            if (existing) {
-              existing.setAttribute('href', dataURL);
-            } else {
-              var link = document.createElement('link');
-              link.rel = 'apple-touch-icon';
-              link.href = dataURL;
-              document.head.appendChild(link);
-            }
+            // Dynamic PNG override for WebKit legacy shortcut handlers
+            var touchIcons = document.querySelectorAll('link[rel="apple-touch-icon"]');
+            touchIcons.forEach(function(el) {
+              el.setAttribute('href', dataURL);
+            });
           } catch (e) {
             console.warn('Dynamic apple-touch-icon PNG conversion deferred:', e);
           }
