@@ -327,7 +327,7 @@ export function printClinicalReport(record: Partial<AnalysisRecord>) {
           }
 
           .print-btn {
-            background-color: #2563eb;
+            background-color: #2d5a37;
             color: white;
             border: none;
             padding: 8px 16px;
@@ -342,7 +342,7 @@ export function printClinicalReport(record: Partial<AnalysisRecord>) {
             box-shadow: 0 1px 2px rgba(0,0,0,0.05);
           }
           .print-btn:hover {
-            background-color: #1d4ed8;
+            background-color: #1b3d22;
           }
 
           .brand-logo {

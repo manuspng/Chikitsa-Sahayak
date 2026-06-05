@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Activity, LayoutDashboard, HeartPulse, Scale, History, ShieldPlus, ChevronDown, Settings, Key, HelpCircle, Lock, Check, ExternalLink, X, AlertTriangle, Cpu } from "lucide-react";
+import { Activity, LayoutDashboard, HeartPulse, Scale, History, ShieldPlus, ChevronDown, Settings, Key, HelpCircle, Lock, Check, ExternalLink, X, AlertTriangle, Cpu, Sun, Moon, Leaf, Search, Info, BookOpen } from "lucide-react";
 import { AnalysisRecord } from "./types";
 import ClinicalMonitor from "./components/ClinicalMonitor";
 import LftAnalyzer from "./components/LftAnalyzer";
@@ -10,6 +10,23 @@ import MetabolicAnalyzer from "./components/MetabolicAnalyzer";
 import InstallPrompt from "./components/InstallPrompt";
 import logoImg from "./assets/images/regenerated_image_1779900749774.jpg";
 
+// Clinical terminology & diagnostic helper references for search
+const MEDICAL_DICTIONARY = [
+  { id: "fib4", term: "FIB-4 Index (Fibrosis-4)", category: "Clinical Index", definition: "A non-invasive index used to estimate liver scarring (fibrosis) in patients with NAFLD, HCV, or HBV. Calculated using Age, AST, ALT, and Platelet count, with a high negative predictive value to rule out advanced fibrosis." },
+  { id: "apri", term: "APRI (AST-to-Platelet Ratio Index)", category: "Clinical Index", definition: "A simple, cost-effective score to evaluate advanced fibrosis and cirrhosis in chronic hepatitis. Calculated as [AST / AST Upper Limit of Normal] / [Platelet Count] * 100." },
+  { id: "meld", term: "MELD Score (Model for End-Stage Liver Disease)", category: "Prognostic Index", definition: "A scoring system from 6 to 40 used to assess the severity of chronic liver disease and prioritize organ allocation for transplantation. Calculated using Serum Creatinine, Bilirubin, INR, and Sodium." },
+  { id: "child_pugh", term: "Child-Pugh Classification", category: "Prognostic Index", definition: "A system to assess the prognosis of chronic liver disease, primarily cirrhosis. Scores are grouped into Classes A, B, and C based on 5 clinical and biochemical measures: Bilirubin, Albumin, INR, Ascites, and Hepatic Encephalopathy." },
+  { id: "bard", term: "BARD Score", category: "NAFLD Staging", definition: "A non-invasive clinical prediction score for advanced fibrosis in Non-Alcoholic Fatty Liver Disease (NAFLD). Assigns weighted points to BMI (>= 28 is +1), AST/ALT Ratio (>=0.8 is +2), and Type 2 Diabetes (+1)." },
+  { id: "ast", term: "AST (Aspartate Aminotransferase)", category: "Biomarker", definition: "An enzyme found mainly in liver and heart cells. Used to screen, diagnose, and monitor liver damage in collaboration with ALT and other biomarkers." },
+  { id: "alt", term: "ALT (Alanine Aminotransferase)", category: "Biomarker", definition: "An enzyme found primarily in the liver. It is a highly specific marker of hepatocyte injury; elevated ALT levels indicate active liver cell damage." },
+  { id: "plt", term: "Platelets (Thrombocytes)", category: "Hematology", definition: "Formed elements of blood essential for clotting. Thrombocytopenia (low platelet count) is heavily linked to portal hypertension, splenomegaly, and advanced liver cirrhosis." },
+  { id: "inr", term: "INR (International Normalized Ratio)", category: "Coagulation", definition: "A standardized measurement of prothrombin time, reflecting the extrinsic coagulation pathway. Since clotting factors are produced by hepatocytes, elevated INR demonstrates impaired liver synthetic function." },
+  { id: "alb", term: "Albumin", category: "Liver Synthesis", definition: "The main protein manufactured by the liver to maintain oncotic pressure and transport molecules. Low serum levels (hypoalbuminemia) suggest chronic liver insufficiency or damage." },
+  { id: "bil", term: "Bilirubin (Total / Direct)", category: "Excretory Marker", definition: "A yellow breakdown product of hemoglobin cleared and excreted by the liver. Elevated bilirubin leads to jaundice and suggests biliary obstruction or cellular liver dysfunction." },
+  { id: "metabolic", term: "Metabolic Syndrome (MetS)", category: "Cardiometabolic Risk", definition: "A cluster of conditions—including abdominal obesity, hypertension, elevated fasting glucose, high triglycerides, and low HDL—that increase risk of coronary disease, stroke, and NAFLD/NASH progression." },
+  { id: "acr", term: "ACR (Albumin-to-Creatinine Ratio)", category: "Renal Function", definition: "A urine test measuring microalbuminuria to screen for early diabetic kidney disease or hepatorenal nephropathies, frequently assessed alongside metabolic syndromes." }
+];
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [reportsDropdownOpen, setReportsDropdownOpen] = useState<boolean>(false);
@@ -17,6 +34,9 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
   const [showKey, setShowKey] = useState<boolean>(false);
   const [confirmRedirectUrl, setConfirmRedirectUrl] = useState<string | null>(null);
+  const [aboutOpen, setAboutOpen] = useState<boolean>(false);
+  const [searchOpen, setSearchOpen] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Dynamic AI Provider States
   const [selectedProvider, setSelectedProvider] = useState<string>(() => {
@@ -53,15 +73,19 @@ export default function App() {
       window.removeEventListener("click", handleOutsideClick);
     };
   }, [reportsDropdownOpen]);
-  const [colorScheme, setColorScheme] = useState<"standard" | "teal" | "obsidian">(() => {
+  const [colorScheme, setColorScheme] = useState<"standard" | "obsidian">(() => {
     try {
-      return (localStorage.getItem("hepatic_color_scheme") as "standard" | "teal" | "obsidian") || "standard";
+      const stored = localStorage.getItem("hepatic_color_scheme");
+      if (stored === "standard" || stored === "obsidian") {
+        return stored as "standard" | "obsidian";
+      }
+      return "standard";
     } catch {
       return "standard";
     }
   });
 
-  const handleSchemeChange = (scheme: "standard" | "teal" | "obsidian") => {
+  const handleSchemeChange = (scheme: "standard" | "obsidian") => {
     setColorScheme(scheme);
     try {
       localStorage.setItem("hepatic_color_scheme", scheme);
@@ -70,28 +94,33 @@ export default function App() {
 
   const schemeClasses = {
     standard: {
-      bg: "bg-[#f1f5f9] text-[#1e293b] dark:bg-slate-900 dark:text-slate-200",
-      accentText: "text-[#2563eb]",
-      logoText: "text-slate-900 dark:text-white",
-      cardStyle: "bg-white dark:bg-slate-900/80 border-slate-250/60 dark:border-slate-800/80",
-      badgeActive: "bg-[#2563eb]/10 text-[#2563eb]",
-      tabActive: "bg-[#2563eb] text-white shadow-md shadow-[#2563eb]/10",
-    },
-    teal: {
-      bg: "bg-[#f0f7f6] text-[#0f2d2b] dark:bg-[#091514] dark:text-[#ecfbf9]",
-      accentText: "text-[#0d9488]",
-      logoText: "text-[#0f2d2b] dark:text-[#ecfbf9]",
-      cardStyle: "bg-white dark:bg-[#0c1f1d] border-teal-200/50 dark:border-teal-900/40",
-      badgeActive: "bg-[#0d9488]/10 text-[#0d9488]",
-      tabActive: "bg-[#0d9488] text-white shadow-md shadow-[#0d9488]/10",
+      bg: "bg-[#f4f7f4] text-[#2c3e30] dark:bg-slate-900 dark:text-slate-200",
+      accentText: "text-[#2d5a37] dark:text-[#10b981] font-extrabold",
+      logoText: "text-[#1b3d22] dark:text-white",
+      cardStyle: "bg-white dark:bg-slate-900/80 border-[#e2e8e3] dark:border-slate-800/80",
+      badgeActive: "bg-[#2d5a37]/10 text-[#2d5a37] border border-[#2d5a37]/15 dark:bg-[#10b981]/10 dark:text-[#a7f3d0] dark:border-[#10b981]/20",
+      tabActive: "bg-[#2d5a37] text-white shadow-md shadow-[#2d5a37]/10 dark:bg-[#10b981] dark:text-slate-950 dark:shadow-[#10b981]/10",
     },
     obsidian: {
       bg: "bg-[#05070f] text-[#ced5e3]",
-      accentText: "text-[#6366f1]",
+      accentText: "text-[#10b981]",
       logoText: "text-[#f1f5f9] dark:text-[#f1f5f9]",
       cardStyle: "bg-[#0c1020] dark:bg-[#0c1020] border-slate-800/80",
-      badgeActive: "bg-[#6366f1]/20 text-[#c7d2fe]",
-      tabActive: "bg-[#6366f1] text-[#ffffff] shadow-md shadow-[#6366f1]/30",
+      badgeActive: "bg-[#10b981]/20 text-[#a7f3d0] border border-emerald-500/20",
+      tabActive: "bg-[#10b981] text-[#090d16] shadow-md shadow-[#10b981]/30",
+    }
+  }[colorScheme];
+
+  const switcherColors = {
+    standard: {
+      containerBorder: "border-[#e0ecd9] dark:border-[#10b981]/45 shadow-[0_0_12px_rgba(45,90,55,0.04)] hover:border-[#2d5a37]/50 dark:hover:border-emerald-500/60",
+      buttonActiveStyle: "bg-[#2d5a37] text-white border border-[#2d5a37] shadow-md shadow-[#2d5a37]/20 dark:bg-[#10b981] dark:text-slate-950 dark:border-[#10b981] dark:shadow-[#10b981]/20",
+      buttonInactiveStyle: "bg-white hover:bg-[#fafdfb] border border-[#d2dfd5] text-slate-700 hover:text-[#2d5a37] dark:bg-slate-900/60 dark:hover:bg-slate-800/80 dark:border-[#10b981]/30 dark:text-slate-400 dark:hover:text-white shadow-sm",
+    },
+    obsidian: {
+      containerBorder: "border-[#10b981]/45 shadow-[0_0_12px_rgba(16,185,129,0.12)] hover:border-[#10b981]/60",
+      buttonActiveStyle: "bg-[#10b981] text-slate-950 border border-[#10b981] shadow-md shadow-[#10b981]/30",
+      buttonInactiveStyle: "bg-[#0c1020] hover:bg-[#0c1020]/80 border border-[#10b981]/35 text-[#ced5e3] hover:text-[#a7f3d0] shadow-sm",
     }
   }[colorScheme];
 
@@ -192,38 +221,221 @@ export default function App() {
             </div>
           </div>
 
-          <div className="flex flex-col items-end gap-1.5 shrink-0 -mt-1 sm:-mt-1.5">
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {/* Theme Toggle Button */}
+            <button
+              onClick={() => handleSchemeChange(colorScheme === "standard" ? "obsidian" : "standard")}
+              className="p-1.5 bg-slate-950/50 rounded-lg border border-slate-800/40 text-slate-400 hover:text-white hover:border-slate-700/80 transition-all cursor-pointer flex items-center justify-center w-8 h-8 shrink-0"
+              title={colorScheme === "standard" ? "Switch to Obsidian Dark Mode" : "Switch to Slate Light Mode"}
+            >
+              {colorScheme === "standard" ? <Moon size={14} /> : <Sun size={14} />}
+            </button>
+
+            {/* Search toggler button */}
+            <button
+              onClick={() => setSearchOpen(!searchOpen)}
+              className={`p-1.5 rounded-lg border transition-all cursor-pointer flex items-center justify-center w-8 h-8 shrink-0 ${
+                searchOpen 
+                  ? "bg-emerald-500 border-emerald-400 text-slate-950 shadow-md" 
+                  : "border-slate-800/40 bg-slate-950/50 text-slate-400 hover:text-white hover:border-slate-750"
+              }`}
+              title="Search Index Criteria & Logs"
+            >
+              <Search size={14} />
+            </button>
+
+            {/* About button */}
+            <button
+              onClick={() => setAboutOpen(true)}
+              className="p-1.5 bg-slate-950/50 rounded-lg border border-slate-800/40 text-slate-400 hover:text-white hover:border-slate-750 transition-all cursor-pointer flex items-center justify-center w-8 h-8 shrink-0"
+              title="About Chikitsa Sahayak Clinical Suite"
+            >
+              <Info size={14} />
+            </button>
+
+            {/* AI Provider Config */}
             <button
               onClick={() => setSettingsOpen(true)}
-              className="group flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-950/50 hover:bg-emerald-900/40 text-slate-200 hover:text-white transition-all text-[11px] sm:text-xs font-semibold cursor-pointer shadow-inner shrink-0"
+              className="group flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-950/50 hover:bg-emerald-900/40 text-slate-200 hover:text-white transition-all text-[11px] font-semibold cursor-pointer shadow-inner h-8"
               title="Configure AI Provider systems and API keys"
             >
               <Key size={12} className="text-emerald-400 group-hover:scale-110 transition-transform duration-300" />
               <span>AI Provider</span>
             </button>
-            <span className="text-[9px] sm:text-[10px] font-bold tracking-wider text-emerald-400 bg-slate-900/50 px-2 py-0.5 rounded border border-emerald-500/20 uppercase leading-none">
-              By-MPS
-            </span>
           </div>
         </div>
       </header>
 
       {/* Primary Dashboard Container */}
       <main className="w-full max-w-none px-4 sm:px-8 md:px-12 py-8 space-y-6">
+        {/* Search Drawer Panel */}
+        {searchOpen && (
+          <div className="bg-slate-900 border border-emerald-500/20 rounded-3xl p-6 text-white space-y-4 shadow-xl transition-all duration-300">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2.5">
+                <Search size={14} className="text-emerald-400" />
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-300">Clinical Knowledge & Log Explorer</span>
+              </div>
+              <button 
+                onClick={() => {
+                  setSearchOpen(false);
+                  setSearchQuery("");
+                }}
+                className="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X size={14} />
+              </button>
+            </div>
+            
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search index criteria, laboratory biomarkers (AST, ALT, Bilirubin, MELD) or client files..."
+                className="w-full bg-slate-950/60 border border-slate-800 focus:border-emerald-500 rounded-xl px-4 py-2.5 text-xs text-slate-200 placeholder-slate-500 outline-none transition-all"
+                autoFocus
+              />
+              {searchQuery && (
+                <button 
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 hover:text-white cursor-pointer"
+                >
+                  CLEAR
+                </button>
+              )}
+            </div>
+
+            {searchQuery.trim() !== "" ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[320px] overflow-y-auto scrollbar-thin pt-1">
+                {/* Dictionary Results */}
+                <div className="space-y-3">
+                  <h4 className="text-[10px] font-extrabold uppercase tracking-widest text-[#0d9488]">Medical Lexicon Matches ({
+                    (() => {
+                      const query = searchQuery.toLowerCase().trim();
+                      return MEDICAL_DICTIONARY.filter(item => 
+                        item.term.toLowerCase().includes(query) ||
+                        item.category.toLowerCase().includes(query) ||
+                        item.definition.toLowerCase().includes(query)
+                      ).length;
+                    })()
+                  })</h4>
+                  <div className="space-y-2">
+                    {(() => {
+                      const query = searchQuery.toLowerCase().trim();
+                      const filtered = MEDICAL_DICTIONARY.filter(item => 
+                        item.term.toLowerCase().includes(query) ||
+                        item.category.toLowerCase().includes(query) ||
+                        item.definition.toLowerCase().includes(query)
+                      );
+                      if (filtered.length === 0) {
+                        return <p className="text-xs text-slate-500 italic">No medical dictionary entries found.</p>;
+                      }
+                      return filtered.map(item => (
+                        <div key={item.id} className="bg-slate-950/50 border border-slate-800/60 rounded-xl p-3.5 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-extrabold text-white">{item.term}</span>
+                            <span className="text-[9px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded leading-none">{item.category}</span>
+                          </div>
+                          <p className="text-[11px] text-slate-350 leading-relaxed text-justify">{item.definition}</p>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                </div>
+
+                {/* Patient / Diagnosis Record Logs Matches */}
+                <div className="space-y-3">
+                  <h4 className="text-[10px] font-extrabold uppercase tracking-widest text-emerald-500">Evaluation History Matches ({
+                    (() => {
+                      const query = searchQuery.toLowerCase().trim();
+                      return records.filter(rec => 
+                        (rec.patientName || "").toLowerCase().includes(query) ||
+                        (rec.type || "").toLowerCase().includes(query) ||
+                        (rec.riskLevel || "").toLowerCase().includes(query) ||
+                        (rec.id || "").toLowerCase().includes(query)
+                      ).length;
+                    })()
+                  })</h4>
+                  <div className="space-y-2">
+                    {(() => {
+                      const query = searchQuery.toLowerCase().trim();
+                      const filtered = records.filter(rec => 
+                        (rec.patientName || "").toLowerCase().includes(query) ||
+                        (rec.type || "").toLowerCase().includes(query) ||
+                        (rec.riskLevel || "").toLowerCase().includes(query) ||
+                        (rec.id || "").toLowerCase().includes(query)
+                      );
+                      if (filtered.length === 0) {
+                        return (
+                          <div className="bg-slate-950/30 border border-slate-900 rounded-xl p-6 text-center space-y-1">
+                            <p className="text-xs text-slate-500 italic">No historical reports match the criteria.</p>
+                            <p className="text-[10px] text-slate-600 font-medium">Saved logs search is real-time across clinical profiles.</p>
+                          </div>
+                        );
+                      }
+                      return filtered.map(rec => (
+                        <button
+                          key={rec.id}
+                          onClick={() => {
+                            setActiveTab("history");
+                            setSearchOpen(false);
+                            setSearchQuery("");
+                          }}
+                          className="w-full text-left bg-slate-950/50 hover:bg-slate-900/50 border border-slate-800/60 hover:border-emerald-500/25 rounded-xl p-3.5 space-y-2 transition-all cursor-pointer block text-white"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-slate-100">{rec.patientName || "Anonymous Patient"}</span>
+                            <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded leading-none ${
+                              rec.riskLevel === "critical"
+                                ? "bg-rose-500/15 text-rose-400 border border-rose-500/20"
+                                : rec.riskLevel === "high"
+                                ? "bg-amber-500/15 text-amber-400 border border-amber-500/20"
+                                : rec.riskLevel === "moderate"
+                                ? "bg-yellow-500/15 text-yellow-400 border border-yellow-500/20"
+                                : "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20"
+                            }`}>
+                              {rec.riskLevel} risk
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium">
+                            <span className="uppercase">File: {rec.type} Report</span>
+                            <span>{new Date(rec.date).toLocaleDateString()}</span>
+                          </div>
+                        </button>
+                      ));
+                    })()}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-slate-950/20 border border-slate-900 rounded-2xl p-6 text-center">
+                <p className="text-xs text-slate-500 font-medium pb-1.5">Begin typing above to perform unified clinical dictionary and diagnostic history search.</p>
+                <div className="flex flex-wrap items-center justify-center gap-1.5">
+                  <span className="text-[10px] bg-slate-900 border border-slate-800 px-2 py-0.5 rounded text-slate-400 font-medium">FIB-4</span>
+                  <span className="text-[10px] bg-slate-900 border border-slate-800 px-2 py-0.5 rounded text-slate-400 font-medium">MELD</span>
+                  <span className="text-[10px] bg-slate-900 border border-slate-800 px-2 py-0.5 rounded text-slate-400 font-medium">ALT</span>
+                  <span className="text-[10px] bg-slate-900 border border-slate-800 px-2 py-0.5 rounded text-slate-400 font-medium">Platelets</span>
+                  <span className="text-[10px] bg-slate-900 border border-slate-800 px-2 py-0.5 rounded text-slate-400 font-medium">Child-Pugh</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         {/* Clinology Navigation Desk */}
-        <div className={`flex items-center p-1.5 rounded-[20px] shadow-sm border overflow-visible gap-1.5 relative ${schemeClasses.cardStyle}`}>
+        <div className={`flex flex-wrap items-center p-1 sm:p-1.5 rounded-[16px] sm:rounded-[20px] border transition-all duration-300 gap-1.5 relative w-fit max-w-full ${schemeClasses.cardStyle} ${switcherColors.containerBorder}`}>
           <button
             onClick={() => {
               setActiveTab("overview");
               setReportsDropdownOpen(false);
             }}
-            className={`flex items-center gap-2 pl-[12px] pr-[17px] pt-[9px] pb-[10px] rounded-[14px] text-xs font-bold transition-all whitespace-nowrap cursor-pointer hover:scale-[1.01] active:scale-[0.98] ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 h-9 sm:h-[42px] rounded-[11px] sm:rounded-[14px] text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer hover:scale-[1.01] active:scale-[0.98] ${
               activeTab === "overview"
-                ? schemeClasses.badgeActive
-                : "bg-slate-100/90 hover:bg-slate-200/85 dark:bg-slate-800/40 dark:hover:bg-slate-800/80 border border-slate-200/40 dark:border-slate-700/30 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 shadow-sm"
+                ? switcherColors.buttonActiveStyle
+                : switcherColors.buttonInactiveStyle
             }`}
           >
-            <LayoutDashboard size={14} />
+            <LayoutDashboard size={14} className="scale-90 sm:scale-100" />
             <span>Biological Overview</span>
           </button>
 
@@ -233,15 +445,15 @@ export default function App() {
                 e.stopPropagation();
                 setReportsDropdownOpen(!reportsDropdownOpen);
               }}
-              className={`flex items-center gap-2 pl-[16px] pr-5 py-2.5 rounded-[14px] text-xs font-bold transition-all whitespace-nowrap cursor-pointer hover:scale-[1.01] active:scale-[0.98] ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2 sm:py-2.5 h-9 sm:h-[42px] rounded-[11px] sm:rounded-[14px] text-[11px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer hover:scale-[1.01] active:scale-[0.98] ${
                 ["cbc", "lft", "bmi", "metabolic"].includes(activeTab)
-                  ? schemeClasses.tabActive
-                  : "bg-slate-100/90 hover:bg-slate-200/85 dark:bg-slate-800/40 dark:hover:bg-slate-800/80 border border-slate-200/40 dark:border-slate-700/30 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 shadow-sm"
+                  ? switcherColors.buttonActiveStyle
+                  : switcherColors.buttonInactiveStyle
               }`}
             >
-              <Activity size={14} />
+              <Activity size={14} className="scale-90 sm:scale-100" />
               <span>Analyze Reports</span>
-              <ChevronDown size={14} className={`transition-transform duration-200 ${reportsDropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown size={14} className={`transition-transform duration-200 scale-90 sm:scale-100 ${reportsDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {reportsDropdownOpen && (
@@ -339,13 +551,166 @@ export default function App() {
         </div>
       </main>
 
-      {/* Footer credits */}
-      <footer className="border-t border-slate-100 dark:border-slate-800 text-center py-6 text-[10px] text-slate-400 font-medium">
-        HEPATIC Diagnostics Platform &copy; {new Date().getFullYear()} • Secure Decision-Support Suite
+      {/* Footer Layout with matching options */}
+      <footer className="border-t border-slate-200/50 dark:border-slate-800/80 bg-white/40 dark:bg-slate-900/30 backdrop-blur-sm py-8 px-4 sm:px-8 mt-12 transition-all duration-300">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="text-center md:text-left space-y-1">
+            <p className="text-xs font-black tracking-widest uppercase text-slate-600 dark:text-slate-300 leading-none">
+              CHIKITSA SAHAYAK
+            </p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-1">
+              HEPATIC Diagnostics Platform &copy; {new Date().getFullYear()} • Secure Decision-Support Suite
+            </p>
+          </div>
+
+          {/* Footer Interactive Actions matching Header */}
+          <div className="flex flex-wrap items-center justify-center gap-3.5">
+            <button
+              onClick={() => {
+                setSearchOpen(!searchOpen);
+                if (!searchOpen) {
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }
+              }}
+              className="text-[11px] font-bold text-slate-500 hover:text-emerald-500 dark:text-slate-400 dark:hover:text-emerald-400 transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <Search size={12} />
+              <span>Diagnostic Search</span>
+            </button>
+
+            <span className="text-slate-200 dark:text-slate-800">|</span>
+
+            <button
+              onClick={() => setAboutOpen(true)}
+              className="text-[11px] font-bold text-slate-500 hover:text-emerald-500 dark:text-slate-400 dark:hover:text-emerald-400 transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <Info size={12} />
+              <span>About Clinical Staging</span>
+            </button>
+
+            <span className="text-slate-200 dark:text-slate-800">|</span>
+
+            <button
+              onClick={() => setSettingsOpen(true)}
+              className="text-[11px] font-bold text-slate-500 hover:text-emerald-500 dark:text-slate-400 dark:hover:text-emerald-400 transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <Key size={12} className="text-emerald-500/80" />
+              <span>AI Engine Setup</span>
+            </button>
+
+            <span className="text-slate-200 dark:text-slate-800">|</span>
+
+            {/* Theme switcher copy */}
+            <button
+              onClick={() => handleSchemeChange(colorScheme === "standard" ? "obsidian" : "standard")}
+              className="p-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white transition-all cursor-pointer flex items-center justify-center w-7 h-7"
+              title={colorScheme === "standard" ? "Switch to Obsidian Dark Mode" : "Switch to Slate Light Mode"}
+            >
+              {colorScheme === "standard" ? <Moon size={12} /> : <Sun size={12} />}
+            </button>
+          </div>
+        </div>
       </footer>
 
       {/* Guide prompt for shortcut installation on mobile */}
       <InstallPrompt />
+
+      {/* About Modal Dialog */}
+      {aboutOpen && (
+        <div className="fixed inset-0 z-55 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white dark:bg-[#0c1020] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden animate-zoom-in">
+            {/* Modal Header Decorated Line */}
+            <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0d9488] to-emerald-600 z-10" />
+
+            <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 scrollbar-thin">
+              {/* Close Button */}
+              <button
+                onClick={() => setAboutOpen(false)}
+                className="absolute top-5 right-5 p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg transition-colors cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+
+              {/* Title & Brand heading */}
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-xl">
+                  <HeartPulse size={24} className="animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight text-justify">
+                    ABOUT CHIKITSA SAHAYAK
+                  </h3>
+                  <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold uppercase tracking-widest mt-0.5">
+                    Clinical Decision-Support Suite
+                  </p>
+                </div>
+              </div>
+
+              {/* Educational info grids */}
+              <div className="space-y-4">
+                <p className="text-xs text-slate-600 dark:text-slate-350 leading-relaxed text-justify">
+                  Chikitsa Sahayak is a state-of-the-art hepatic assessment platform designed to deliver professional decision-support. It integrates validated biological guidelines and advanced predictive indexes to support early hepatopathy screening and disease staging.
+                </p>
+
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 mt-4 border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                  Validated Scoring & Staging Systems
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <div className="bg-slate-50 dark:bg-slate-900/30 p-3.5 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <span className="text-xs font-extrabold text-slate-900 dark:text-white block text-left">FIB-4 Index</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1 leading-relaxed text-justify">
+                      Combines Age, AST, ALT, and Platelet levels. Highly sensitive for ruling in/out liver cirrhosis and advanced fibrosis.
+                    </span>
+                  </div>
+                  <div className="bg-slate-50 dark:bg-slate-900/30 p-3.5 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <span className="text-xs font-extrabold text-slate-900 dark:text-white block text-left">APRI Ratio</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1 leading-relaxed text-justify">
+                      AST-to-Platelet Ratio Index. Broadly used internationally for rapid staging of chronic hepatitis pathology.
+                    </span>
+                  </div>
+                  <div className="bg-slate-55 dark:bg-slate-900/30 p-3.5 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <span className="text-xs font-extrabold text-slate-900 dark:text-white block text-left">MELD Score</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1 leading-relaxed text-justify">
+                      Model for End-Stage Liver Disease. Objectively assesses risk severity and survival prognostic status.
+                    </span>
+                  </div>
+                  <div className="bg-slate-55 dark:bg-slate-900/30 p-3.5 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <span className="text-xs font-extrabold text-slate-900 dark:text-white block text-left">Child-Pugh Grouping</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1 leading-relaxed text-justify">
+                      Classic diagnostic tool evaluating serum biomarkers and patient status (Ascites/Encephalopathy) for chronic pathology.
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-xl border border-emerald-500/15 text-xs text-slate-600 dark:text-slate-300 leading-relaxed text-justify space-y-2">
+                  <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-emerald-400">
+                    <ShieldPlus size={14} />
+                    <span>Diagnostics Assistance Mode</span>
+                  </div>
+                  <p>
+                    By connecting a Gemini Flash, OpenAI, Anthropic Claude, or DeepSeek API Key, clinicians can activate reports analysis. The system parses uploaded liver function screens (LFTs, CBCs) dynamically to extract parameters and display medical advice in real-time.
+                  </p>
+                </div>
+
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-normal text-justify">
+                  <strong>Regulatory Disclaimer:</strong> Keep in mind that clinical scoring systems and electronic diagnostic helpers are intended as diagnostic companions only. All outputs must be validated by a licensed gastroenterology or hepatology specialist prior to treating patient cohorts.
+                </p>
+              </div>
+
+              {/* Close Button Footer */}
+              <div className="flex items-center justify-end pt-4 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setAboutOpen(false)}
+                  className="px-5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                >
+                  Close & Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* API Key Settings Modal Panel */}
       {settingsOpen && (

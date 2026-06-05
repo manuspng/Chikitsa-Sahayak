@@ -75,7 +75,7 @@ export default function ClinicalMonitor({ records, onSetTab }: ClinicalMonitorPr
       {/* Overview Bento Stats - Made Smaller and more Compact */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         <div className="bg-white dark:bg-slate-800 border border-slate-200/60 dark:border-slate-700/50 rounded-2xl py-3 px-4 flex flex-row items-center gap-3.5 shadow-[0_1px_2px_rgba(0,0,0,0.02)]">
-          <div className="p-2 bg-[#2563eb]/10 text-[#2563eb] rounded-xl flex-shrink-0">
+          <div className="p-2 bg-[#2d5a37]/10 text-[#2d5a37] dark:bg-[#10b981]/15 dark:text-[#10b981] rounded-xl flex-shrink-0">
             <HeartPulse size={16} />
           </div>
           <div>
