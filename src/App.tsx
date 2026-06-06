@@ -555,11 +555,11 @@ export default function App() {
       <footer className="border-t border-slate-200/50 dark:border-slate-800/80 bg-white/40 dark:bg-slate-900/30 backdrop-blur-sm py-8 px-4 sm:px-8 mt-12 transition-all duration-300">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="text-center md:text-left space-y-1">
-            <p className="text-xs font-black tracking-widest text-slate-600 dark:text-slate-300 leading-none">
-              Chikitsa Sahayak
+            <p className="text-lg font-black text-brand-gold font-serif-brand tracking-tight">
+              Chikitsa Sahayak™
             </p>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-1 uppercase tracking-widest">
-              CLINICAL DECISION SUPPORT
+            <p className="text-[10px] text-slate-500 dark:text-slate-450 font-semibold uppercase tracking-wider">
+              © 2026 Chikitsa Sahayak
             </p>
           </div>
 
