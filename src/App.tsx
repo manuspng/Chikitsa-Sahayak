@@ -202,14 +202,6 @@ export default function App() {
 
         <div className="w-full max-w-none px-4 sm:px-8 md:px-12 py-3 flex items-center justify-between relative z-10">
           <div className="flex items-center gap-4">
-            <div className="w-[68px] h-[68px] rounded-2xl overflow-hidden flex items-center justify-center shadow-lg border border-slate-800/10 bg-white">
-              <img 
-                src={logoImg} 
-                alt="Chikitsa Sahayak Logo" 
-                className="w-full h-full object-contain p-0.5 select-none pointer-events-none"
-                referrerPolicy="no-referrer"
-              />
-            </div>
             <div className="flex flex-col">
               <h1 className="text-lg font-black tracking-wider text-white leading-none">
                 Chikitsa Sahayak
@@ -231,18 +223,7 @@ export default function App() {
               {colorScheme === "standard" ? <Moon size={14} /> : <Sun size={14} />}
             </button>
 
-            {/* Search toggler button */}
-            <button
-              onClick={() => setSearchOpen(!searchOpen)}
-              className={`p-1.5 rounded-lg border transition-all cursor-pointer flex items-center justify-center w-8 h-8 shrink-0 ${
-                searchOpen 
-                  ? "bg-emerald-500 border-emerald-400 text-slate-950 shadow-md" 
-                  : "border-slate-800/40 bg-slate-950/50 text-slate-400 hover:text-white hover:border-slate-750"
-              }`}
-              title="Search Index Criteria & Logs"
-            >
-              <Search size={14} />
-            </button>
+
 
             {/* About button */}
             <button
