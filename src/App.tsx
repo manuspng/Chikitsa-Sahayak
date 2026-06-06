@@ -211,8 +211,8 @@ export default function App() {
               />
             </div>
             <div className="flex flex-col">
-              <h1 className="text-lg font-black tracking-wider uppercase text-white leading-none">
-                CHIKITSA SAHAYAK
+              <h1 className="text-lg font-black tracking-wider text-white leading-none">
+                Chikitsa Sahayak
               </h1>
               <div className="flex items-center gap-1.5 mt-1.5">
                 <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
@@ -555,11 +555,11 @@ export default function App() {
       <footer className="border-t border-slate-200/50 dark:border-slate-800/80 bg-white/40 dark:bg-slate-900/30 backdrop-blur-sm py-8 px-4 sm:px-8 mt-12 transition-all duration-300">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="text-center md:text-left space-y-1">
-            <p className="text-xs font-black tracking-widest uppercase text-slate-600 dark:text-slate-300 leading-none">
-              CHIKITSA SAHAYAK
+            <p className="text-xs font-black tracking-widest text-slate-600 dark:text-slate-300 leading-none">
+              Chikitsa Sahayak
             </p>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-1">
-              HEPATIC Diagnostics Platform &copy; {new Date().getFullYear()} • Secure Decision-Support Suite
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-1 uppercase tracking-widest">
+              CLINICAL DECISION SUPPORT
             </p>
           </div>
 
@@ -620,7 +620,7 @@ export default function App() {
         <div className="fixed inset-0 z-55 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-fade-in">
           <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white dark:bg-[#0c1020] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden animate-zoom-in">
             {/* Modal Header Decorated Line */}
-            <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#0d9488] to-emerald-600 z-10" />
+            <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-emerald-500 via-[#2d5a37] to-emerald-600 z-10" />
 
             <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 scrollbar-thin">
               {/* Close Button */}
@@ -631,70 +631,146 @@ export default function App() {
                 <X size={16} />
               </button>
 
-              {/* Title & Brand heading */}
-              <div className="flex items-start gap-4">
-                <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 rounded-xl">
-                  <HeartPulse size={24} className="animate-pulse" />
+              {/* Logo & Application Title */}
+              <div className="text-center space-y-3 pt-2">
+                <div className="w-16 h-16 mx-auto rounded-xl overflow-hidden flex items-center justify-center border border-slate-200/80 dark:border-slate-700/60 bg-white p-1">
+                  <img 
+                    src={logoImg} 
+                    alt="Chikitsa Sahayak Logo" 
+                    className="w-full h-full object-contain select-none pointer-events-none"
+                    referrerPolicy="no-referrer"
+                  />
                 </div>
-                <div>
-                  <h3 className="text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight text-justify">
-                    ABOUT CHIKITSA SAHAYAK
+                <div className="space-y-1">
+                  <h3 className="text-lg font-black text-brand-gold font-serif-brand tracking-tight">
+                    Chikitsa Sahayak™
                   </h3>
-                  <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold uppercase tracking-widest mt-0.5">
-                    Clinical Decision-Support Suite
+                  <p className="text-[10px] text-slate-500 dark:text-slate-450 font-semibold uppercase tracking-wider">
+                    © 2026 Chikitsa Sahayak
                   </p>
+                </div>
+                {/* Attribution */}
+                <div className="text-xs pt-1">
+                  <p className="text-[10px] text-slate-400 uppercase tracking-widest leading-none">An initiative by</p>
+                  <p className="font-bold text-slate-800 dark:text-slate-200 mt-1">Dr. M. P. Singh</p>
                 </div>
               </div>
 
-              {/* Educational info grids */}
-              <div className="space-y-4">
-                <p className="text-xs text-slate-600 dark:text-slate-350 leading-relaxed text-justify">
-                  Chikitsa Sahayak is a state-of-the-art hepatic assessment platform designed to deliver professional decision-support. It integrates validated biological guidelines and advanced predictive indexes to support early hepatopathy screening and disease staging.
+              <hr className="border-slate-100 dark:border-slate-800/80" />
+
+              {/* Main Description */}
+              <div className="space-y-4 text-xs text-slate-600 dark:text-slate-300 leading-relaxed text-justify">
+                <p>
+                  Chikitsa Sahayak is an amateur initiative aimed at providing simple solutions to simple but important healthcare-related problems. It combines practical tools, calculators, reference resources, and utilities that may help make routine educational and clinical tasks more convenient.
                 </p>
 
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 mt-4 border-b border-slate-100 dark:border-slate-800 pb-1.5">
-                  Validated Scoring & Staging Systems
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                  <div className="bg-slate-50 dark:bg-slate-900/30 p-3.5 rounded-xl border border-slate-100 dark:border-slate-800">
-                    <span className="text-xs font-extrabold text-slate-900 dark:text-white block text-left">FIB-4 Index</span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1 leading-relaxed text-justify">
-                      Combines Age, AST, ALT, and Platelet levels. Highly sensitive for ruling in/out liver cirrhosis and advanced fibrosis.
-                    </span>
-                  </div>
-                  <div className="bg-slate-50 dark:bg-slate-900/30 p-3.5 rounded-xl border border-slate-100 dark:border-slate-800">
-                    <span className="text-xs font-extrabold text-slate-900 dark:text-white block text-left">APRI Ratio</span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1 leading-relaxed text-justify">
-                      AST-to-Platelet Ratio Index. Broadly used internationally for rapid staging of chronic hepatitis pathology.
-                    </span>
-                  </div>
-                  <div className="bg-slate-55 dark:bg-slate-900/30 p-3.5 rounded-xl border border-slate-100 dark:border-slate-800">
-                    <span className="text-xs font-extrabold text-slate-900 dark:text-white block text-left">MELD Score</span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1 leading-relaxed text-justify">
-                      Model for End-Stage Liver Disease. Objectively assesses risk severity and survival prognostic status.
-                    </span>
-                  </div>
-                  <div className="bg-slate-55 dark:bg-slate-900/30 p-3.5 rounded-xl border border-slate-100 dark:border-slate-800">
-                    <span className="text-xs font-extrabold text-slate-900 dark:text-white block text-left">Child-Pugh Grouping</span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1 leading-relaxed text-justify">
-                      Classic diagnostic tool evaluating serum biomarkers and patient status (Ascites/Encephalopathy) for chronic pathology.
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-4 bg-emerald-500/5 dark:bg-emerald-500/10 rounded-xl border border-emerald-500/15 text-xs text-slate-600 dark:text-slate-300 leading-relaxed text-justify space-y-2">
-                  <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-emerald-400">
-                    <ShieldPlus size={14} />
-                    <span>Diagnostics Assistance Mode</span>
-                  </div>
+                {/* Purpose Section */}
+                <div className="space-y-2">
+                  <h4 className="font-black text-slate-800 dark:text-slate-200 uppercase tracking-wide text-[11px]">
+                    Purpose of the Application
+                  </h4>
                   <p>
-                    By connecting a Gemini Flash, OpenAI, Anthropic Claude, or DeepSeek API Key, clinicians can activate reports analysis. The system parses uploaded liver function screens (LFTs, CBCs) dynamically to extract parameters and display medical advice in real-time.
+                    Many clinical scores and assessment tools are simple in principle but can be difficult to remember, calculate, or apply consistently during routine practice. The application aims to make these tools readily accessible and easier to use.
                   </p>
                 </div>
 
-                <p className="text-[10px] text-slate-400 dark:text-slate-500 leading-normal text-justify">
-                  <strong>Regulatory Disclaimer:</strong> Keep in mind that clinical scoring systems and electronic diagnostic helpers are intended as diagnostic companions only. All outputs must be validated by a licensed gastroenterology or hepatology specialist prior to treating patient cohorts.
-                </p>
+                <hr className="border-slate-100 dark:border-slate-800/80" />
+
+                {/* Key Features Section */}
+                <div className="space-y-3">
+                  <h4 className="font-black text-slate-800 dark:text-slate-200 uppercase tracking-wide text-[11px]">
+                    Key Features
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div className="bg-slate-50 dark:bg-slate-900/30 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80">
+                      <span className="text-xs font-bold text-slate-900 dark:text-white block">FIB-4 Index</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1">
+                        A non-invasive metric derived from age, AST, ALT, and platelet count to help screen for liver fibrosis.
+                      </span>
+                    </div>
+
+                    <div className="bg-slate-50 dark:bg-slate-900/30 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80">
+                      <span className="text-xs font-bold text-slate-900 dark:text-white block">APRI Score</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1">
+                        AST-to-Platelet Ratio Index, providing a basic, clear calculation tool for hepatic scarring assessments.
+                      </span>
+                    </div>
+
+                    <div className="bg-slate-50 dark:bg-slate-900/30 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80">
+                      <span className="text-xs font-bold text-slate-900 dark:text-white block">BARD Score</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1">
+                        A prediction score weighting BMI, AST/ALT ratio, and type 2 diabetes status to assess fibrotic risks.
+                      </span>
+                    </div>
+
+                    <div className="bg-slate-50 dark:bg-slate-900/30 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80">
+                      <span className="text-xs font-bold text-slate-900 dark:text-white block">MELD Score</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1">
+                        A score system used to evaluate the severity of chronic liver disease based on objective laboratory indicators.
+                      </span>
+                    </div>
+
+                    <div className="bg-slate-50 dark:bg-slate-900/30 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80">
+                      <span className="text-xs font-bold text-slate-900 dark:text-white block">Child-Pugh Classification</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-450 block mt-1">
+                        A prognosis grading grid evaluating bilirubin, albumin, INR, ascites, and hepatic encephalopathy severity.
+                      </span>
+                    </div>
+
+                    <div className="bg-slate-50 dark:bg-slate-900/30 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80">
+                      <span className="text-xs font-bold text-slate-900 dark:text-white block">Metabolic Syndrome Risk Assessment</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1">
+                        A quick reference tracking standard metrics of cardiometabolic and fatty liver disease development risk.
+                      </span>
+                    </div>
+
+                    <div className="bg-slate-50 dark:bg-slate-900/30 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80">
+                      <span className="text-xs font-bold text-slate-900 dark:text-white block">BMI Calculator</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1">
+                        A standard mass tracker module matching physiological indicators instantly for daily tracking convenience.
+                      </span>
+                    </div>
+
+                    <div className="bg-slate-50 dark:bg-slate-900/30 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80">
+                      <span className="text-xs font-bold text-slate-900 dark:text-white block">CBC Interpretation Support</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1">
+                        A basic supportive overview assisting the translation of blood parameters and platelet thresholds.
+                      </span>
+                    </div>
+
+                    <div className="bg-slate-50 dark:bg-slate-900/30 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80">
+                      <span className="text-xs font-bold text-slate-900 dark:text-white block">Albumin-Creatinine Ratio (ACR) Assessment</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1">
+                        A clean reference screen assisting standard microalbuminuria assessments in chronic patients.
+                      </span>
+                    </div>
+
+                    <div className="bg-slate-50 dark:bg-slate-900/30 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80">
+                      <span className="text-xs font-bold text-slate-900 dark:text-white block">AI-Assisted Report Analysis</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-1">
+                        Optional integration allowing user-provided API keys to assist in parsing standard report values for educational purposes.
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <hr className="border-slate-100 dark:border-slate-800/80" />
+
+                {/* Important Notice Section */}
+                <div className="p-4 bg-amber-500/5 dark:bg-amber-500/10 rounded-xl border border-amber-500/15 space-y-2">
+                  <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-amber-400 text-xs">
+                    <AlertTriangle size={14} className="text-amber-600 dark:text-amber-400" />
+                    <span>Important Notice</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed text-justify">
+                    The application is intended for educational, informational, and reference purposes only. Calculators, interpretations, and AI-generated outputs should always be reviewed alongside patient history, examination findings, investigations, clinical guidelines, and professional judgment. The application does not replace diagnosis, treatment decisions, or specialist consultation.
+                  </p>
+                </div>
+
+                {/* Closing */}
+                <div className="text-center pt-2 text-slate-500 dark:text-slate-450 text-[11px] font-semibold italic">
+                  Thank you for using Chikitsa Sahayak.
+                </div>
               </div>
 
               {/* Close Button Footer */}

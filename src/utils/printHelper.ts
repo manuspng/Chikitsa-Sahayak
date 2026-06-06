@@ -592,7 +592,7 @@ export function printClinicalReport(record: Partial<AnalysisRecord>) {
           <div>
             <div class="brand-logo">
               <img src="${finalLogoUrl}" alt="Logo" />
-              <div class="logo-text">CHIKITSA SAHAYAK</div>
+              <div class="logo-text">Chikitsa Sahayak</div>
             </div>
             <div class="brand-tagline">Clinical Decision-Support</div>
           </div>

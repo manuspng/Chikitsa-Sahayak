@@ -4,6 +4,8 @@
 @theme {
   --font-sans: "Outfit", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-serif-brand: "Times New Roman", Times, Georgia, serif;
+  --color-brand-gold: #a47523;
 }
 
 @layer utilities {
