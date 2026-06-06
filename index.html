@@ -7,37 +7,25 @@
     
     <!-- Home screen and shortcut branding icons -->
     <link rel="manifest" href="/manifest.json" />
-    <link rel="icon" type="image/png" href="/apple-touch-icon.png" />
-    <link rel="shortcut icon" type="image/png" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="57x57" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="72x72" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="76x76" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="114x114" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="120x120" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="144x144" href="/apple-touch-icon.png" />
     <link rel="apple-touch-icon" sizes="152x152" href="/apple-touch-icon.png" />
     <link rel="apple-touch-icon" sizes="167x167" href="/apple-touch-icon.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <script>
-      (function() {
-        var img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.src = '/apple-touch-icon.png';
-        img.onload = function() {
-          try {
-            var canvas = document.createElement('canvas');
-            canvas.width = 180;
-            canvas.height = 180;
-            var ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, 180, 180);
-            var dataURL = canvas.toDataURL('image/png');
-            
-            // Dynamic PNG override for WebKit legacy shortcut handlers
-            var touchIcons = document.querySelectorAll('link[rel="apple-touch-icon"]');
-            touchIcons.forEach(function(el) {
-              el.setAttribute('href', dataURL);
-            });
-          } catch (e) {
-            console.warn('Dynamic apple-touch-icon PNG conversion deferred:', e);
-          }
-        };
-      })();
-    </script>
+    <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png" />
+    
+    <!-- PWA core application indicators -->
+    <meta name="theme-color" content="#0d9488" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
