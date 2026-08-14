@@ -8,7 +8,7 @@ import MetricCard from "./MetricCard";
 import Tesseract from "tesseract.js";
 import { preprocessImageForOcr } from "../utils/ocrPreprocessing";
 import { parseCbcReport } from "../utils/labReportParser";
-import { runGeminiAnalyze, runGeminiExtractReport } from "../utils/geminiClient";
+import { runGeminiAnalyze, runGeminiExtractReport, getProviderDisplayName } from "../utils/geminiClient";
 import CameraModal from "./CameraModal";
 
 function getOfflineCbcSummary(inputs: CBCInputs, results: CBCResults): string {
@@ -86,16 +86,9 @@ export default function CbcAnalyzer({ onAddRecord }: CbcAnalyzerProps) {
   const [isVerifiedCheck, setIsVerifiedCheck] = useState(false);
 
   // Mapped dynamic AI provider translations
-  const currentProvider = localStorage.getItem("selected_ai_provider") || "gemini";
-  const providerNames: Record<string, string> = {
-    gemini: "Gemini Flash",
-    groq: "Groq Llama",
-    openrouter: "OpenRouter Flash",
-    openai: "OpenAI GPT-4o",
-    claude: "Claude Haiku",
-    deepseek: "DeepSeek Expert",
-  };
-  const activeProviderName = providerNames[currentProvider] || "Clinical AI";
+  const currentProvider = localStorage.getItem("selected_ai_provider") || "auto";
+  const activeProviderName = getProviderDisplayName(currentProvider);
+  const [aiMeta, setAiMeta] = useState<{ providerUsed?: string; wasFallback?: boolean; modelUsed?: string } | null>(null);
 
   // Multi-page image queue
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -224,11 +217,16 @@ Calculated Markers:
 
 Please write an expert, professional clinical interpretation of these results. Mention the implications for hepatic portal hypertension (if platelets are significantly low), iron or nutrient profiles, systemic inflammation flags, or any other findings.`;
 
-      const provider = localStorage.getItem("selected_ai_provider") || "gemini";
+      const provider = localStorage.getItem("selected_ai_provider") || "auto";
       const data = await runGeminiAnalyze("cbc", prompt, provider);
 
       if (data && data.insight) {
         setAiInsight(data.insight);
+        setAiMeta({
+          providerUsed: data.providerUsed,
+          wasFallback: data.wasFallback,
+          modelUsed: data.modelUsed
+        });
         
         // Dynamically update the newly generated record inside history to reflect current AiInsight
         onAddRecord({
@@ -1198,9 +1196,16 @@ Please write an expert, professional clinical interpretation of these results. M
 
               {aiInsight && (
                 <div style={{ backgroundColor: "#ffffff" }} className="space-y-2 p-4 border-2 border-slate-300 rounded-2xl shadow-xs">
-                  <span style={{ color: "#065f46" }} className="text-xs uppercase font-black tracking-widest block">
-                    Clinical AI Analysis ({activeProviderName})
-                  </span>
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <span style={{ color: "#065f46" }} className="text-xs uppercase font-black tracking-widest block">
+                      Clinical AI Analysis ({getProviderDisplayName(aiMeta?.providerUsed || currentProvider)})
+                    </span>
+                    {aiMeta?.wasFallback && (
+                      <span className="text-[10px] bg-amber-100 text-amber-950 border-2 border-amber-400 px-2 py-0.5 rounded-lg font-black uppercase tracking-wider">
+                        ⚡ Auto-Switched Agent
+                      </span>
+                    )}
+                  </div>
                   <div style={{ color: "#000000" }} className="text-xs sm:text-sm whitespace-pre-wrap leading-relaxed text-justify pr-2 max-h-96 overflow-y-auto font-medium">
                     {aiInsight}
                   </div>

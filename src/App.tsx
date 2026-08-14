@@ -182,9 +182,9 @@ export default function App() {
   // Dynamic AI Provider States
   const [selectedProvider, setSelectedProvider] = useState<string>(() => {
     try {
-      return localStorage.getItem("selected_ai_provider") || "gemini";
+      return localStorage.getItem("selected_ai_provider") || "auto";
     } catch {
-      return "gemini";
+      return "auto";
     }
   });
 
@@ -1057,30 +1057,62 @@ export default function App() {
 
               {/* Provider Selection Dropdown */}
               <div className="space-y-2">
-                <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  Select Active AI Engine
+                <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  Select Active AI Engine Mode
                 </label>
                 <div className="relative">
                   <select
                     value={selectedProvider}
                     onChange={(e) => setSelectedProvider(e.target.value)}
-                    className="w-full pl-4 pr-10 py-2.5 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 outline-none appearance-none cursor-pointer focus:border-emerald-500"
+                    className="w-full pl-4 pr-10 py-2.5 bg-slate-50 dark:bg-slate-900/40 border-2 border-slate-300 dark:border-slate-800 rounded-xl text-xs font-black text-slate-950 dark:text-slate-100 outline-none appearance-none cursor-pointer focus:border-emerald-500"
                   >
-                    <option value="gemini">Gemini Flash (Built-in Support)</option>
-                    <option value="groq">Groq Llama (High-Speed & Adaptive)</option>
+                    <option value="auto">✨ Auto (Smart Multi-Agent Cascade - Recommended)</option>
+                    <option value="gemini">Gemini Flash (Built-in Support / Zero-Cost)</option>
+                    <option value="groq">Groq Llama 3.3 70B (High-Speed Cloud)</option>
                     <option value="openrouter">OpenRouter (Unified Multi-Model)</option>
-                    <option value="openai">OpenAI GPT-4o (High-Precision Diagnostics)</option>
-                    <option value="claude">Claude Haiku (Exquisite Medical Detail)</option>
-                    <option value="deepseek">DeepSeek Expert (Robust Clinical Reasoning)</option>
+                    <option value="openai">OpenAI GPT-4o-mini (Precision Diagnostics)</option>
+                    <option value="claude">Claude 3.5 Haiku (Dense Clinical Detail)</option>
+                    <option value="deepseek">DeepSeek Chat (Clinical Reasoning)</option>
                   </select>
-                  <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500">
+                  <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-700">
                     <ChevronDown size={14} />
                   </div>
                 </div>
               </div>
 
-              {/* Provider Details, Key Links & Warning Trigger */}
-              {(() => {
+              {/* Multi-Agent Cascade Status or Provider Details */}
+              {selectedProvider === "auto" ? (
+                <div className="space-y-3 pt-1">
+                  <div className="bg-emerald-50 border-2 border-emerald-300 p-3.5 rounded-xl text-xs space-y-2 text-left">
+                    <div className="flex items-center gap-2 font-black text-emerald-950">
+                      <ShieldPlus size={16} className="text-emerald-700" />
+                      <span>Smart Multi-Agent Failover Active</span>
+                    </div>
+                    <p className="text-slate-900 font-bold leading-relaxed">
+                      The application will automatically test and cycle through all available AI engines in priority order. If any provider experiences rate limits, errors, or lacks a key, it seamlessly switches to the next available agent.
+                    </p>
+                    <div className="pt-2 border-t border-emerald-200 space-y-1 text-[11px] font-mono font-bold">
+                      <div className="text-emerald-900 font-black uppercase text-[10px]">Failover Pipeline Priority:</div>
+                      <div className="flex items-center gap-1.5 flex-wrap text-slate-800">
+                        <span className="px-2 py-0.5 rounded bg-white border border-emerald-300 font-bold">1. Gemini Flash</span>
+                        <span>→</span>
+                        <span className={`px-2 py-0.5 rounded border font-bold ${keys.groq ? "bg-emerald-100 text-emerald-950 border-emerald-400 font-black" : "bg-white text-slate-600 border-slate-300"}`}>2. Groq Llama {keys.groq ? "✓" : ""}</span>
+                        <span>→</span>
+                        <span className={`px-2 py-0.5 rounded border font-bold ${keys.openrouter ? "bg-emerald-100 text-emerald-950 border-emerald-400 font-black" : "bg-white text-slate-600 border-slate-300"}`}>3. OpenRouter {keys.openrouter ? "✓" : ""}</span>
+                        <span>→</span>
+                        <span className={`px-2 py-0.5 rounded border font-bold ${keys.deepseek ? "bg-emerald-100 text-emerald-950 border-emerald-400 font-black" : "bg-white text-slate-600 border-slate-300"}`}>4. DeepSeek {keys.deepseek ? "✓" : ""}</span>
+                        <span>→</span>
+                        <span className={`px-2 py-0.5 rounded border font-bold ${keys.openai ? "bg-emerald-100 text-emerald-950 border-emerald-400 font-black" : "bg-white text-slate-600 border-slate-300"}`}>5. OpenAI {keys.openai ? "✓" : ""}</span>
+                        <span>→</span>
+                        <span className="px-2 py-0.5 rounded bg-emerald-200 text-emerald-950 border border-emerald-400 font-black">6. Public Interest Engine (100% Reliable)</span>
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-slate-700 font-bold text-left">
+                    Tip: To add personal keys for any provider in the cascade, select the specific provider from the dropdown above and paste your key.
+                  </p>
+                </div>
+              ) : (() => {
                 const config: Record<string, { desc: string; url: string; label: string; placeholder: string }> = {
                   gemini: {
                     desc: "Official Gemini 2.5/3.5 Flash engine for medical report analysis.",

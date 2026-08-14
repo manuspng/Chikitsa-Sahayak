@@ -3,7 +3,7 @@ import { HelpCircle, Save, Check, FileText, AlertCircle, RefreshCw, Layers, Tras
 import { BMIInputs, BMIResults, AnalysisRecord } from "../types";
 import { calculateBMI } from "../utils/calculations";
 import { printClinicalReport } from "../utils/printHelper";
-import { runGeminiAnalyze } from "../utils/geminiClient";
+import { runGeminiAnalyze, getProviderDisplayName } from "../utils/geminiClient";
 import ScoreGauge from "./ScoreGauge";
 import MetricCard from "./MetricCard";
 
@@ -42,16 +42,9 @@ export default function BmiTracker({ onAddRecord }: BmiTrackerProps) {
   const [currentRecordId, setCurrentRecordId] = useState<string | null>(null);
 
   // Mapped dynamic AI provider translations
-  const currentProvider = localStorage.getItem("selected_ai_provider") || "gemini";
-  const providerNames: Record<string, string> = {
-    gemini: "Gemini Flash",
-    groq: "Groq Llama",
-    openrouter: "OpenRouter Flash",
-    openai: "OpenAI GPT-4o",
-    claude: "Claude Haiku",
-    deepseek: "DeepSeek Expert",
-  };
-  const activeProviderName = providerNames[currentProvider] || "Clinical AI";
+  const currentProvider = localStorage.getItem("selected_ai_provider") || "auto";
+  const activeProviderName = getProviderDisplayName(currentProvider);
+  const [aiMeta, setAiMeta] = useState<{ providerUsed?: string; wasFallback?: boolean; modelUsed?: string } | null>(null);
 
   const handleInputChange = (key: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [key]: value }));
@@ -145,11 +138,16 @@ Calculated Metabolic Markers:
 
 Please write an expert, professional clinical interpretation of this patient's metabolic risk factors as they pertain to fat deposition, Non-Alcoholic Fatty Liver Disease (NAFLD/MASH), insulin resistance, and overall cardiovascular fitness. Provide physical recommendations for diet changes, weight tracking, or abdominal exercise regimes.`;
 
-      const provider = localStorage.getItem("selected_ai_provider") || "gemini";
+      const provider = localStorage.getItem("selected_ai_provider") || "auto";
       const data = await runGeminiAnalyze("bmi", prompt, provider);
 
       if (data && data.insight) {
         setAiInsight(data.insight);
+        setAiMeta({
+          providerUsed: data.providerUsed,
+          wasFallback: data.wasFallback,
+          modelUsed: data.modelUsed
+        });
         
         // Dynamically update the newly generated record inside history to reflect current AiInsight
         onAddRecord({
@@ -577,9 +575,16 @@ Please write an expert, professional clinical interpretation of this patient's m
 
               {aiInsight && (
                 <div style={{ backgroundColor: "#ffffff" }} className="space-y-2 p-4 border-2 border-slate-300 rounded-2xl shadow-xs">
-                  <span style={{ color: "#065f46" }} className="text-xs uppercase font-black tracking-widest block">
-                    Clinical AI Analysis ({activeProviderName})
-                  </span>
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <span style={{ color: "#065f46" }} className="text-xs uppercase font-black tracking-widest block">
+                      Clinical AI Analysis ({getProviderDisplayName(aiMeta?.providerUsed || currentProvider)})
+                    </span>
+                    {aiMeta?.wasFallback && (
+                      <span className="text-[10px] bg-amber-100 text-amber-950 border-2 border-amber-400 px-2 py-0.5 rounded-lg font-black uppercase tracking-wider">
+                        ⚡ Auto-Switched Agent
+                      </span>
+                    )}
+                  </div>
                   <div style={{ color: "#000000" }} className="text-xs sm:text-sm whitespace-pre-wrap leading-relaxed text-justify pr-2 max-h-96 overflow-y-auto font-medium">
                     {aiInsight}
                   </div>

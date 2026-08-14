@@ -319,10 +319,194 @@ All laboratory metrics below have been parsed from source data. Please verify ag
   }
 }
 
+export interface AnalysisResponse {
+  insight: string;
+  providerUsed: string;
+  modelUsed?: string;
+  wasFallback: boolean;
+  failoverChain?: { provider: string; error?: string; status: "success" | "failed" }[];
+}
+
+export function getProviderDisplayName(providerId: string): string {
+  const map: Record<string, string> = {
+    auto: "Auto (Smart Multi-Agent Cascade)",
+    gemini: "Gemini 2.5 Flash",
+    groq: "Groq (Llama 3.3 70B)",
+    openrouter: "OpenRouter Multi-Model",
+    openai: "OpenAI GPT-4o-mini",
+    claude: "Claude 3.5 Haiku",
+    deepseek: "DeepSeek Chat",
+    public_interest: "Public Interest Clinical Engine",
+  };
+  return map[providerId] || providerId.toUpperCase();
+}
+
 /**
- * Centralized analyzer request that checks backend readiness, and falls back to browser direct calls
+ * Executes an individual provider attempt directly on the client side.
  */
-export async function runGeminiAnalyze(analysisType: string, prompt: string, provider: string): Promise<{ insight: string }> {
+async function callSingleProvider(
+  provider: string,
+  analysisType: string,
+  prompt: string,
+  keys: {
+    geminiKey: string;
+    groqKey: string;
+    openrouterKey: string;
+    openaiKey: string;
+    claudeKey: string;
+    deepseekKey: string;
+  }
+): Promise<{ insight: string; modelUsed: string }> {
+  let systemInstruction = DEFAULT_INSTRUCTION;
+  if (analysisType === "lft") systemInstruction = LFT_INSTRUCTION;
+  if (analysisType === "cbc") systemInstruction = CBC_INSTRUCTION;
+
+  if (provider === "gemini") {
+    if (keys.geminiKey) {
+      const txt = await callDirectGeminiAnalyze(prompt, keys.geminiKey, analysisType);
+      return { insight: txt, modelUsed: "gemini-2.5-flash" };
+    }
+    // If no key, default to public interest clinical generator
+    return { insight: generatePublicInterestClinicalReport(analysisType, prompt), modelUsed: "public-interest-engine" };
+  }
+
+  if (provider === "groq") {
+    if (!keys.groqKey) throw new Error("Groq API Key is not configured.");
+    const url = "https://api.groq.com/openai/v1/chat/completions";
+    const bodyPayload = {
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        { role: "system", content: systemInstruction },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.2,
+      max_tokens: 1024
+    };
+    logGeminiRequest("Direct Multi-Provider (Groq)", url, bodyPayload.model, true, bodyPayload);
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${keys.groqKey}` },
+      body: JSON.stringify(bodyPayload)
+    });
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`Groq API error (${res.status}): ${err.slice(0, 140)}`);
+    }
+    const data = await res.json();
+    const txt = data.choices?.[0]?.message?.content;
+    if (!txt) throw new Error("Received empty response from Groq.");
+    return { insight: txt, modelUsed: "llama-3.3-70b-versatile" };
+  }
+
+  if (provider === "openrouter") {
+    if (!keys.openrouterKey) throw new Error("OpenRouter API Key is not configured.");
+    const url = "https://openrouter.ai/api/v1/chat/completions";
+    const bodyPayload = {
+      model: "google/gemini-2.5-flash",
+      messages: [
+        { role: "system", content: systemInstruction },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.2,
+      max_tokens: 1024
+    };
+    logGeminiRequest("Direct Multi-Provider (OpenRouter)", url, bodyPayload.model, true, bodyPayload);
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${keys.openrouterKey}` },
+      body: JSON.stringify(bodyPayload)
+    });
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`OpenRouter API error (${res.status}): ${err.slice(0, 140)}`);
+    }
+    const data = await res.json();
+    const txt = data.choices?.[0]?.message?.content;
+    if (!txt) throw new Error("Received empty response from OpenRouter.");
+    return { insight: txt, modelUsed: "openrouter/gemini-2.5-flash" };
+  }
+
+  if (provider === "deepseek") {
+    if (!keys.deepseekKey) throw new Error("DeepSeek API Key is not configured.");
+    const url = "https://api.deepseek.com/chat/completions";
+    const bodyPayload = {
+      model: "deepseek-chat",
+      messages: [
+        { role: "system", content: systemInstruction },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.2,
+      max_tokens: 1024
+    };
+    logGeminiRequest("Direct Multi-Provider (DeepSeek)", url, bodyPayload.model, true, bodyPayload);
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${keys.deepseekKey}` },
+      body: JSON.stringify(bodyPayload)
+    });
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`DeepSeek API error (${res.status}): ${err.slice(0, 140)}`);
+    }
+    const data = await res.json();
+    const txt = data.choices?.[0]?.message?.content;
+    if (!txt) throw new Error("Received empty response from DeepSeek.");
+    return { insight: txt, modelUsed: "deepseek-chat" };
+  }
+
+  if (provider === "openai") {
+    if (!keys.openaiKey) throw new Error("OpenAI API Key is not configured.");
+    const url = "https://api.openai.com/v1/chat/completions";
+    const bodyPayload = {
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: systemInstruction },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.2,
+      max_tokens: 1024
+    };
+    logGeminiRequest("Direct Multi-Provider (OpenAI)", url, bodyPayload.model, true, bodyPayload);
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${keys.openaiKey}` },
+      body: JSON.stringify(bodyPayload)
+    });
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`OpenAI API error (${res.status}): ${err.slice(0, 140)}`);
+    }
+    const data = await res.json();
+    const txt = data.choices?.[0]?.message?.content;
+    if (!txt) throw new Error("Received empty response from OpenAI.");
+    return { insight: txt, modelUsed: "gpt-4o-mini" };
+  }
+
+  if (provider === "claude") {
+    if (!keys.claudeKey) throw new Error("Claude API Key is not configured.");
+    // Claude requires backend or direct anthropic proxy
+    throw new Error("Direct client Claude calls require proxy headers.");
+  }
+
+  if (provider === "public_interest") {
+    return {
+      insight: generatePublicInterestClinicalReport(analysisType, prompt),
+      modelUsed: "public-interest-clinical-engine"
+    };
+  }
+
+  throw new Error(`Unrecognized AI provider: ${provider}`);
+}
+
+/**
+ * Centralized analyzer request that checks backend readiness, 
+ * and automatically cascades across all available AI providers.
+ */
+export async function runGeminiAnalyze(
+  analysisType: string,
+  prompt: string,
+  preferredProvider: string = "auto"
+): Promise<AnalysisResponse> {
   const geminiKey = localStorage.getItem("user_gemini_api_key") || "";
   const groqKey = localStorage.getItem("user_groq_api_key") || "";
   const openrouterKey = localStorage.getItem("user_openrouter_api_key") || "";
@@ -330,7 +514,25 @@ export async function runGeminiAnalyze(analysisType: string, prompt: string, pro
   const claudeKey = localStorage.getItem("user_claude_api_key") || "";
   const deepseekKey = localStorage.getItem("user_deepseek_api_key") || "";
 
-  // 1. Try backend server request first
+  const keys = { geminiKey, groqKey, openrouterKey, openaiKey, claudeKey, deepseekKey };
+  const failoverChain: { provider: string; error?: string; status: "success" | "failed" }[] = [];
+
+  // Determine candidate order based on preferredProvider and configured keys
+  let candidates: string[] = [];
+
+  if (preferredProvider !== "auto" && preferredProvider) {
+    candidates.push(preferredProvider);
+  }
+
+  // Multi-agent priority fallback list
+  const standardPriority = ["gemini", "groq", "openrouter", "deepseek", "openai", "public_interest"];
+  for (const p of standardPriority) {
+    if (!candidates.includes(p)) {
+      candidates.push(p);
+    }
+  }
+
+  // 1. Try Backend server if reachable for the preferred provider
   try {
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (geminiKey) headers["x-user-gemini-api-key"] = geminiKey;
@@ -341,10 +543,11 @@ export async function runGeminiAnalyze(analysisType: string, prompt: string, pro
     if (deepseekKey) headers["x-user-deepseek-api-key"] = deepseekKey;
 
     const targetUrl = getAbsoluteUrl("/api/gemini/analyze");
-    const payload = { analysisType, prompt, provider };
-    const hasAnyApiKey = !!(geminiKey || groqKey || openrouterKey || openaiKey || claudeKey || deepseekKey);
-
-    logGeminiRequest("Backend Analytical Request", targetUrl, provider === "gemini" ? "gemini-3.5-flash" : provider, hasAnyApiKey, payload);
+    const payload = { 
+      analysisType, 
+      prompt, 
+      provider: preferredProvider === "auto" ? "gemini" : preferredProvider 
+    };
 
     const response = await fetch(targetUrl, {
       method: "POST",
@@ -356,106 +559,63 @@ export async function runGeminiAnalyze(analysisType: string, prompt: string, pro
     if (response.ok && contentType.includes("json")) {
       const data = await response.json();
       if (data && data.insight) {
-        return { insight: data.insight };
+        return {
+          insight: data.insight,
+          providerUsed: preferredProvider === "auto" ? "gemini" : preferredProvider,
+          modelUsed: "backend-proxy",
+          wasFallback: false,
+          failoverChain: [{ provider: preferredProvider, status: "success" }]
+        };
       }
-    } else {
-      const respText = await response.text();
-      console.warn(`Backend responded with status ${response.status} (Not valid JSON):`, respText.slice(0, 150));
     }
-  } catch (err) {
-    console.warn("Backend /api/gemini/analyze unreachable/errored. Falling back to direct client-side integration.", err);
+  } catch (err: any) {
+    console.warn("Backend /api/gemini/analyze unreachable. Beginning Multi-Agent Client Cascade Failover...", err?.message || err);
   }
 
-  // 2. Client-side fallback if backend failed, timed out, or returned HTML (e.g. Vercel static router)
-  if (provider === "gemini") {
-    if (!geminiKey) {
-      return { insight: generatePublicInterestClinicalReport(analysisType, prompt) };
+  // 2. Client-Side Multi-Agent Cascade Loop
+  let lastError = "";
+  let isFirstAttempt = true;
+
+  for (const candidate of candidates) {
+    // Skip candidate if required key is missing (except gemini or public_interest)
+    if (candidate === "groq" && !groqKey) continue;
+    if (candidate === "openrouter" && !openrouterKey) continue;
+    if (candidate === "deepseek" && !deepseekKey) continue;
+    if (candidate === "openai" && !openaiKey) continue;
+    if (candidate === "claude" && !claudeKey) continue;
+
+    try {
+      console.log(`%c[CHIKITSA SAHAYAK - MULTI-AGENT CASCADE] Attempting: ${candidate.toUpperCase()}...`, "color: #3b82f6; font-weight: bold;");
+      const result = await callSingleProvider(candidate, analysisType, prompt, keys);
+
+      failoverChain.push({ provider: candidate, status: "success" });
+
+      return {
+        insight: result.insight,
+        providerUsed: candidate,
+        modelUsed: result.modelUsed,
+        wasFallback: !isFirstAttempt || (preferredProvider !== "auto" && candidate !== preferredProvider),
+        failoverChain
+      };
+    } catch (err: any) {
+      lastError = err?.message || String(err);
+      console.warn(`[MULTI-AGENT CASCADE] ${candidate} failed:`, lastError);
+      failoverChain.push({ provider: candidate, error: lastError, status: "failed" });
+      isFirstAttempt = false;
     }
-    const txt = await callDirectGeminiAnalyze(prompt, geminiKey, analysisType);
-    return { insight: txt };
   }
 
-  // Fallbacks for other client-configured providers if backend is inactive
-  let url = "";
-  let bodyPayload: any = null;
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  let systemInstruction = DEFAULT_INSTRUCTION;
-  if (analysisType === "lft") systemInstruction = LFT_INSTRUCTION;
-  if (analysisType === "cbc") systemInstruction = CBC_INSTRUCTION;
+  // Guaranteed fallback: Public Interest Clinical Engine
+  const publicReport = generatePublicInterestClinicalReport(analysisType, prompt);
+  failoverChain.push({ provider: "public_interest", status: "success" });
 
-  if (provider === "groq") {
-    if (!groqKey) throw new Error("Please configure your Groq API Key.");
-    url = "https://api.groq.com/openai/v1/chat/completions";
-    headers["Authorization"] = `Bearer ${groqKey}`;
-    bodyPayload = {
-      model: "llama-3.3-70b-versatile",
-      messages: [
-        { role: "system", content: systemInstruction },
-        { role: "user", content: prompt }
-      ],
-      temperature: 0.2,
-      max_tokens: 1024
-    };
-  } else if (provider === "openrouter") {
-    if (!openrouterKey) throw new Error("Please configure your OpenRouter API Key.");
-    url = "https://openrouter.ai/api/v1/chat/completions";
-    headers["Authorization"] = `Bearer ${openrouterKey}`;
-    bodyPayload = {
-      model: "google/gemini-2.5-flash",
-      messages: [
-        { role: "system", content: systemInstruction },
-        { role: "user", content: prompt }
-      ],
-      temperature: 0.2,
-      max_tokens: 1024
-    };
-  } else if (provider === "openai") {
-    if (!openaiKey) throw new Error("Please configure your OpenAI API Key.");
-    url = "https://api.openai.com/v1/chat/completions";
-    headers["Authorization"] = `Bearer ${openaiKey}`;
-    bodyPayload = {
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: systemInstruction },
-        { role: "user", content: prompt }
-      ],
-      temperature: 0.2,
-      max_tokens: 1024
-    };
-  } else if (provider === "deepseek") {
-    if (!deepseekKey) throw new Error("Please configure your DeepSeek API Key.");
-    url = "https://api.deepseek.com/chat/completions";
-    headers["Authorization"] = `Bearer ${deepseekKey}`;
-    bodyPayload = {
-      model: "deepseek-chat",
-      messages: [
-        { role: "system", content: systemInstruction },
-        { role: "user", content: prompt }
-      ],
-      temperature: 0.2,
-      max_tokens: 1024
-    };
-  } else {
-    throw new Error(`Provider fallback for ${provider} is not configured on the client side without a server.`);
-  }
-
-  logGeminiRequest(`Fallback Direct Multi-Provider Client (${provider})`, url, bodyPayload?.model || "unknown", true, bodyPayload);
-
-  const res = await fetch(url, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(bodyPayload)
-  });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Direct provider API call failed (Status ${res.status}): ${errText.slice(0, 150)}`);
-  }
-
-  const data = await res.json();
-  const txt = data.choices?.[0]?.message?.content;
-  if (!txt) throw new Error("Received empty response from fallback model provider.");
-  return { insight: txt };
+  return {
+    insight: publicReport,
+    providerUsed: "public_interest",
+    modelUsed: "public-interest-clinical-engine",
+    wasFallback: true,
+    failoverChain
+  };
 }
 
 /**
