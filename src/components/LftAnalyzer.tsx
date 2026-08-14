@@ -122,7 +122,8 @@ export default function LftAnalyzer({ onAddRecord }: LftAnalyzerProps) {
   const activeProviderName = getProviderDisplayName(currentProvider);
   const [aiMeta, setAiMeta] = useState<{ providerUsed?: string; wasFallback?: boolean; modelUsed?: string } | null>(null);
   
-  // Input refs for Mobile & PC (Upload Report & Camera)
+  // Input refs and files queue for Mobile & PC (Upload Report & Camera)
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [isWebcamOpen, setIsWebcamOpen] = useState<boolean>(false);
