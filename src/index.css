@@ -1,0 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Cormorant Garamond", Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --color-brand-gold: #A47523;
+  --color-brand-ink: #2C3333;
+  --color-brand-bg: #F2EFEB;
+}
+
+@layer utilities {
+  .font-serif {
+    font-family: var(--font-serif);
+  }
+
+  .bento-card {
+    background-color: #ffffff !important;
+    border: 2px solid #cbd5e1 !important;
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  }
+
+  .card-title {
+    color: #000000 !important;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 900;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .score-big {
+    @apply text-slate-950 dark:text-white font-serif;
+    font-size: 56px;
+    font-weight: 700;
+    line-height: 1;
+    margin: 8px 0;
+  }
+
+  .status-badge {
+    @apply bg-emerald-100 text-emerald-950 border border-emerald-400;
+    padding: 6px 12px;
+    border-radius: 99px;
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .bg-checkered-mint {
+    background-color: #F2EFEB;
+    background-image: 
+      linear-gradient(rgba(15, 23, 42, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(15, 23, 42, 0.05) 1px, transparent 1px);
+    background-size: 24px 24px;
+    color: #0f172a;
+  }
+
+  .bg-checkered-slate {
+    background-color: #F2EFEB;
+    background-image: 
+      linear-gradient(rgba(15, 23, 42, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(15, 23, 42, 0.05) 1px, transparent 1px);
+    background-size: 24px 24px;
+    color: #0f172a;
+  }
+}
+

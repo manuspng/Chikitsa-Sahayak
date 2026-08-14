@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <defs>
+    <!-- Vibrant Blue-to-Teal Gradient for the Circular Hand/Swoosh -->
+    <linearGradient id="blue-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0ea5e9" />
+      <stop offset="60%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#1d4ed8" />
+    </linearGradient>
+
+    <!-- Vibrant Green Gradient for the Leaf -->
+    <linearGradient id="green-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="50%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#34d399" />
+    </linearGradient>
+
+    <!-- Vibrant Emerald Gradient for the Medical Cross -->
+    <linearGradient id="cross-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+  </defs>
+
+  <!-- Clean, Solid White Background Card with Rounded Corners exactly like the upload -->
+  <rect width="400" height="400" rx="80" fill="#ffffff" />
+
+  <!-- Logo Emblem Grouped, Scaled and Centered perfectly in the upper part -->
+  <g transform="translate(100, 35) scale(2)">
+    <!-- Blue Crescent Swoosh (Hand & Embrace) -->
+    <path d="M 40,12 C 22,14 10,29 10,48 C 10,70 28,88 50,88 C 68,88 82,76 86,60 C 87,55 81,53 78,56 C 70,64 58,70 46,70 C 32,70 22,60 22,46 C 22,33 32,22 44,17 C 49,15 47,11 40,12 Z" fill="url(#blue-grad)" />
+
+    <!-- Smooth Supporting Hand Arc -->
+    <path d="M 46,70 C 60,70 74,62 82,50 C 85,46 80,41 76,44 C 68,50 56,54 44,54 C 34,54 28,46 28,38 C 28,34 30,30 33,27 C 36,24 33,19 29,21 C 22,25 18,33 18,42 C 18,58 30,70 46,70 Z" fill="url(#blue-grad)" opacity="0.85" />
+
+    <!-- Rounded Medical Cross -->
+    <path d="M 44,28 C 44,26.5 45.5,25 47,25 L 53,25 C 54.5,25 56,26.5 56,28 L 56,33 L 61,33 C 62.5,33 64,34.5 64,36 L 64,42 C 64,43.5 62.5,45 61,45 L 56,45 L 56,50 C 56,51.5 54.5,53 53,53 L 47,53 C 45.5,53 44,51.5 44,50 L 44,45 L 39,45 C 37.5,45 36,43.5 36,42 L 36,36 C 36,34.5 37.5,33 39,33 L 44,33 Z" fill="url(#cross-grad)" />
+
+    <!-- Elegant Green Leaf -->
+    <path d="M 64,44 C 64,44 71,30 76,26 C 81,22 84,20 84,20 C 84,20 83,24 79,29 C 75,34 68,46 68,46 C 68,46 72,43 76,43 C 80,43 83,46 83,50 C 83,55 78,59 72,59 C 66,59 62,54 62,49 C 62,46 64,44 64,44 Z" fill="url(#green-grad)" />
+    <path d="M 64,44 Q 71,37 79,29" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.6" />
+  </g>
+
+  <!-- Typography elements below symbol, matching the font structure & color of original design -->
+  <text x="200" y="295" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="800" font-size="46" fill="#0c2e5a" letter-spacing="-0.5">Chikitsa</text>
+  <text x="200" y="348" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-weight="800" font-size="46" fill="#0ba879" letter-spacing="-0.5">sahayak</text>
+</svg>
