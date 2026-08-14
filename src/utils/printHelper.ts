@@ -329,30 +329,84 @@ export function printClinicalReport(record: Partial<AnalysisRecord>) {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: #f8fafc;
-            padding: 12px 20px;
-            border-radius: 8px;
+            flex-wrap: wrap;
+            gap: 12px;
+            background-color: #f1f5f9;
+            padding: 12px 18px;
+            border-radius: 12px;
             margin-bottom: 24px;
-            border: 1px solid #e2e8f0;
+            border: 2px solid #cbd5e1;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
           }
 
-          .print-btn {
-            background-color: #2d5a37;
-            color: white;
-            border: none;
+          .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+          }
+
+          .back-btn {
+            background-color: #ffffff;
+            color: #0f172a;
+            border: 2px solid #94a3b8;
             padding: 8px 16px;
             font-size: 12px;
-            font-weight: 700;
-            border-radius: 6px;
+            font-weight: 800;
+            border-radius: 8px;
             cursor: pointer;
             font-family: inherit;
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+          }
+          .back-btn:hover {
+            background-color: #e2e8f0;
+            border-color: #475569;
+          }
+
+          .print-btn {
+            background-color: #15803d;
+            color: white;
+            border: 2px solid #166534;
+            padding: 8px 18px;
+            font-size: 12px;
+            font-weight: 800;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
           }
           .print-btn:hover {
-            background-color: #1b3d22;
+            background-color: #166534;
+          }
+
+          .floating-close-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #0f172a;
+            color: #ffffff;
+            border: 2px solid #334155;
+            padding: 10px 18px;
+            font-size: 12px;
+            font-weight: 800;
+            border-radius: 9999px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            z-index: 9999;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+          }
+          .floating-close-btn:hover {
+            background-color: #1e293b;
           }
 
           .brand-logo {
@@ -586,17 +640,32 @@ export function printClinicalReport(record: Partial<AnalysisRecord>) {
       </head>
       <body>
         <div class="print-header-bar no-print">
-          <span style="font-weight:600; font-size:12px; color:#475569;">
-            This report can be printed physical paper or exported as a high-density, vector-perfect clinical PDF file.
-          </span>
-          <button class="print-btn" onclick="window.print()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
-              <path d="M6 14h12v8H6z"/>
-            </svg>
-            <span>Print or Export PDF</span>
-          </button>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <button class="back-btn" onclick="handleGoBack()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+              </svg>
+              <span>← Back to Chikitsa Sahayak</span>
+            </button>
+            <span style="font-weight:700; font-size:12px; color:#334155;">
+              Clinical Report Preview
+            </span>
+          </div>
+
+          <div class="header-actions">
+            <button class="print-btn" onclick="window.print()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <path d="M6 14h12v8H6z"/>
+              </svg>
+              <span>Print or Save as PDF</span>
+            </button>
+          </div>
         </div>
+
+        <button class="floating-close-btn no-print" onclick="handleGoBack()" title="Close Report">
+          <span>✕ Close Report</span>
+        </button>
 
         <div class="doc-header">
           <div>
@@ -659,11 +728,25 @@ export function printClinicalReport(record: Partial<AnalysisRecord>) {
         </div>
         
         <script>
-          // Auto trigger trigger printing once script has loaded
+          function handleGoBack() {
+            try {
+              if (window.opener && !window.opener.closed) {
+                window.close();
+              } else if (window.history.length > 1) {
+                window.history.back();
+              } else {
+                window.close();
+              }
+            } catch(e) {
+              window.close();
+            }
+          }
+
+          // Auto trigger printing once script has loaded
           window.onload = function() {
             setTimeout(function() {
               window.print();
-            }, 300);
+            }, 350);
           }
         </script>
       </body>

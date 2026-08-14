@@ -84,9 +84,16 @@ export default function InstallPrompt() {
       } catch {}
     }
 
+    // 5. Allow manual trigger from anywhere via custom event
+    const handleOpenPrompt = () => {
+      setIsVisible(true);
+    };
+    window.addEventListener("open-install-prompt", handleOpenPrompt);
+
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
       window.removeEventListener("appinstalled", handleAppInstalled);
+      window.removeEventListener("open-install-prompt", handleOpenPrompt);
     };
   }, []);
 
@@ -98,7 +105,10 @@ export default function InstallPrompt() {
   };
 
   const handleNativeInstall = async () => {
-    if (!deferredPrompt) return;
+    if (!deferredPrompt) {
+      alert("To install, tap your browser's menu (⋮ or Share) and select 'Add to Home screen' or 'Install App'.");
+      return;
+    }
     
     // Trigger browser's native install dialog
     await deferredPrompt.prompt();
@@ -114,20 +124,6 @@ export default function InstallPrompt() {
       setIsVisible(false);
     });
   };
-
-  // If already installed, return null
-  if (isStandalone) return null;
-
-  // We only show Android/Desktop card if we have a valid deferredPrompt,
-  // or if it's iOS which requires manual guidance.
-  const canShowNativeInstall = deferredPrompt !== null;
-  const isIOS = platform === "ios";
-
-  if (!isIOS && !canShowNativeInstall && isVisible) {
-    // If visible is true but no native prompt is loaded yet on Android/Desktop,
-    // wait for beforeinstallprompt event before showing to prevent non-functional prompts.
-    return null;
-  }
 
   if (!isVisible) return null;
 
@@ -194,13 +190,26 @@ export default function InstallPrompt() {
           </div>
         ) : (
           <div className="space-y-3">
-            <button
-              onClick={handleNativeInstall}
-              className="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2.5 px-4 rounded-xl shadow-lg shadow-emerald-500/20 active:scale-[0.98] transition-all cursor-pointer"
-            >
-              <Download size={16} className="stroke-[2.5]" />
-              <span>Install Official App</span>
-            </button>
+            {deferredPrompt ? (
+              <button
+                onClick={handleNativeInstall}
+                className="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-2.5 px-4 rounded-xl shadow-lg shadow-emerald-500/20 active:scale-[0.98] transition-all cursor-pointer"
+              >
+                <Download size={16} className="stroke-[2.5]" />
+                <span>Install Official App (1-Click)</span>
+              </button>
+            ) : (
+              <div className="space-y-2.5 bg-slate-950/60 rounded-2xl p-3.5 border border-slate-800/40 text-xs text-slate-300 text-left">
+                <div className="flex items-start gap-2.5">
+                  <div className="w-5 h-5 rounded-full bg-slate-800 text-slate-200 text-[11px] font-black flex items-center justify-center shrink-0 mt-0.5">1</div>
+                  <p>Tap your browser menu (<strong className="text-white">⋮ 3-Dots</strong> in Chrome / Edge / Samsung Internet).</p>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <div className="w-5 h-5 rounded-full bg-slate-800 text-slate-200 text-[11px] font-black flex items-center justify-center shrink-0 mt-0.5">2</div>
+                  <p>Select <strong className="text-white">"Install app"</strong> or <strong className="text-white">"Add to Home screen"</strong>.</p>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

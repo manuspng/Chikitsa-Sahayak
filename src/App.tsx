@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Activity, LayoutDashboard, HeartPulse, Scale, History, ShieldPlus, ChevronDown, Settings, Key, HelpCircle, Lock, Check, ExternalLink, X, AlertTriangle, Cpu, Sun, Moon, Leaf, Search, Info, BookOpen, Share2, Copy, FileText, Home } from "lucide-react";
+import { Activity, LayoutDashboard, HeartPulse, Scale, History, ShieldPlus, ChevronDown, Settings, Key, HelpCircle, Lock, Check, ExternalLink, X, AlertTriangle, Cpu, Sun, Moon, Leaf, Search, Info, BookOpen, Share2, Copy, FileText, Home, Download, Smartphone } from "lucide-react";
 import { AnalysisRecord } from "./types";
 import ClinicalMonitor from "./components/ClinicalMonitor";
 import LftAnalyzer from "./components/LftAnalyzer";
@@ -378,6 +378,16 @@ export default function App() {
               title="About Chikitsa Sahayak Clinical Suite"
             >
               <Info size={14} className="text-slate-700" />
+            </button>
+
+            {/* Install App button */}
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent("open-install-prompt"))}
+              className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 h-8 rounded-lg border bg-white/95 hover:bg-emerald-50 text-emerald-950 border-emerald-400 shadow-xs transition-all text-xs font-black cursor-pointer shrink-0"
+              title="Install Chikitsa Sahayak App / Add to Home Screen"
+            >
+              <Download size={14} className="text-emerald-700 stroke-[2.5]" />
+              <span className="hidden xs:inline sm:inline">Install App</span>
             </button>
 
             {/* AI Provider Config */}
@@ -806,10 +816,23 @@ export default function App() {
                     )}
                   </div>
                 </div>
-                {/* Attribution */}
-                <div className="pt-1">
-                  <p className="text-xs text-slate-900 dark:text-slate-200 font-black uppercase tracking-widest leading-none">An initiative by</p>
-                  <p className="font-black text-slate-950 dark:text-white mt-1.5 text-base">Dr. M. P. Singh</p>
+                {/* Attribution & Install App Button */}
+                <div className="pt-1 space-y-3">
+                  <div>
+                    <p className="text-xs text-slate-900 dark:text-slate-200 font-black uppercase tracking-widest leading-none">An initiative by</p>
+                    <p className="font-black text-slate-950 dark:text-white mt-1.5 text-base">Dr. M. P. Singh</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAboutOpen(false);
+                      window.dispatchEvent(new CustomEvent("open-install-prompt"));
+                    }}
+                    className="w-full max-w-sm mx-auto flex items-center justify-center gap-2 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black shadow-md transition-all cursor-pointer"
+                  >
+                    <Download size={14} className="stroke-[2.5]" />
+                    <span>Install App on Phone (Add to Home Screen)</span>
+                  </button>
                 </div>
               </div>
 
