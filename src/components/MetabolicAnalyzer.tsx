@@ -75,10 +75,120 @@ export default function MetabolicAnalyzer({ onAddRecord }: MetabolicAnalyzerProp
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [isWebcamOpen, setIsWebcamOpen] = useState<boolean>(false);
 
+  const [extractMeta, setExtractMeta] = useState<{ providerUsed?: string; modelUsed?: string; wasFallback?: boolean } | null>(null);
+
   const handleWebcamCapture = (file: File) => {
     const newFiles = [...selectedFiles, file].slice(0, 3);
     setSelectedFiles(newFiles);
-    processFilesForOcr(newFiles);
+    processFilesForOcr(newFiles, "ai");
+  };
+
+  const applyMetabolicOcrValues = (parsedData: any) => {
+    if (parsedData.patientName) setPatientName(parsedData.patientName);
+    if (parsedData.patientGender) handleInputChange("gender", parsedData.patientGender);
+    if (parsedData.patientAge) handleInputChange("age", String(parsedData.patientAge));
+
+    if (parsedData.waistCircumference !== undefined) {
+      handleInputChange("waistCircumference", String(parsedData.waistCircumference));
+    }
+    if (parsedData.fastingBloodGlucose !== undefined) {
+      handleInputChange("fastingBloodGlucose", String(parsedData.fastingBloodGlucose));
+    }
+    if (parsedData.triglycerides !== undefined) {
+      handleInputChange("triglycerides", String(parsedData.triglycerides));
+    }
+    if (parsedData.hdlCholesterol !== undefined) {
+      handleInputChange("hdlCholesterol", String(parsedData.hdlCholesterol));
+    }
+    if (parsedData.systolicBp !== undefined) {
+      handleInputChange("systolicBp", String(parsedData.systolicBp));
+    }
+    if (parsedData.diastolicBp !== undefined) {
+      handleInputChange("diastolicBp", String(parsedData.diastolicBp));
+    }
+    if (parsedData.urineAcr !== undefined) {
+      handleInputChange("urineAcr", String(parsedData.urineAcr));
+    }
+    if (parsedData.urineAlbumin !== undefined) {
+      handleInputChange("urineAlbumin", String(parsedData.urineAlbumin));
+    }
+    if (parsedData.urineCreatinine !== undefined) {
+      handleInputChange("urineCreatinine", String(parsedData.urineCreatinine));
+    }
+  };
+
+  const processFilesForOcr = async (filesToProcess: File[], mode: "offline" | "ai" = "ai") => {
+    if (filesToProcess.length === 0) return;
+    setIsOcrLoading(true);
+    setOcrError(null);
+    setOcrStatusText("Starting biological report scan...");
+
+    try {
+      let combinedOcrText = "";
+
+      for (let i = 0; i < filesToProcess.length; i++) {
+        const file = filesToProcess[i];
+        setOcrStatusText(`Scanning report page ${i + 1} of ${filesToProcess.length}...`);
+        
+        const preprocessedImgSrc = await preprocessImageForOcr(file);
+        
+        const result = await Tesseract.recognize(
+          preprocessedImgSrc,
+          "eng",
+          {
+            logger: m => {
+              if (m.status === "recognizing text") {
+                setOcrStatusText(`Scanning page ${i + 1}: ${(m.progress * 100).toFixed(0)}%`);
+              }
+            }
+          }
+        );
+        combinedOcrText += "\n" + result.data.text;
+      }
+
+      if (mode === "offline") {
+        setOcrStatusText("Parsing clinical fields offline...");
+        const parsedData = parseMetabolicReport(combinedOcrText);
+        applyMetabolicOcrValues(parsedData);
+        setExtractMeta({ providerUsed: "Local Tesseract OCR", modelUsed: "Offline Pattern Parser", wasFallback: false });
+      } else {
+        setOcrStatusText("Encoding images for Clinical AI Engine...");
+        const base64Promises = filesToProcess.map(file => {
+          return new Promise<{ base64: string, mimeType: string }>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              const resultStr = reader.result as string;
+              const base64Content = resultStr.split(",")[1];
+              resolve({ base64: base64Content, mimeType: file.type || "image/jpeg" });
+            };
+            reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`));
+            reader.readAsDataURL(file);
+          });
+        });
+
+        const base64Contents = await Promise.all(base64Promises);
+        setOcrStatusText("Extracting with Clinical Multi-Agent AI...");
+        const data = await runGeminiExtractReport(base64Contents, "metabolic", combinedOcrText);
+        
+        if (data && data.values) {
+          applyMetabolicOcrValues(data.values);
+          setExtractMeta({
+            providerUsed: data.providerUsed,
+            modelUsed: data.modelUsed,
+            wasFallback: data.wasFallback
+          });
+        } else {
+          throw new Error("The AI model was unable to extract report fields. Please verify image quality.");
+        }
+      }
+
+      setOcrStatusText(null);
+    } catch (err: any) {
+      setOcrError(err.message || "Optical character recognition failed. Please upload a high-contrast image or input parameters manually.");
+      setOcrStatusText(null);
+    } finally {
+      setIsOcrLoading(false);
+    }
   };
 
   const handlePopulateSample = () => {
@@ -349,76 +459,6 @@ OFFLINE CRITERIA SYNTHESIS:
     });
   };
 
-  const processFilesForOcr = async (filesToProcess: File[]) => {
-    if (filesToProcess.length === 0) return;
-    setIsOcrLoading(true);
-    setOcrError(null);
-    setOcrStatusText("Starting multi-page biological imaging scan...");
-
-    try {
-      let combinedOcrText = "";
-
-      for (let i = 0; i < filesToProcess.length; i++) {
-        const file = filesToProcess[i];
-        setOcrStatusText(`Preprocessing and filtering report page ${i + 1} of ${filesToProcess.length}...`);
-        
-        const preprocessedImgSrc = await preprocessImageForOcr(file);
-        
-        setOcrStatusText(`Running character recognition on page ${i + 1} of ${filesToProcess.length}...`);
-        
-        const result = await Tesseract.recognize(
-          preprocessedImgSrc,
-          "eng",
-          {
-            logger: m => {
-              if (m.status === "recognizing text") {
-                setOcrStatusText(`Scanning page ${i + 1}: ${(m.progress * 100).toFixed(0)}%`);
-              }
-            }
-          }
-        );
-        combinedOcrText += "\n" + result.data.text;
-      }
-
-      setOcrStatusText("Normalizing structured laboratory metrics...");
-      const parsedData = parseMetabolicReport(combinedOcrText);
-
-      setOcrStatusText("Assigning mapped biological parameters...");
-      
-      if (parsedData.patientName) setPatientName(parsedData.patientName);
-      if (parsedData.patientGender) handleInputChange("gender", parsedData.patientGender);
-      if (parsedData.patientAge) handleInputChange("age", parsedData.patientAge);
-
-      if (parsedData.waistCircumference !== undefined) {
-        handleInputChange("waistCircumference", String(parsedData.waistCircumference));
-      }
-      if (parsedData.fastingBloodGlucose !== undefined) {
-        handleInputChange("fastingBloodGlucose", String(parsedData.fastingBloodGlucose));
-      }
-      if (parsedData.triglycerides !== undefined) {
-        handleInputChange("triglycerides", String(parsedData.triglycerides));
-      }
-      if (parsedData.hdlCholesterol !== undefined) {
-        handleInputChange("hdlCholesterol", String(parsedData.hdlCholesterol));
-      }
-      if (parsedData.systolicBp !== undefined) {
-        handleInputChange("systolicBp", String(parsedData.systolicBp));
-      }
-      if (parsedData.diastolicBp !== undefined) {
-        handleInputChange("diastolicBp", String(parsedData.diastolicBp));
-      }
-      if (parsedData.urineAcr !== undefined) {
-        handleInputChange("urineAcr", String(parsedData.urineAcr));
-      }
-
-      setOcrStatusText(null);
-    } catch (err: any) {
-      setOcrError("Optical character recognition failed. Please upload a high-contrast image or input parameters manually.");
-      setOcrStatusText(null);
-    } finally {
-      setIsOcrLoading(false);
-    }
-  };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -478,10 +518,22 @@ OFFLINE CRITERIA SYNTHESIS:
       <div className="p-4 bg-white dark:bg-slate-900/80 border-2 border-slate-300 dark:border-slate-700 rounded-2xl shadow-xs space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
           <div>
-            <h4 style={{ color: "#000000" }} className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 dark:text-white">
-              <Upload size={14} className="text-emerald-700 dark:text-emerald-400" />
-              <span>Feed / Scan Metabolic & ACR Report (Photo or PDF)</span>
-            </h4>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h4 style={{ color: "#000000" }} className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 dark:text-white">
+                <Upload size={14} className="text-emerald-700 dark:text-emerald-400" />
+                <span>Feed / Scan Metabolic & ACR Report (Photo or PDF)</span>
+              </h4>
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent("open-ai-provider-modal"))}
+                className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 cursor-pointer flex items-center gap-1 transition-colors"
+                title="Click to change AI engine or configure API keys"
+              >
+                <Sparkles size={10} />
+                <span>Agent: {getProviderDisplayName(currentProvider)}</span>
+                <span className="text-[9px] underline ml-0.5">Switch ⚙️</span>
+              </button>
+            </div>
             <p style={{ color: "#000000" }} className="text-[11px] font-bold mt-0.5 dark:text-slate-200">
               Upload your metabolic or renal urine ACR panel for automated parameter recognition
             </p>
@@ -505,6 +557,36 @@ OFFLINE CRITERIA SYNTHESIS:
             </button>
           </div>
         </div>
+
+        {/* Extraction Engine Attribution Banner */}
+        {extractMeta && (
+          <div className="flex items-center justify-between gap-2 p-2.5 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800/60 rounded-xl text-xs">
+            <div className="flex items-center gap-1.5 text-emerald-900 dark:text-emerald-200 font-bold truncate">
+              <Check size={14} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span className="truncate">
+                Extracted via <strong>{getProviderDisplayName(extractMeta.providerUsed || "auto")}</strong> {extractMeta.modelUsed ? `(${extractMeta.modelUsed})` : ""}
+              </span>
+            </div>
+            <div className="flex items-center gap-1 shrink-0">
+              <button
+                type="button"
+                onClick={() => selectedFiles.length > 0 && processFilesForOcr(selectedFiles, "ai")}
+                className="px-2 py-1 bg-white dark:bg-slate-800 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300 rounded-lg text-[10px] font-black hover:bg-emerald-100 transition-colors cursor-pointer"
+                title="Re-run AI extraction"
+              >
+                🔄 Re-extract
+              </button>
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent("open-ai-provider-modal"))}
+                className="px-2 py-1 bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-lg text-[10px] font-black hover:bg-indigo-100 transition-colors cursor-pointer"
+                title="Switch to another AI Agent"
+              >
+                Switch Agent ▾
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Mobile View: Exactly 1 single 'Upload Report' button */}
         <div className="block sm:hidden">
@@ -574,7 +656,7 @@ OFFLINE CRITERIA SYNTHESIS:
                     e.stopPropagation();
                     const update = selectedFiles.filter((_, i) => i !== idx);
                     setSelectedFiles(update);
-                    if (update.length > 0) processFilesForOcr(update);
+                    if (update.length > 0) processFilesForOcr(update, "ai");
                     else setOcrError(null);
                   }}
                   className="text-slate-400 hover:text-red-500 transition-colors p-1"
@@ -597,12 +679,21 @@ OFFLINE CRITERIA SYNTHESIS:
               <>
                 <button
                   type="button"
-                  onClick={() => processFilesForOcr(selectedFiles)}
+                  onClick={() => processFilesForOcr(selectedFiles, "offline")}
                   className="flex-1 py-1.5 px-3 rounded-lg text-[11px] font-bold uppercase text-white bg-emerald-600 hover:bg-emerald-700 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5"
                   title="Perform local offline text recognition"
                 >
                   <Cpu size={12} />
                   <span>Extract Offline</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => processFilesForOcr(selectedFiles, "ai")}
+                  className="flex-1 py-1.5 px-3 rounded-lg text-[11px] font-bold uppercase text-white bg-indigo-600 hover:bg-indigo-700 transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-1.5"
+                  title="Use advanced intelligence model to extract report values"
+                >
+                  <Sparkles size={11} />
+                  <span>AI to Extract</span>
                 </button>
               </>
             )}

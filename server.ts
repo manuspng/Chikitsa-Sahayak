@@ -614,40 +614,7 @@ app.post("/api/gemini/extract-report", async (req, res) => {
     }
     
     if (!activeApiKey) {
-      // Return sample responses depending on reportType if API Key is not set yet, so preview users get a high-quality onboarding experience.
-      if (reportType === "lft") {
-        return res.json({
-          values: {
-            patientName: "John Doe",
-            ALT: 64,
-            AST: 42,
-            ALP: 112,
-            GGT: 48,
-            "Total Bilirubin": 0.9,
-            "Direct Bilirubin": 0.2,
-            Albumin: 4.2,
-            "Total Protein": 7.4,
-            INR: 1.0,
-            Platelets: 195,
-          },
-        });
-      } else {
-        return res.json({
-          values: {
-            patientName: "Jane Doe",
-            Hemoglobin: 12.8,
-            Hematocrit: 38.5,
-            RBC: 4.1,
-            WBC: 9.2,
-            Platelets: 165,
-            MCV: 84,
-            MCH: 28,
-            MCHC: 33,
-            Neutrophils: 64,
-            Lymphocytes: 28,
-          },
-        });
-      }
+      return res.status(400).json({ error: "No API Key configured on server. Please configure your API key or use direct client extraction." });
     }
 
     const activeAi = userApiKey 
@@ -689,6 +656,23 @@ app.post("/api/gemini/extract-report", async (req, res) => {
           Platelets: { type: Type.NUMBER, description: "Platelet count inside 10^3/uL or 10^9/L" },
         },
       };
+    } else if (reportType === "metabolic") {
+      textPrompt = `Identify and extract the clean, brief patient name and all listed Metabolic Syndrome & Renal/Lipid laboratory indicators from these lab report photo pages: Fasting Blood Glucose (mg/dL), Triglycerides (mg/dL), HDL Cholesterol (mg/dL), Systolic Blood Pressure (mmHg), Diastolic Blood Pressure (mmHg), Urine Albumin-Creatinine Ratio (ACR in mg/g or ug/mg), Urine Albumin (mg/L), Urine Creatinine (mg/dL), and Waist Circumference (cm). If a specific reading is not present in any page, omit it.`;
+      responseSchema = {
+        type: Type.OBJECT,
+        properties: {
+          patientName: { type: Type.STRING, description: "Strictly the raw patient name only." },
+          fastingBloodGlucose: { type: Type.NUMBER, description: "Fasting Blood Glucose (mg/dL)" },
+          triglycerides: { type: Type.NUMBER, description: "Triglycerides (mg/dL)" },
+          hdlCholesterol: { type: Type.NUMBER, description: "HDL Cholesterol (mg/dL)" },
+          systolicBp: { type: Type.NUMBER, description: "Systolic BP (mmHg)" },
+          diastolicBp: { type: Type.NUMBER, description: "Diastolic BP (mmHg)" },
+          urineAcr: { type: Type.NUMBER, description: "Urine Albumin Creatinine Ratio (ACR) in mg/g" },
+          urineAlbumin: { type: Type.NUMBER, description: "Urine Microalbumin in mg/L" },
+          urineCreatinine: { type: Type.NUMBER, description: "Urine Creatinine in mg/dL" },
+          waistCircumference: { type: Type.NUMBER, description: "Waist Circumference in cm" },
+        },
+      };
     } else {
       textPrompt = `Identify and extract the clean, brief patient name (excluding any dates, test results, or surrounding sentence text) and all listed Complete Blood Count (CBC) numerical value readings from these lab report photo pages. Convert the extracted items into a single flat JSON dictionary representing values consolidated across all original pages. If a specific reading is not present in any page, do not include it. Ignore standard range guides. If different pages list the same indicator, use the most recent or logical one.`;
       responseSchema = {
@@ -710,7 +694,7 @@ app.post("/api/gemini/extract-report", async (req, res) => {
     }
 
     const response = await activeAi.models.generateContent({
-      model: "gemini-3.5-flash",
+      model: "gemini-2.0-flash",
       contents: {
         parts: [
           ...imageParts,

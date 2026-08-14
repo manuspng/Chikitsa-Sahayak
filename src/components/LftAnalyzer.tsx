@@ -126,6 +126,7 @@ export default function LftAnalyzer({ onAddRecord }: LftAnalyzerProps) {
   // Input refs and files queue for Mobile & PC (Upload Report & Camera)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [extractMeta, setExtractMeta] = useState<{ providerUsed?: string; modelUsed?: string; wasFallback?: boolean } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [isWebcamOpen, setIsWebcamOpen] = useState<boolean>(false);
@@ -373,7 +374,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
     setIsVerifiedCheck(false);
   };
 
-  const runOcrExtract = async (filesList: File[], mode: "offline" | "ai" = "offline") => {
+  const runOcrExtract = async (filesList: File[], mode: "offline" | "ai" = "ai") => {
     if (filesList.length === 0) {
       setSelectedFiles([]);
       return;
@@ -382,49 +383,44 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
     setIsOcrLoading(true);
     setOcrError(null);
     setOcrErrorStack(null);
-    setOcrStatusText(mode === "offline" ? "Preprocessing images..." : "Reading files for transmission...");
+    setOcrStatusText("Preparing report scan...");
 
     try {
-      if (mode === "offline") {
-        // 1. Preprocess images locally
-        const preprocessedUrls = await Promise.all(
-          filesList.map(file => preprocessImageForOcr(file))
-        );
+      // 1. Preprocess images locally for OCR analysis
+      const preprocessedUrls = await Promise.all(
+        filesList.map(file => preprocessImageForOcr(file))
+      );
 
-        // 2. Perform local, offline OCR using Tesseract.js
-        let aggregatedText = "";
-        let index = 0;
-        for (const dataUrl of preprocessedUrls) {
-          index++;
-          setOcrStatusText(`Page ${index}/${preprocessedUrls.length}: Starting analyzer...`);
-          const ocrResult = await Tesseract.recognize(dataUrl, "eng", {
-            logger: m => {
-              if (m.status === "recognizing text") {
-                const pct = Math.round(m.progress * 100);
-                setOcrStatusText(`Page ${index}/${preprocessedUrls.length}: Analyzing text (${pct}%)`);
-              } else if (m.status) {
-                setOcrStatusText(`Page ${index}/${preprocessedUrls.length}: ${m.status}...`);
-              }
+      // 2. Perform OCR text recognition using Tesseract.js (provides clean text for both modes)
+      let aggregatedText = "";
+      let index = 0;
+      for (const dataUrl of preprocessedUrls) {
+        index++;
+        setOcrStatusText(`Page ${index}/${preprocessedUrls.length}: Scanning image text...`);
+        const ocrResult = await Tesseract.recognize(dataUrl, "eng", {
+          logger: m => {
+            if (m.status === "recognizing text") {
+              const pct = Math.round(m.progress * 100);
+              setOcrStatusText(`Page ${index}/${preprocessedUrls.length}: Scanning (${pct}%)`);
+            } else if (m.status) {
+              setOcrStatusText(`Page ${index}/${preprocessedUrls.length}: ${m.status}...`);
             }
-          });
-          aggregatedText += "\n" + (ocrResult.data?.text || "");
-        }
+          }
+        });
+        aggregatedText += "\n" + (ocrResult.data?.text || "");
+      }
 
-        // 3. Extract parameters locally
+      if (mode === "offline") {
         setOcrStatusText("Parsing clinical fields offline...");
         const extracted = parseLftReport(aggregatedText);
-
-        // Simple validation: check if we found anything at all
         const foundValues = Object.keys(extracted).filter(k => k !== "patientName" && k !== "patientGender" && k !== "patientAge");
         if (foundValues.length === 0 && !extracted.patientName) {
-          throw new Error("Unable to identify clinical metrics locally. Try adjusting threshold/contrast or use 'AI to Extract' for advanced recognition.");
+          throw new Error("Unable to identify clinical metrics locally. Try adjusting lighting or use 'AI to Extract' for advanced recognition.");
         }
-
-        // Apply values
         applyLftOcrValues(extracted);
+        setExtractMeta({ providerUsed: "Local Tesseract OCR", modelUsed: "Offline Pattern Parser", wasFallback: false });
       } else {
-        // AI extraction mode
-        setOcrStatusText("Encoding images to base64...");
+        setOcrStatusText("Encoding document for Clinical AI Engine...");
         const base64Promises = filesList.map(file => {
           return new Promise<{ base64: string, mimeType: string }>((resolve, reject) => {
             const reader = new FileReader();
@@ -439,12 +435,16 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
         });
 
         const base64Contents = await Promise.all(base64Promises);
-
-         setOcrStatusText("Sending to Clinical AI Extractor...");
-        const data = await runGeminiExtractReport(base64Contents, "lft");
+        setOcrStatusText("Extracting with Clinical Multi-Agent AI...");
+        const data = await runGeminiExtractReport(base64Contents, "lft", aggregatedText);
         
         if (data && data.values) {
           applyLftOcrValues(data.values);
+          setExtractMeta({
+            providerUsed: data.providerUsed,
+            modelUsed: data.modelUsed,
+            wasFallback: data.wasFallback
+          });
         } else {
           throw new Error("The AI model was unable to extract report fields. Please verify image quality.");
         }
@@ -610,10 +610,22 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
       <div className="p-4 bg-white dark:bg-slate-900/80 border-2 border-slate-300 dark:border-slate-700 rounded-2xl shadow-xs space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
           <div>
-            <h4 style={{ color: "#000000" }} className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 dark:text-white">
-              <Upload size={14} className="text-emerald-700 dark:text-emerald-400" />
-              <span>Feed / Scan Report (Photo or PDF)</span>
-            </h4>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h4 style={{ color: "#000000" }} className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 dark:text-white">
+                <Upload size={14} className="text-emerald-700 dark:text-emerald-400" />
+                <span>Feed / Scan Report (Photo or PDF)</span>
+              </h4>
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent("open-ai-provider-modal"))}
+                className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 cursor-pointer flex items-center gap-1 transition-colors"
+                title="Click to change AI engine or configure API keys"
+              >
+                <Sparkles size={10} />
+                <span>Agent: {getProviderDisplayName(currentProvider)}</span>
+                <span className="text-[9px] underline ml-0.5">Switch ⚙️</span>
+              </button>
+            </div>
             <p style={{ color: "#000000" }} className="text-[11px] font-bold mt-0.5 dark:text-slate-200">
               Upload your lab report or prescription for automated parameter recognition
             </p>
@@ -637,6 +649,36 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
             </button>
           </div>
         </div>
+
+        {/* Extraction Engine Attribution Banner */}
+        {extractMeta && (
+          <div className="flex items-center justify-between gap-2 p-2.5 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800/60 rounded-xl text-xs">
+            <div className="flex items-center gap-1.5 text-emerald-900 dark:text-emerald-200 font-bold truncate">
+              <Check size={14} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span className="truncate">
+                Extracted via <strong>{getProviderDisplayName(extractMeta.providerUsed || "auto")}</strong> {extractMeta.modelUsed ? `(${extractMeta.modelUsed})` : ""}
+              </span>
+            </div>
+            <div className="flex items-center gap-1 shrink-0">
+              <button
+                type="button"
+                onClick={() => selectedFiles.length > 0 && runOcrExtract(selectedFiles, "ai")}
+                className="px-2 py-1 bg-white dark:bg-slate-800 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300 rounded-lg text-[10px] font-black hover:bg-emerald-100 transition-colors cursor-pointer"
+                title="Re-run AI extraction"
+              >
+                🔄 Re-extract
+              </button>
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent("open-ai-provider-modal"))}
+                className="px-2 py-1 bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-lg text-[10px] font-black hover:bg-indigo-100 transition-colors cursor-pointer"
+                title="Switch to another AI Agent"
+              >
+                Switch Agent ▾
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Mobile View: Exactly 1 single 'Upload Report' button */}
         <div className="block sm:hidden">

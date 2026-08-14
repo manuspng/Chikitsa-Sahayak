@@ -3,6 +3,7 @@
  * Detects if the backend is unavailable/unresponsive (standard on static hosts like Vercel)
  * and falls back to browser-direct API calls using user-configured API keys.
  */
+import { parseLftReport, parseCbcReport, parseMetabolicReport } from "./labReportParser";
 
 // Indian unit rules and guidelines
 const INDIAN_UNITS_PROMPT = `You are interpreting laboratory reports for users in India.
@@ -618,10 +619,22 @@ export async function runGeminiAnalyze(
   };
 }
 
+export interface ExtractResponse {
+  values: any;
+  providerUsed?: string;
+  modelUsed?: string;
+  wasFallback?: boolean;
+}
+
 /**
  * Direct client-side multimodal Gemini OCR call
  */
-async function callDirectGeminiExtractocr(images: { base64: string, mimeType: string }[], reportType: "lft" | "cbc", apiKey: string): Promise<any> {
+async function callDirectGeminiExtractocr(
+  images: { base64: string, mimeType: string }[],
+  reportType: "lft" | "cbc" | "metabolic",
+  rawOcrText: string | undefined,
+  apiKey: string
+): Promise<any> {
   const imageParts = images.map(img => ({
     inlineData: {
       mimeType: img.mimeType || "image/jpeg",
@@ -633,81 +646,227 @@ async function callDirectGeminiExtractocr(images: { base64: string, mimeType: st
   let responseSchema: any = {};
 
   if (reportType === "lft") {
-    textPrompt = `Identify and extract the clean, brief patient name (excluding any dates, test results, or surrounding sentence text) and all listed Liver Function Test (LFT) numerical value readings from these lab report photo pages. Convert the extracted items into a single flat JSON dictionary representing values consolidated across all original pages. If a specific reading is not present in any page, do not include it. Ignore text and references that are not quantitative indicators.`;
+    textPrompt = `You are a clinical laboratory document parsing specialist. Carefully analyze the uploaded Liver Function Test (LFT) report images and raw text.
+Extract the patient name, age, gender, and exact numerical laboratory values for all listed parameters.
+Return a clean JSON object with the exact keys:
+- patientName (raw name only, e.g. "Suresh Kumar")
+- patientAge (numerical age if present)
+- patientGender ("male" or "female" if present)
+- ALT (Alanine Aminotransferase / SGPT in U/L)
+- AST (Aspartate Aminotransferase / SGOT in U/L)
+- ALP (Alkaline Phosphatase in U/L)
+- GGT (Gamma-Glutamyl Transferase in U/L)
+- "Total Bilirubin" (mg/dL)
+- "Direct Bilirubin" (mg/dL)
+- Albumin (g/dL)
+- "Total Protein" (g/dL)
+- INR (International Normalized Ratio)
+- Platelets (in 10^3/uL or 10^9/L or lakh/uL converted to standard thousands)
+
+If a metric is not present in the document, do not include it or set it to undefined. Do not fabricate or estimate values.
+${rawOcrText ? `\n\nOCR Pre-scanned text for verification:\n${rawOcrText}` : ""}`;
+
     responseSchema = {
       type: "OBJECT",
       properties: {
-        patientName: { type: "STRING", description: "Strictly the raw patient name only, e.g. 'Mr. Suresh Kumar'." },
-        ALT: { type: "NUMBER", description: "Alanine Aminotransferase (ALT/SGPT) in U/L" },
-        AST: { type: "NUMBER", description: "Aspartate Aminotransferase (AST/SGOT) in U/L" },
-        ALP: { type: "NUMBER", description: "Alkaline Phosphatase (ALP) in U/L" },
-        GGT: { type: "NUMBER", description: "Gamma-Glutamyl Transferase (GGT) in U/L" },
-        "Total Bilirubin": { type: "NUMBER", description: "Total Bilirubin in mg/dL or umol/L" },
-        "Direct Bilirubin": { type: "NUMBER", description: "Direct Bilirubin in mg/dL" },
-        Albumin: { type: "NUMBER", description: "Albumin in g/dL or g/L" },
-        "Total Protein": { type: "NUMBER", description: "Total Protein in g/dL" },
-        INR: { type: "NUMBER", description: "International Normalized Ratio (INR)" },
-        Platelets: { type: "NUMBER", description: "Platelet count inside 10^3/uL or 10^9/L" },
+        patientName: { type: "STRING" },
+        patientAge: { type: "NUMBER" },
+        patientGender: { type: "STRING" },
+        ALT: { type: "NUMBER" },
+        AST: { type: "NUMBER" },
+        ALP: { type: "NUMBER" },
+        GGT: { type: "NUMBER" },
+        "Total Bilirubin": { type: "NUMBER" },
+        "Direct Bilirubin": { type: "NUMBER" },
+        Albumin: { type: "NUMBER" },
+        "Total Protein": { type: "NUMBER" },
+        INR: { type: "NUMBER" },
+        Platelets: { type: "NUMBER" },
+      },
+    };
+  } else if (reportType === "metabolic") {
+    textPrompt = `You are a clinical laboratory document parsing specialist. Analyze the uploaded Metabolic Panel & Renal/ACR report images.
+Extract the patient details and laboratory numbers:
+- patientName (raw name only)
+- patientAge (numerical age)
+- patientGender ("male" or "female")
+- fastingBloodGlucose (mg/dL)
+- triglycerides (mg/dL)
+- hdlCholesterol (mg/dL)
+- systolicBp (mmHg)
+- diastolicBp (mmHg)
+- urineAcr (Urine Albumin-Creatinine Ratio in mg/g or ug/mg)
+- urineAlbumin (Urine Microalbumin in mg/L)
+- urineCreatinine (Urine Creatinine in mg/dL)
+- waistCircumference (cm)
+${rawOcrText ? `\n\nOCR Pre-scanned text:\n${rawOcrText}` : ""}`;
+
+    responseSchema = {
+      type: "OBJECT",
+      properties: {
+        patientName: { type: "STRING" },
+        patientAge: { type: "NUMBER" },
+        patientGender: { type: "STRING" },
+        fastingBloodGlucose: { type: "NUMBER" },
+        triglycerides: { type: "NUMBER" },
+        hdlCholesterol: { type: "NUMBER" },
+        systolicBp: { type: "NUMBER" },
+        diastolicBp: { type: "NUMBER" },
+        urineAcr: { type: "NUMBER" },
+        urineAlbumin: { type: "NUMBER" },
+        urineCreatinine: { type: "NUMBER" },
+        waistCircumference: { type: "NUMBER" },
       },
     };
   } else {
-    textPrompt = `Identify and extract the clean, brief patient name (excluding any dates, test results, or surrounding sentence text) and all listed Complete Blood Count (CBC) numerical value readings from these lab report photo pages. Convert the extracted items into a single flat JSON dictionary representing values consolidated across all original pages. If a specific reading is not present in any page, do not include it.`;
+    textPrompt = `You are a clinical laboratory document parsing specialist. Analyze the Complete Blood Count (CBC) report images.
+Extract:
+- patientName (raw name only)
+- patientAge (numerical age)
+- patientGender ("male" or "female")
+- Hemoglobin (g/dL)
+- Hematocrit (%)
+- RBC (10^12/L or 10^6/uL)
+- WBC (10^9/L or 10^3/uL)
+- Platelets (10^3/uL or 10^9/L)
+- MCV (fL)
+- MCH (pg)
+- MCHC (g/dL)
+- Neutrophils (%)
+- Lymphocytes (%)
+- Monocytes (%)
+- Eosinophils (%)
+- Basophils (%)
+${rawOcrText ? `\n\nOCR Pre-scanned text:\n${rawOcrText}` : ""}`;
+
     responseSchema = {
       type: "OBJECT",
       properties: {
-        patientName: { type: "STRING", description: "Strictly the raw patient name only, e.g. 'Jane Smith'." },
-        Hemoglobin: { type: "NUMBER", description: "Hemoglobin value in g/dL" },
-        Hematocrit: { type: "NUMBER", description: "Hematocrit percentage value" },
-        RBC: { type: "NUMBER", description: "Red Blood Cell count x10^12/L or x10^6/uL" },
-        WBC: { type: "NUMBER", description: "White Blood Cell count x10^9/L or x10^3/uL" },
-        Platelets: { type: "NUMBER", description: "Platelet count inside 10^3/uL or 10^9/L" },
-        MCV: { type: "NUMBER", description: "Mean Corpuscular Volume in fL" },
-        MCH: { type: "NUMBER", description: "Mean Corpuscular Hemoglobin in pg" },
-        MCHC: { type: "NUMBER", description: "Mean Corpuscular Hemoglobin Concentration in g/dL" },
-        Neutrophils: { type: "NUMBER", description: "Neutrophils percentage" },
-        Lymphocytes: { type: "NUMBER", description: "Lymphocytes percentage" },
+        patientName: { type: "STRING" },
+        patientAge: { type: "NUMBER" },
+        patientGender: { type: "STRING" },
+        Hemoglobin: { type: "NUMBER" },
+        Hematocrit: { type: "NUMBER" },
+        RBC: { type: "NUMBER" },
+        WBC: { type: "NUMBER" },
+        Platelets: { type: "NUMBER" },
+        MCV: { type: "NUMBER" },
+        MCH: { type: "NUMBER" },
+        MCHC: { type: "NUMBER" },
+        Neutrophils: { type: "NUMBER" },
+        Lymphocytes: { type: "NUMBER" },
+        Monocytes: { type: "NUMBER" },
+        Eosinophils: { type: "NUMBER" },
+        Basophils: { type: "NUMBER" },
       },
     };
   }
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-  const requestBody = {
-    contents: [{
-      parts: [
-        ...imageParts,
-        { text: textPrompt }
-      ]
-    }],
-    generationConfig: {
-      responseMimeType: "application/json",
-      responseSchema: responseSchema
+  const modelsToTry = ["gemini-2.0-flash", "gemini-1.5-flash"];
+  let lastError: any = null;
+
+  for (const model of modelsToTry) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const requestBody = {
+        contents: [{
+          parts: [
+            ...imageParts,
+            { text: textPrompt }
+          ]
+        }],
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: responseSchema
+        }
+      };
+
+      logGeminiRequest(`Direct Gemini Extract OCR (${model})`, `https://generativelanguage.googleapis.com/.../${model}`, model, !!apiKey, requestBody);
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Gemini ${model} failed (Status ${response.status}): ${errorText.slice(0, 140)}`);
+      }
+
+      const result = await response.json();
+      let textStr = result.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+      
+      if (textStr.includes("```")) {
+        const match = textStr.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+        if (match) {
+          textStr = match[1];
+        }
+      }
+
+      const parsed = JSON.parse(textStr.trim() || "{}");
+      if (parsed.patientName) {
+        parsed.patientName = sanitizePatientName(parsed.patientName);
+      }
+      return parsed;
+    } catch (err: any) {
+      lastError = err;
+      console.warn(`[GEMINI EXTRACT] Model ${model} failed, trying fallback:`, err.message);
     }
+  }
+
+  throw lastError || new Error("Gemini multimodal extraction failed on all model endpoints.");
+}
+
+/**
+ * Direct Groq LLM Extraction (uses Llama 3.3 70B Versatile on OCR pre-scanned text)
+ */
+async function callDirectGroqExtract(
+  rawOcrText: string,
+  reportType: "lft" | "cbc" | "metabolic",
+  apiKey: string
+): Promise<any> {
+  const url = "https://api.groq.com/openai/v1/chat/completions";
+  
+  let instructions = "";
+  if (reportType === "lft") {
+    instructions = `You are a medical laboratory data extraction engine. Extract patientName, patientAge, patientGender ("male"|"female"), and exact numeric values for: ALT, AST, ALP, GGT, Total Bilirubin, Direct Bilirubin, Albumin, Total Protein, INR, Platelets from the OCR text. Return valid JSON only with these exact keys. If a value is missing, omit it.`;
+  } else if (reportType === "metabolic") {
+    instructions = `You are a medical laboratory data extraction engine. Extract patientName, patientAge, patientGender, and exact numeric values for: fastingBloodGlucose, triglycerides, hdlCholesterol, systolicBp, diastolicBp, urineAcr, urineAlbumin, urineCreatinine, waistCircumference from the OCR text. Return valid JSON only with these exact keys.`;
+  } else {
+    instructions = `You are a medical laboratory data extraction engine. Extract patientName, patientAge, patientGender, and exact numeric values for: Hemoglobin, Hematocrit, RBC, WBC, Platelets, MCV, MCH, MCHC, Neutrophils, Lymphocytes from the OCR text. Return valid JSON only with these exact keys.`;
+  }
+
+  const payload = {
+    model: "llama-3.3-70b-versatile",
+    messages: [
+      { role: "system", content: `${instructions}\nRespond with JSON only. No explanations.` },
+      { role: "user", content: `OCR Text:\n${rawOcrText}` }
+    ],
+    response_format: { type: "json_object" },
+    temperature: 0.1,
+    max_tokens: 800
   };
 
-  logGeminiRequest("Direct Gemini Extract OCR", "https://generativelanguage.googleapis.com/.../generateContent", "gemini-2.5-flash", !!apiKey, requestBody);
+  logGeminiRequest("Direct Groq Extract", url, "llama-3.3-70b-versatile", !!apiKey, payload);
 
-  const response = await fetch(url, {
+  const res = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(requestBody),
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`
+    },
+    body: JSON.stringify(payload)
   });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Direct OCR extraction failed (Status ${response.status}): ${errorText.slice(0, 150)}`);
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Groq extraction error (${res.status}): ${err.slice(0, 140)}`);
   }
 
-  const result = await response.json();
-  let textStr = result.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-  
-  if (textStr.includes("```")) {
-    const match = textStr.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
-    if (match) {
-      textStr = match[1];
-    }
-  }
-
-  const parsed = JSON.parse(textStr.trim() || "{}");
+  const data = await res.json();
+  const content = data.choices?.[0]?.message?.content || "{}";
+  const parsed = JSON.parse(content);
   if (parsed.patientName) {
     parsed.patientName = sanitizePatientName(parsed.patientName);
   }
@@ -715,20 +874,119 @@ async function callDirectGeminiExtractocr(images: { base64: string, mimeType: st
 }
 
 /**
- * Robust OCR extractor selector that checks backend readiness, and falls back to client direct call
+ * Direct OpenRouter Extraction
  */
-export async function runGeminiExtractReport(imagesBase64: { base64: string, mimeType: string }[], reportType: "lft" | "cbc"): Promise<{ values: any }> {
-  const geminiKey = localStorage.getItem("user_gemini_api_key") || "";
+async function callDirectOpenRouterExtract(
+  images: { base64: string, mimeType: string }[],
+  rawOcrText: string,
+  reportType: "lft" | "cbc" | "metabolic",
+  apiKey: string
+): Promise<any> {
+  const url = "https://openrouter.ai/api/v1/chat/completions";
+  
+  let instructions = `Extract all clinical laboratory numbers into a strict JSON dictionary for ${reportType.toUpperCase()} testing. Return only JSON.`;
+  
+  const payload = {
+    model: "google/gemini-2.0-flash-001",
+    messages: [
+      { role: "system", content: instructions },
+      { role: "user", content: `Extract laboratory parameters from this text:\n\n${rawOcrText}` }
+    ],
+    temperature: 0.1,
+    max_tokens: 800
+  };
 
-  // 1. Try backend server request first
+  logGeminiRequest("Direct OpenRouter Extract", url, payload.model, !!apiKey, payload);
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`OpenRouter extraction error (${res.status}): ${err.slice(0, 140)}`);
+  }
+
+  const data = await res.json();
+  let content = data.choices?.[0]?.message?.content || "{}";
+  if (content.includes("```")) {
+    const match = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (match) content = match[1];
+  }
+  const parsed = JSON.parse(content.trim() || "{}");
+  if (parsed.patientName) {
+    parsed.patientName = sanitizePatientName(parsed.patientName);
+  }
+  return parsed;
+}
+
+/**
+ * Robust Multi-Agent Report Extractor
+ * Supports Gemini Multimodal Vision, Groq Llama 3.3, OpenRouter, and Local OCR Fallback.
+ * Guaranteed never to return mock or hardcoded fake dummy numbers!
+ */
+export async function runGeminiExtractReport(
+  imagesBase64: { base64: string, mimeType: string }[],
+  reportType: "lft" | "cbc" | "metabolic",
+  rawOcrText?: string
+): Promise<ExtractResponse> {
+  const selectedProvider = localStorage.getItem("selected_ai_provider") || "auto";
+  const geminiKey = localStorage.getItem("user_gemini_api_key") || "";
+  const groqKey = localStorage.getItem("user_groq_api_key") || "";
+  const openrouterKey = localStorage.getItem("user_openrouter_api_key") || "";
+  const openaiKey = localStorage.getItem("user_openai_api_key") || "";
+
+  // 1. If explicit provider is chosen (not auto), attempt that provider directly
+  if (selectedProvider === "gemini" && geminiKey) {
+    try {
+      const values = await callDirectGeminiExtractocr(imagesBase64, reportType, rawOcrText, geminiKey);
+      return { values, providerUsed: "gemini", modelUsed: "gemini-2.0-flash", wasFallback: false };
+    } catch (err: any) {
+      console.warn("Direct Gemini extraction failed:", err.message);
+    }
+  }
+
+  if (selectedProvider === "groq" && groqKey && rawOcrText) {
+    try {
+      const values = await callDirectGroqExtract(rawOcrText, reportType, groqKey);
+      return { values, providerUsed: "groq", modelUsed: "llama-3.3-70b-versatile", wasFallback: false };
+    } catch (err: any) {
+      console.warn("Direct Groq extraction failed:", err.message);
+    }
+  }
+
+  if (selectedProvider === "openrouter" && openrouterKey) {
+    try {
+      const values = await callDirectOpenRouterExtract(imagesBase64, rawOcrText || "", reportType, openrouterKey);
+      return { values, providerUsed: "openrouter", modelUsed: "google/gemini-2.0-flash-001", wasFallback: false };
+    } catch (err: any) {
+      console.warn("Direct OpenRouter extraction failed:", err.message);
+    }
+  }
+
+  // 2. Cascade Priority (Auto Mode):
+  // Step A: Try user's Gemini Key with Gemini 2.0 Flash
+  if (geminiKey) {
+    try {
+      const values = await callDirectGeminiExtractocr(imagesBase64, reportType, rawOcrText, geminiKey);
+      return { values, providerUsed: "gemini", modelUsed: "gemini-2.0-flash", wasFallback: false };
+    } catch (err: any) {
+      console.warn("[CASCADE] Gemini failed, attempting next available agent:", err.message);
+    }
+  }
+
+  // Step B: Try backend server endpoint
   try {
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (geminiKey) headers["x-user-gemini-api-key"] = geminiKey;
 
     const targetUrl = getAbsoluteUrl("/api/gemini/extract-report");
     const payload = { imagesBase64, reportType };
-
-    logGeminiRequest("Backend Custom OCR Extract", targetUrl, "gemini-3.5-flash", !!geminiKey, payload);
 
     const response = await fetch(targetUrl, {
       method: "POST",
@@ -740,53 +998,52 @@ export async function runGeminiExtractReport(imagesBase64: { base64: string, mim
     if (response.ok && contentType.includes("json")) {
       const data = await response.json();
       if (data && data.values) {
-        return { values: data.values };
+        return { values: data.values, providerUsed: "backend", modelUsed: "gemini-2.0-flash", wasFallback: false };
       }
-    } else {
-      const errText = await response.text();
-      console.warn(`Backend responded with status ${response.status} (Not valid JSON):`, errText.slice(0, 150));
     }
   } catch (err) {
-    console.warn("Backend /api/gemini/extract-report unreachable. Falling back to direct client-side OCR extraction.", err);
+    console.warn("[CASCADE] Backend /api/gemini/extract-report unreachable, continuing cascade.");
   }
 
-  // 2. Client-side fallback if backend failed or is not available (e.g. Vercel deployment)
-  if (!geminiKey) {
-    if (reportType === "lft") {
+  // Step C: Try user's Groq Key with Llama 3.3 70B
+  if (groqKey && rawOcrText && rawOcrText.trim().length > 10) {
+    try {
+      const values = await callDirectGroqExtract(rawOcrText, reportType, groqKey);
+      return { values, providerUsed: "groq", modelUsed: "llama-3.3-70b-versatile", wasFallback: true };
+    } catch (err: any) {
+      console.warn("[CASCADE] Groq extraction failed:", err.message);
+    }
+  }
+
+  // Step D: Try user's OpenRouter Key
+  if (openrouterKey && rawOcrText && rawOcrText.trim().length > 10) {
+    try {
+      const values = await callDirectOpenRouterExtract(imagesBase64, rawOcrText, reportType, openrouterKey);
+      return { values, providerUsed: "openrouter", modelUsed: "gemini-2.0-flash-001", wasFallback: true };
+    } catch (err: any) {
+      console.warn("[CASCADE] OpenRouter extraction failed:", err.message);
+    }
+  }
+
+  // Step E: High-Fidelity Local Clinical Regex Pattern Fallback (from real pre-scanned OCR text)
+  if (rawOcrText && rawOcrText.trim().length > 5) {
+    let localParsed: any = {};
+    if (reportType === "lft") localParsed = parseLftReport(rawOcrText);
+    else if (reportType === "cbc") localParsed = parseCbcReport(rawOcrText);
+    else if (reportType === "metabolic") localParsed = parseMetabolicReport(rawOcrText);
+
+    const foundKeys = Object.keys(localParsed).filter(k => localParsed[k] !== undefined && localParsed[k] !== "");
+    if (foundKeys.length > 0) {
       return {
-        values: {
-          patientName: "Public Patient Record",
-          ALT: 64,
-          AST: 42,
-          ALP: 112,
-          GGT: 48,
-          "Total Bilirubin": 0.9,
-          "Direct Bilirubin": 0.2,
-          Albumin: 4.2,
-          "Total Protein": 7.4,
-          INR: 1.0,
-          Platelets: 195,
-        }
-      };
-    } else {
-      return {
-        values: {
-          patientName: "Public Patient Record",
-          Hemoglobin: 12.8,
-          Hematocrit: 38.5,
-          RBC: 4.1,
-          WBC: 9.2,
-          Platelets: 165,
-          MCV: 84,
-          MCH: 28,
-          MCHC: 33,
-          Neutrophils: 64,
-          Lymphocytes: 28,
-        }
+        values: localParsed,
+        providerUsed: "local_ocr",
+        modelUsed: "Tesseract OCR + Local Clinical Parser",
+        wasFallback: true
       };
     }
   }
 
-  const values = await callDirectGeminiExtractocr(imagesBase64, reportType, geminiKey);
-  return { values };
+  // If no values could be extracted, throw a clear actionable error instead of returning fake mock data
+  throw new Error("Unable to extract quantitative clinical parameters. Please ensure image is well-lit and clear, or configure a free Google Gemini or Groq API Key in AI Provider Settings for enhanced recognition.");
 }
+

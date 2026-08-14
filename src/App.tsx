@@ -214,6 +214,16 @@ export default function App() {
       window.removeEventListener("click", handleOutsideClick);
     };
   }, [reportsDropdownOpen]);
+
+  useEffect(() => {
+    const handleOpenProviderModal = () => {
+      setSettingsOpen(true);
+    };
+    window.addEventListener("open-ai-provider-modal", handleOpenProviderModal);
+    return () => {
+      window.removeEventListener("open-ai-provider-modal", handleOpenProviderModal);
+    };
+  }, []);
   const [colorScheme, setColorScheme] = useState<"standard" | "obsidian">(() => {
     try {
       const stored = localStorage.getItem("hepatic_color_scheme");
