@@ -11,44 +11,130 @@ export function normalizeOcrText(text: string): string {
     .replace(/\s+/g, " "); // consolidate spaces
 }
 
-// Extract patient name from text
+/**
+ * Normalizes letter-spaced tokens like "R a h u l   K u m a r" into "Rahul Kumar"
+ */
+function normalizeLetterSpacing(str: string): string {
+  return str.replace(/\b([A-Za-z])(?:\s+([A-Za-z]))+\b/g, (match) => {
+    const multiWords = match.split(/\s{2,}/);
+    return multiWords.map(chunk => {
+      const chars = chunk.trim().split(/\s+/);
+      if (chars.length > 1 && chars.every(c => c.length === 1)) {
+        return chars.join("");
+      }
+      return chunk;
+    }).join(" ");
+  });
+}
+
+/**
+ * /**
+ * Cleans a candidate patient name, eliminating distant column words, unusual gaps, and unwanted noise
+ */
+function cleanCandidateName(candidate: string): string | undefined {
+  if (!candidate) return undefined;
+
+  // 1. First normalize letter-spaced words (e.g. "R a j e s h   K u m a r" -> "Rajesh   Kumar")
+  let normalized = normalizeLetterSpacing(candidate);
+
+  // 2. Cut off at standard medical/report delimiter keywords before column breaks
+  const cutoffMarkers = [
+    /\b(?:age|sex|gender|dob|d\.o\.b|date|ref|dr\.|doctor|uhid|pid|reg|ipd|opd|bed|ward|bill|sample|collected|received|reported|barcode|phone|mob|hospital|clinic|lab|test|investigation|page)\b/i,
+    /[:=]/
+  ];
+
+  for (const marker of cutoffMarkers) {
+    const match = normalized.search(marker);
+    if (match !== -1) {
+      normalized = normalized.substring(0, match).trim();
+    }
+  }
+
+  // 3. Separate at large gaps (3+ spaces, tabs, pipes, semicolons) - ignore distant column spillover!
+  const chunks = normalized.split(/\s{3,}|\t+|[|;\\/]+/);
+  let firstChunk = (chunks[0] || "").trim();
+  if (!firstChunk && chunks.length > 1) {
+    firstChunk = chunks[1].trim();
+  }
+
+  // 4. Remove unwanted symbols and numbers
+  firstChunk = firstChunk.replace(/[^A-Za-z.\-\s]/g, " ").replace(/\s+/g, " ").trim();
+
+  // 5. Extract words and filter
+  const words = firstChunk.split(/\s+/).filter(w => w.length > 0);
+  if (words.length === 0) return undefined;
+
+  // Discard forbidden non-name words
+  const forbiddenTerms = new Set([
+    "patient", "name", "pt", "mr", "mrs", "ms", "dr", "doctor", "reference", "range", 
+    "result", "normal", "date", "clinical", "report", "hospital", "lab", "page", 
+    "male", "female", "years", "year", "biochemistry", "pathology", "haematology", 
+    "test", "profile", "specimen", "blood", "serum", "plasma"
+  ]);
+
+  const validWords: string[] = [];
+  for (let i = 0; i < words.length && validWords.length < 4; i++) {
+    const w = words[i];
+    const lowerW = w.toLowerCase().replace(/[^a-z]/g, "");
+    if (forbiddenTerms.has(lowerW)) {
+      // If it's a prefix like Mr./Mrs./Ms./Dr. at the beginning, keep it
+      if (i === 0 && ["mr", "mrs", "ms", "miss", "master", "dr"].includes(lowerW)) {
+        validWords.push(w.endsWith(".") ? w : `${w}.`);
+        continue;
+      }
+      break;
+    }
+    if (w.length >= 2 && /^[A-Za-z.\-]+$/.test(w)) {
+      validWords.push(w);
+    }
+  }
+
+  // If only a title was captured (e.g. "Mr."), reject
+  const nonTitleWords = validWords.filter(w => !/^(mr|mrs|ms|miss|master|dr)\.?$/i.test(w));
+  if (nonTitleWords.length === 0) return undefined;
+
+  const finalName = validWords.join(" ");
+  if (finalName.length >= 3 && finalName.length <= 45) {
+    return finalName;
+  }
+  return undefined;
+}
+
+// Extract patient name from text with proximity & gap filtering
 export function extractPatientName(text: string): string | undefined {
+  if (!text) return undefined;
+
+  // 1. Line-by-line targeted search (preserves line layout and wide tab/space gaps)
+  const lines = text.split(/\r?\n/);
+  for (const line of lines) {
+    // Check for "Patient Name:", "Patient:", "Pt Name:", "Name:"
+    const nameLineMatch = line.match(/(?:patient\s+name|patient's\s+name|pt\.?\s*name|patient\s*:|name\s*:)[\s:._]*([^\n\r]+)/i);
+    if (nameLineMatch && nameLineMatch[1]) {
+      const cleaned = cleanCandidateName(nameLineMatch[1]);
+      if (cleaned) return cleaned;
+    }
+
+    // Check for Honorifics at line start: "Mr. Rajesh Kumar"
+    const honorificMatch = line.match(/\b(mr\.|ms\.|mrs\.|dr\.|master|miss|shri|smt\.)\s+([A-Za-z]+(?:\s+[A-Za-z]+){1,3})/i);
+    if (honorificMatch) {
+      const cleaned = cleanCandidateName(honorificMatch[0]);
+      if (cleaned) return cleaned;
+    }
+  }
+
+  // 2. Normalized full-text regexes
   const normalized = normalizeOcrText(text);
-  
-  // Regex combinations for matching patient name
   const nameRegexes = [
-    /(?:patient\s+name|patient\s*:\s*|name\s*:\s*|patient's\s+name)[\s:._]*([A-Za-z]+(?:\s+[A-Za-z]+){1,3})/i,
-    /(?:mr\.|ms\.|mrs\.|dr\.)\s*([A-Za-z]+(?:\s+[A-Za-z]+){1,2})/i,
-    /name\s+([\w\s]+?)(?=\s+(?:age|sex|gender|date|ref|id|uhid|reg))/i
+    /(?:patient\s+name|patient\s*:\s*|name\s*:\s*|patient's\s+name|pt\.?\s*name)[\s:._]*([A-Za-z]+(?:\s+[A-Za-z]+){1,3})/i,
+    /(?:mr\.|ms\.|mrs\.|dr\.|shri|smt\.)\s*([A-Za-z]+(?:\s+[A-Za-z]+){1,2})/i,
+    /name\s+([\w\s]+?)(?=\s+(?:age|sex|gender|dob|date|ref|id|uhid|reg))/i
   ];
 
   for (const regex of nameRegexes) {
     const match = normalized.match(regex);
     if (match && match[1]) {
-      const name = match[1].trim();
-      // Enforce sanity checks on name: shouldn't contain numbers or common medical report terms
-      const lowerName = name.toLowerCase();
-      const forbiddenTerms = ["reference", "range", "result", "normal", "date", "clinical", "report", "hospital", "doctor", "lab", "page"];
-      const hasForbiddenTerm = forbiddenTerms.some(term => lowerName.includes(term));
-      const hasNumbers = /\d/.test(name);
-      
-      if (name.length >= 3 && name.length <= 40 && !hasForbiddenTerm && !hasNumbers) {
-        return name;
-      }
-    }
-  }
-
-  // Fallback check on individual lines
-  const lines = text.split("\n");
-  for (const line of lines) {
-    if (/name/i.test(line) && !/reference|ref/i.test(line)) {
-      const parts = line.split(/[:\-\t]/);
-      if (parts.length > 1) {
-        const potentialName = parts[1].trim();
-        if (potentialName.length >= 3 && potentialName.length <= 30 && !/\d/.test(potentialName)) {
-          return potentialName;
-        }
-      }
+      const cleaned = cleanCandidateName(match[1]);
+      if (cleaned) return cleaned;
     }
   }
 
@@ -89,13 +175,116 @@ export function extractPatientGender(text: string): "male" | "female" | undefine
   return undefined;
 }
 
-// Extract patient age dynamically
+/**
+ * Calculates current age in years given a Date of Birth (DOB) string or year
+ */
+export function calculateAgeFromDob(dobStr: string): string | undefined {
+  if (!dobStr) return undefined;
+  const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth() + 1;
+  const currentDay = new Date().getDate();
+
+  // Pattern 1: ISO format YYYY-MM-DD or YYYY/MM/DD: e.g. "1990-10-25" or "1985/07/15"
+  const isoMatch = dobStr.match(/\b([0-9]{4})[-/.]([0-9]{1,2})[-/.]([0-9]{1,2})\b/);
+  if (isoMatch) {
+    const year = parseInt(isoMatch[1]);
+    const month = parseInt(isoMatch[2]);
+    const day = parseInt(isoMatch[3]);
+    if (year > 1900 && year <= currentYear) {
+      let age = currentYear - year;
+      if (month && (currentMonth < month || (currentMonth === month && day && currentDay < day))) {
+        age--;
+      }
+      if (age >= 0 && age <= 120) {
+        return String(age);
+      }
+    }
+  }
+
+  // Pattern 2: DD/MM/YYYY or DD-Mon-YYYY: e.g. "15/07/1985", "12-Apr-1980", "12/04/85"
+  const standardMatch = dobStr.match(/\b([0-9]{1,2})[-/.]([0-9]{1,2}|[A-Za-z]{3,9})[-/.]([0-9]{2,4})\b/);
+  if (standardMatch) {
+    const rawYear = standardMatch[3];
+    let year: number;
+    if (rawYear.length === 2) {
+      const y2 = parseInt(rawYear);
+      const cur2 = currentYear % 100;
+      year = y2 <= cur2 ? 2000 + y2 : 1900 + y2;
+    } else {
+      year = parseInt(rawYear);
+    }
+
+    const day = parseInt(standardMatch[1]);
+    let month: number | undefined;
+    if (isNaN(parseInt(standardMatch[2]))) {
+      const mStr = standardMatch[2].toLowerCase().slice(0, 3);
+      const months: Record<string, number> = {
+        jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
+        jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12
+      };
+      month = months[mStr];
+    } else {
+      month = parseInt(standardMatch[2]);
+    }
+
+    if (year > 1900 && year <= currentYear) {
+      let age = currentYear - year;
+      if (month && (currentMonth < month || (currentMonth === month && day && currentDay < day))) {
+        age--;
+      }
+      if (age >= 0 && age <= 120) {
+        return String(age);
+      }
+    }
+  }
+
+  // Pattern 3: Month name first: "April 12, 1980" or "Jul 15 1985"
+  const monthFirstMatch = dobStr.match(/\b([A-Za-z]{3,9})\s+([0-9]{1,2}),?\s+([0-9]{4})\b/);
+  if (monthFirstMatch) {
+    const year = parseInt(monthFirstMatch[3]);
+    const mStr = monthFirstMatch[1].toLowerCase().slice(0, 3);
+    const months: Record<string, number> = {
+      jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6,
+      jul: 7, aug: 8, sep: 9, oct: 10, nov: 11, dec: 12
+    };
+    const month = months[mStr];
+    const day = parseInt(monthFirstMatch[2]);
+    if (year > 1900 && year <= currentYear) {
+      let age = currentYear - year;
+      if (month && (currentMonth < month || (currentMonth === month && day && currentDay < day))) {
+        age--;
+      }
+      if (age >= 0 && age <= 120) {
+        return String(age);
+      }
+    }
+  }
+
+  // Pattern 4: Explicit 4-digit birth year: e.g. "Born 1982" or "DOB: 1978"
+  const yearMatch = dobStr.match(/\b(19[2-9][0-9]|20[0-2][0-9])\b/);
+  if (yearMatch) {
+    const yr = parseInt(yearMatch[1]);
+    const age = currentYear - yr;
+    if (age >= 0 && age <= 120) {
+      return String(age);
+    }
+  }
+
+  return undefined;
+}
+
+// Extract patient age dynamically (supports explicit age and calculates from Date of Birth)
 export function extractPatientAge(text: string): string | undefined {
+  if (!text) return undefined;
   const normalized = text.toLowerCase();
+
+  // 1. Explicit age patterns (e.g. "Age: 45 Y", "45 Y / M", "Age/Sex: 45/Male")
   const ageRegexes = [
     /age\s*[:\-\t]*\s*([0-9]{1,3})\s*(?:years|yr|y\.?o\.?|s)?\b/i,
-    /\b([0-9]{1,3})\s*years\b/i,
-    /age\s*\/sex\s*[:\-\t]*\s*([0-9]{1,3})/i
+    /age\s*\/sex\s*[:\-\t]*\s*([0-9]{1,3})/i,
+    /\b([0-9]{1,3})\s*(?:y|yr|yrs|years)\s*(?:\/|\s)\s*(?:m|f|male|female)\b/i,
+    /(?:male|female|m|f)\s*(?:\/|\s)\s*([0-9]{1,3})\s*(?:y|yr|yrs|years)\b/i,
+    /\b([0-9]{1,3})\s*years\b/i
   ];
 
   for (const regex of ageRegexes) {
@@ -107,6 +296,23 @@ export function extractPatientAge(text: string): string | undefined {
       }
     }
   }
+
+  // 2. Date of Birth (DOB) pattern detection and current year age calculation
+  const dobRegexes = [
+    /(?:dob|d\.o\.b|date\s+of\s+birth|birth\s*date|born)\s*[:\-\t/]*\s*([^\n\r,;|]+)/i,
+    /(?:age\s*\/\s*dob|dob\s*\/\s*age)\s*[:\-\t/]*\s*([^\n\r,;|]+)/i
+  ];
+
+  for (const dobRegex of dobRegexes) {
+    const dobMatch = text.match(dobRegex);
+    if (dobMatch && dobMatch[1]) {
+      const calculatedAge = calculateAgeFromDob(dobMatch[1]);
+      if (calculatedAge) {
+        return calculatedAge;
+      }
+    }
+  }
+
   return undefined;
 }
 

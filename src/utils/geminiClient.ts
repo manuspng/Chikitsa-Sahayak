@@ -168,6 +168,23 @@ This report is intended solely for clinical decision-support and educational pur
 export function sanitizePatientName(name: any): string | undefined {
   if (typeof name !== "string" || !name) return undefined;
   let clean = name.trim();
+
+  // 1. Separate at large gaps (2+ spaces, tabs, pipes, semicolons) - ignore distant column words
+  const chunks = clean.split(/\s{2,}|\t+|[|;\\/]+/);
+  if (chunks.length > 0 && chunks[0].trim().length >= 2) {
+    clean = chunks[0].trim();
+  }
+
+  // 2. Normalize letter-spaced characters (e.g., "R a j e s h" -> "Rajesh")
+  clean = clean.replace(/\b([A-Za-z])\s+([A-Za-z])(?:\s+([A-Za-z]))*(?:\s+([A-Za-z]))*\b/g, (match) => {
+    const chars = match.split(/\s+/);
+    if (chars.every(c => c.length === 1)) {
+      return chars.join("");
+    }
+    return match;
+  });
+
+  // 3. Cut off at standard trailing metadata
   clean = clean.replace(/\d{4}[\-\/]\d{2}[\-\/]\d{2}[_\s]?\d{2}:\d{2}:\d{2}.*$/i, "");
   clean = clean.replace(/\d{4}[:\-\/]\d{2}[:\-\/]\d{2}.*/i, "");
   clean = clean.replace(/\d{2}[:\-\/]\d{2}[:\-\/]\d{4}.*/i, "");
@@ -175,7 +192,8 @@ export function sanitizePatientName(name: any): string | undefined {
   const expressions = [
     "results represent", "represent", "lab data", "as of", "patient name is",
     "json mapping", "let's list", "schema", "json", "total bilirubin",
-    "direct bilirubin", "ast (sgot)", "alt (sgpt)", "ggt", "alp", "albumin"
+    "direct bilirubin", "ast (sgot)", "alt (sgpt)", "ggt", "alp", "albumin",
+    "ref by", "ref:", "dr.", "doctor", "age", "sex", "gender", "dob", "uhid", "pid"
   ];
   
   for (const exp of expressions) {
@@ -187,13 +205,13 @@ export function sanitizePatientName(name: any): string | undefined {
 
   clean = clean.replace(/\d{4}.*$/g, "");
   clean = clean.replace(/\d+.*$/g, "");
-  clean = clean.trim();
+  clean = clean.replace(/[^A-Za-z.\-\s]/g, " ").replace(/\s+/g, " ").trim();
   
-  if (clean.length > 60) {
-    clean = clean.substring(0, 60);
+  if (clean.length > 50) {
+    clean = clean.substring(0, 50).trim();
   }
   
-  return clean || undefined;
+  return (clean.length >= 2) ? clean : undefined;
 }
 
 /**
@@ -642,16 +660,20 @@ async function callDirectGeminiExtractocr(
     }
   }));
 
+  const currentYear = new Date().getFullYear();
   let textPrompt = "";
   let responseSchema: any = {};
 
+  const patientDemographicsGuideline = `CRITICAL EXTRACTION RULES FOR DEMOGRAPHICS:
+1. patientName: Extract ONLY the patient's full name from the words immediately adjacent to 'Patient Name' / 'Name' / 'Pt Name'. Ignore distant words separated by wide spaces, tabs, or separate table columns. DO NOT include doctor names ('Dr.', 'Ref By'), hospital/lab names, test titles, dates, or sample IDs.
+2. patientAge: Extract numerical age in years. If explicit age is not listed but Date of Birth (DOB) / Birth Date is present (e.g., DOB: 14/06/1982), automatically calculate the patient's current age in years using the current year (${currentYear}).
+3. patientGender: Extract "male" or "female".`;
+
   if (reportType === "lft") {
     textPrompt = `You are a clinical laboratory document parsing specialist. Carefully analyze the uploaded Liver Function Test (LFT) report images and raw text.
-Extract the patient name, age, gender, and exact numerical laboratory values for all listed parameters.
-Return a clean JSON object with the exact keys:
-- patientName (raw name only, e.g. "Suresh Kumar")
-- patientAge (numerical age if present)
-- patientGender ("male" or "female" if present)
+${patientDemographicsGuideline}
+
+Extract numerical laboratory values for all listed parameters:
 - ALT (Alanine Aminotransferase / SGPT in U/L)
 - AST (Aspartate Aminotransferase / SGOT in U/L)
 - ALP (Alkaline Phosphatase in U/L)
@@ -669,9 +691,9 @@ ${rawOcrText ? `\n\nOCR Pre-scanned text for verification:\n${rawOcrText}` : ""}
     responseSchema = {
       type: "OBJECT",
       properties: {
-        patientName: { type: "STRING" },
-        patientAge: { type: "NUMBER" },
-        patientGender: { type: "STRING" },
+        patientName: { type: "STRING", description: "Patient full name strictly from adjacent words" },
+        patientAge: { type: "NUMBER", description: `Patient age in years (calculated from DOB with year ${currentYear} if DOB is given)` },
+        patientGender: { type: "STRING", description: "male or female" },
         ALT: { type: "NUMBER" },
         AST: { type: "NUMBER" },
         ALP: { type: "NUMBER" },
@@ -686,10 +708,9 @@ ${rawOcrText ? `\n\nOCR Pre-scanned text for verification:\n${rawOcrText}` : ""}
     };
   } else if (reportType === "metabolic") {
     textPrompt = `You are a clinical laboratory document parsing specialist. Analyze the uploaded Metabolic Panel & Renal/ACR report images.
-Extract the patient details and laboratory numbers:
-- patientName (raw name only)
-- patientAge (numerical age)
-- patientGender ("male" or "female")
+${patientDemographicsGuideline}
+
+Extract the laboratory numbers:
 - fastingBloodGlucose (mg/dL)
 - triglycerides (mg/dL)
 - hdlCholesterol (mg/dL)
@@ -704,9 +725,9 @@ ${rawOcrText ? `\n\nOCR Pre-scanned text:\n${rawOcrText}` : ""}`;
     responseSchema = {
       type: "OBJECT",
       properties: {
-        patientName: { type: "STRING" },
-        patientAge: { type: "NUMBER" },
-        patientGender: { type: "STRING" },
+        patientName: { type: "STRING", description: "Patient full name strictly from adjacent words" },
+        patientAge: { type: "NUMBER", description: `Patient age in years (calculated from DOB with year ${currentYear} if DOB is given)` },
+        patientGender: { type: "STRING", description: "male or female" },
         fastingBloodGlucose: { type: "NUMBER" },
         triglycerides: { type: "NUMBER" },
         hdlCholesterol: { type: "NUMBER" },
@@ -720,10 +741,9 @@ ${rawOcrText ? `\n\nOCR Pre-scanned text:\n${rawOcrText}` : ""}`;
     };
   } else {
     textPrompt = `You are a clinical laboratory document parsing specialist. Analyze the Complete Blood Count (CBC) report images.
+${patientDemographicsGuideline}
+
 Extract:
-- patientName (raw name only)
-- patientAge (numerical age)
-- patientGender ("male" or "female")
 - Hemoglobin (g/dL)
 - Hematocrit (%)
 - RBC (10^12/L or 10^6/uL)
@@ -742,9 +762,9 @@ ${rawOcrText ? `\n\nOCR Pre-scanned text:\n${rawOcrText}` : ""}`;
     responseSchema = {
       type: "OBJECT",
       properties: {
-        patientName: { type: "STRING" },
-        patientAge: { type: "NUMBER" },
-        patientGender: { type: "STRING" },
+        patientName: { type: "STRING", description: "Patient full name strictly from adjacent words" },
+        patientAge: { type: "NUMBER", description: `Patient age in years (calculated from DOB with year ${currentYear} if DOB is given)` },
+        patientGender: { type: "STRING", description: "male or female" },
         Hemoglobin: { type: "NUMBER" },
         Hematocrit: { type: "NUMBER" },
         RBC: { type: "NUMBER" },
@@ -827,14 +847,15 @@ async function callDirectGroqExtract(
   apiKey: string
 ): Promise<any> {
   const url = "https://api.groq.com/openai/v1/chat/completions";
+  const currentYear = new Date().getFullYear();
   
   let instructions = "";
   if (reportType === "lft") {
-    instructions = `You are a medical laboratory data extraction engine. Extract patientName, patientAge, patientGender ("male"|"female"), and exact numeric values for: ALT, AST, ALP, GGT, Total Bilirubin, Direct Bilirubin, Albumin, Total Protein, INR, Platelets from the OCR text. Return valid JSON only with these exact keys. If a value is missing, omit it.`;
+    instructions = `You are a medical laboratory data extraction engine. Extract patientName (strictly from words immediately adjacent to Patient Name, ignoring distant words or other columns), patientAge (number in years, calculate from Date of Birth with year ${currentYear} if DOB is given), patientGender ("male"|"female"), and exact numeric values for: ALT, AST, ALP, GGT, Total Bilirubin, Direct Bilirubin, Albumin, Total Protein, INR, Platelets from the OCR text. Return valid JSON only with these exact keys. If a value is missing, omit it.`;
   } else if (reportType === "metabolic") {
-    instructions = `You are a medical laboratory data extraction engine. Extract patientName, patientAge, patientGender, and exact numeric values for: fastingBloodGlucose, triglycerides, hdlCholesterol, systolicBp, diastolicBp, urineAcr, urineAlbumin, urineCreatinine, waistCircumference from the OCR text. Return valid JSON only with these exact keys.`;
+    instructions = `You are a medical laboratory data extraction engine. Extract patientName (strictly adjacent words), patientAge (calculate from DOB with year ${currentYear} if DOB is given), patientGender, and exact numeric values for: fastingBloodGlucose, triglycerides, hdlCholesterol, systolicBp, diastolicBp, urineAcr, urineAlbumin, urineCreatinine, waistCircumference from the OCR text. Return valid JSON only with these exact keys.`;
   } else {
-    instructions = `You are a medical laboratory data extraction engine. Extract patientName, patientAge, patientGender, and exact numeric values for: Hemoglobin, Hematocrit, RBC, WBC, Platelets, MCV, MCH, MCHC, Neutrophils, Lymphocytes from the OCR text. Return valid JSON only with these exact keys.`;
+    instructions = `You are a medical laboratory data extraction engine. Extract patientName (strictly adjacent words), patientAge (calculate from DOB with year ${currentYear} if DOB is given), patientGender, and exact numeric values for: Hemoglobin, Hematocrit, RBC, WBC, Platelets, MCV, MCH, MCHC, Neutrophils, Lymphocytes from the OCR text. Return valid JSON only with these exact keys.`;
   }
 
   const payload = {

@@ -47,34 +47,34 @@ const ai = new GoogleGenAI({
 
 function sanitizePatientName(name: any): string | undefined {
   if (typeof name !== "string" || !name) return undefined;
-  
-  // Trim any whitespace
   let clean = name.trim();
   
-  // Strip common image/file dates or timestamps if glued, e.g., "Suresh Kumar2024-05-16_08:11:00 AM" => "Suresh Kumar"
+  // 1. Separate at large gaps (2+ spaces, tabs, pipes, semicolons) - ignore distant column words
+  const chunks = clean.split(/\s{2,}|\t+|[|;\\/]+/);
+  if (chunks.length > 0 && chunks[0].trim().length >= 2) {
+    clean = chunks[0].trim();
+  }
+
+  // 2. Normalize letter-spaced characters (e.g., "R a j e s h" -> "Rajesh")
+  clean = clean.replace(/\b([A-Za-z])\s+([A-Za-z])(?:\s+([A-Za-z]))*(?:\s+([A-Za-z]))*\b/g, (match) => {
+    const chars = match.split(/\s+/);
+    if (chars.every(c => c.length === 1)) {
+      return chars.join("");
+    }
+    return match;
+  });
+
+  // 3. Strip common image/file dates or timestamps if glued
   clean = clean.replace(/\d{4}[\-\/]\d{2}[\-\/]\d{2}[_\s]?\d{2}:\d{2}:\d{2}.*$/i, "");
   clean = clean.replace(/\d{4}[:\-\/]\d{2}[:\-\/]\d{2}.*/i, "");
   clean = clean.replace(/\d{2}[:\-\/]\d{2}[:\-\/]\d{4}.*/i, "");
   
   // Strip generic sentence explanations or guidelines often outputted by models
   const expressions = [
-    "results represent",
-    "represent",
-    "lab data",
-    "as of",
-    "patient name is",
-    "json mapping",
-    "let's list",
-    "schema",
-    "json",
-    "mr. suresh kumar total bilirubin",
-    "total bilirubin",
-    "direct bilirubin",
-    "ast (sgot)",
-    "alt (sgpt)",
-    "ggt",
-    "alp",
-    "albumin"
+    "results represent", "represent", "lab data", "as of", "patient name is",
+    "json mapping", "let's list", "schema", "json", "total bilirubin",
+    "direct bilirubin", "ast (sgot)", "alt (sgpt)", "ggt", "alp", "albumin",
+    "ref by", "ref:", "dr.", "doctor", "age", "sex", "gender", "dob", "uhid", "pid"
   ];
   
   for (const exp of expressions) {
@@ -84,18 +84,15 @@ function sanitizePatientName(name: any): string | undefined {
     }
   }
 
-  // Double cleanup of any leftover trailing garbage/years/dates
   clean = clean.replace(/\d{4}.*$/g, "");
   clean = clean.replace(/\d+.*$/g, "");
+  clean = clean.replace(/[^A-Za-z.\-\s]/g, " ").replace(/\s+/g, " ").trim();
   
-  clean = clean.trim();
-  
-  // Ensure we don't have extremely long strings or junk
-  if (clean.length > 60) {
-    clean = clean.substring(0, 60);
+  if (clean.length > 50) {
+    clean = clean.substring(0, 50).trim();
   }
   
-  return clean || undefined;
+  return (clean.length >= 2) ? clean : undefined;
 }
 
 function formatGeminiError(error: any): string {
@@ -635,15 +632,26 @@ app.post("/api/gemini/extract-report", async (req, res) => {
       },
     }));
 
+    const currentYear = new Date().getFullYear();
     let textPrompt = "";
     let responseSchema: any = {};
 
+    const patientDemographicsGuideline = `CRITICAL EXTRACTION RULES FOR DEMOGRAPHICS:
+1. patientName: Extract ONLY the patient's full name from words immediately adjacent to 'Patient Name' / 'Name' / 'Pt Name'. Ignore distant words separated by wide spaces, tabs, or separate table columns. DO NOT include doctor names ('Dr.', 'Ref By'), hospital/lab names, test titles, dates, or sample IDs.
+2. patientAge: Extract numerical age in years. If explicit age is not listed but Date of Birth (DOB) / Birth Date is present (e.g., DOB: 14/06/1982), automatically calculate the patient's current age in years using the current year (${currentYear}).
+3. patientGender: Extract "male" or "female".`;
+
     if (reportType === "lft") {
-      textPrompt = `Identify and extract the clean, brief patient name (excluding any dates, test results, or surrounding sentence text) and all listed Liver Function Test (LFT) numerical value readings from these lab report photo pages. Convert the extracted items into a single flat JSON dictionary representing values consolidated across all original pages. If a specific reading is not present in any page, do not include it. Ignore text and references that are not quantitative indicators. If different pages list the same indicator, use the most recent or logical one.`;
+      textPrompt = `Identify and extract patient demographics and all listed Liver Function Test (LFT) numerical value readings from these lab report photo pages.
+${patientDemographicsGuideline}
+
+Convert the extracted items into a single flat JSON dictionary representing values consolidated across all original pages. If a specific reading is not present in any page, do not include it. Ignore text and references that are not quantitative indicators. If different pages list the same indicator, use the most recent or logical one.`;
       responseSchema = {
         type: Type.OBJECT,
         properties: {
-          patientName: { type: Type.STRING, description: "Strictly the raw patient name only, e.g. 'Mr. Suresh Kumar'. Absolutely no dates, notes, or analytical results included." },
+          patientName: { type: Type.STRING, description: "Strictly the raw patient name only from adjacent words" },
+          patientAge: { type: Type.NUMBER, description: `Patient age in years (calculated from DOB with year ${currentYear} if DOB is given)` },
+          patientGender: { type: Type.STRING, description: "male or female" },
           ALT: { type: Type.NUMBER, description: "Alanine Aminotransferase (ALT/SGPT) in U/L" },
           AST: { type: Type.NUMBER, description: "Aspartate Aminotransferase (AST/SGOT) in U/L" },
           ALP: { type: Type.NUMBER, description: "Alkaline Phosphatase (ALP) in U/L" },
@@ -657,11 +665,16 @@ app.post("/api/gemini/extract-report", async (req, res) => {
         },
       };
     } else if (reportType === "metabolic") {
-      textPrompt = `Identify and extract the clean, brief patient name and all listed Metabolic Syndrome & Renal/Lipid laboratory indicators from these lab report photo pages: Fasting Blood Glucose (mg/dL), Triglycerides (mg/dL), HDL Cholesterol (mg/dL), Systolic Blood Pressure (mmHg), Diastolic Blood Pressure (mmHg), Urine Albumin-Creatinine Ratio (ACR in mg/g or ug/mg), Urine Albumin (mg/L), Urine Creatinine (mg/dL), and Waist Circumference (cm). If a specific reading is not present in any page, omit it.`;
+      textPrompt = `Identify and extract patient demographics and all listed Metabolic Syndrome & Renal/Lipid laboratory indicators from these lab report photo pages: Fasting Blood Glucose (mg/dL), Triglycerides (mg/dL), HDL Cholesterol (mg/dL), Systolic Blood Pressure (mmHg), Diastolic Blood Pressure (mmHg), Urine Albumin-Creatinine Ratio (ACR in mg/g or ug/mg), Urine Albumin (mg/L), Urine Creatinine (mg/dL), and Waist Circumference (cm).
+${patientDemographicsGuideline}
+
+If a specific reading is not present in any page, omit it.`;
       responseSchema = {
         type: Type.OBJECT,
         properties: {
-          patientName: { type: Type.STRING, description: "Strictly the raw patient name only." },
+          patientName: { type: Type.STRING, description: "Strictly the raw patient name only from adjacent words." },
+          patientAge: { type: Type.NUMBER, description: `Patient age in years (calculated from DOB with year ${currentYear} if DOB is given)` },
+          patientGender: { type: Type.STRING, description: "male or female" },
           fastingBloodGlucose: { type: Type.NUMBER, description: "Fasting Blood Glucose (mg/dL)" },
           triglycerides: { type: Type.NUMBER, description: "Triglycerides (mg/dL)" },
           hdlCholesterol: { type: Type.NUMBER, description: "HDL Cholesterol (mg/dL)" },
@@ -674,11 +687,16 @@ app.post("/api/gemini/extract-report", async (req, res) => {
         },
       };
     } else {
-      textPrompt = `Identify and extract the clean, brief patient name (excluding any dates, test results, or surrounding sentence text) and all listed Complete Blood Count (CBC) numerical value readings from these lab report photo pages. Convert the extracted items into a single flat JSON dictionary representing values consolidated across all original pages. If a specific reading is not present in any page, do not include it. Ignore standard range guides. If different pages list the same indicator, use the most recent or logical one.`;
+      textPrompt = `Identify and extract patient demographics and all listed Complete Blood Count (CBC) numerical value readings from these lab report photo pages.
+${patientDemographicsGuideline}
+
+Convert the extracted items into a single flat JSON dictionary representing values consolidated across all original pages. If a specific reading is not present in any page, do not include it. Ignore standard range guides. If different pages list the same indicator, use the most recent or logical one.`;
       responseSchema = {
         type: Type.OBJECT,
         properties: {
-          patientName: { type: Type.STRING, description: "Strictly the raw patient name only, e.g. 'Jane Smith'. Absolutely no dates, notes, or analytical results included." },
+          patientName: { type: Type.STRING, description: "Strictly the raw patient name only from adjacent words." },
+          patientAge: { type: Type.NUMBER, description: `Patient age in years (calculated from DOB with year ${currentYear} if DOB is given)` },
+          patientGender: { type: Type.STRING, description: "male or female" },
           Hemoglobin: { type: Type.NUMBER, description: "Hemoglobin value in g/dL" },
           Hematocrit: { type: Type.NUMBER, description: "Hematocrit percentage value" },
           RBC: { type: Type.NUMBER, description: "Red Blood Cell count x10^12/L or x10^6/uL" },
