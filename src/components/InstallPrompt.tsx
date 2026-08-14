@@ -18,13 +18,29 @@ export default function InstallPrompt() {
       setActiveTab("desktop");
     }
 
-    // 2. Allow manual trigger from anywhere via custom event
+    // 2. Check if running in installed/standalone mode
+    const isInStandaloneMode = 
+      Boolean((window.navigator as any).standalone) || 
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.matchMedia("(display-mode: fullscreen)").matches ||
+      document.referrer.includes("android-app://");
+
+    // 3. Auto-show popup every time the link is opened in standard browser mode
+    let timer: any;
+    if (!isInStandaloneMode) {
+      timer = setTimeout(() => {
+        setIsVisible(true);
+      }, 750);
+    }
+
+    // 4. Allow manual trigger from anywhere via custom event
     const handleOpenPrompt = () => {
       setIsVisible(true);
     };
     window.addEventListener("open-install-prompt", handleOpenPrompt);
 
     return () => {
+      clearTimeout(timer);
       window.removeEventListener("open-install-prompt", handleOpenPrompt);
     };
   }, []);
