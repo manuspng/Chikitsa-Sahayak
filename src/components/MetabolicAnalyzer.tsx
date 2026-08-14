@@ -7,9 +7,7 @@ import ScoreGauge from "./ScoreGauge";
 import MetricCard from "./MetricCard";
 import Tesseract from "tesseract.js";
 import { preprocessImageForOcr } from "../utils/ocrPreprocessing";
-import { parseMetabolicReport } from "../utils/labReportParser";
 import { runGeminiAnalyze, runGeminiExtractReport, getProviderDisplayName } from "../utils/geminiClient";
-import CameraModal from "./CameraModal";
 
 function getOfflineMetabolicSummary(inputs: MetabolicInputs, results: MetabolicResults): string {
   const segments: string[] = [];
@@ -68,17 +66,12 @@ export default function MetabolicAnalyzer({ onAddRecord }: MetabolicAnalyzerProp
   const activeProviderName = getProviderDisplayName(currentProvider);
   const [aiMeta, setAiMeta] = useState<{ providerUsed?: string; wasFallback?: boolean; modelUsed?: string } | null>(null);
 
-  // Multi-page image queue
+  // Multi-page image queue & input refs for Mobile & PC (Camera, Gallery, Document/PDF)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
-  const [isCameraOpen, setIsCameraOpen] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleCameraCapture = (file: File) => {
-    const updated = [...selectedFiles, file].slice(0, 3);
-    setSelectedFiles(updated);
-    processFilesForOcr(updated);
-  };
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const documentInputRef = useRef<HTMLInputElement>(null);
 
   const handlePopulateSample = () => {
     setFormData({
@@ -444,67 +437,104 @@ OFFLINE CRITERIA SYNTHESIS:
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setOcrError(null);
     if (e.target.files) {
-      const files = Array.from(e.target.files).filter((f: any) => f.type.startsWith("image/"));
+      const files = Array.from(e.target.files);
       const newFiles = [...selectedFiles, ...files].slice(0, 3);
       setSelectedFiles(newFiles);
       processFilesForOcr(newFiles);
+      // Reset input value so re-uploading the same file works
+      e.target.value = "";
     }
   };
 
   return (
     <div className="space-y-6" id="metabolic-analyzer-root">
+      {/* 3 Native File Input Handlers for Mobile & PC */}
       <input 
         type="file" 
-        ref={fileInputRef}
+        ref={cameraInputRef}
+        onChange={handleFileChange}
+        accept="image/*"
+        capture="environment"
+        className="hidden" 
+      />
+      <input 
+        type="file" 
+        ref={galleryInputRef}
         onChange={handleFileChange}
         accept="image/*"
         multiple
         className="hidden" 
       />
-
-      <CameraModal
-        isOpen={isCameraOpen}
-        onClose={() => setIsCameraOpen(false)}
-        onCapture={handleCameraCapture}
-        title="Capture Metabolic & Urine ACR Report"
+      <input 
+        type="file" 
+        ref={documentInputRef}
+        onChange={handleFileChange}
+        accept=".pdf,image/*,application/pdf"
+        multiple
+        className="hidden" 
       />
 
-      {/* Quick Actions Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-white dark:bg-slate-900/60 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
-        <div className="flex items-center gap-2">
+      {/* Upload Action Center (Take Photo, Gallery, PDF/Files, Sample, Clear) */}
+      <div className="p-4 bg-white dark:bg-slate-900/80 border-2 border-slate-300 dark:border-slate-700 rounded-2xl shadow-xs space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+          <div>
+            <h4 style={{ color: "#000000" }} className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 dark:text-white">
+              <Upload size={14} className="text-emerald-700 dark:text-emerald-400" />
+              <span>Feed / Scan Metabolic & ACR Report (Photo, Gallery or PDF)</span>
+            </h4>
+            <p style={{ color: "#000000" }} className="text-[11px] font-bold mt-0.5 dark:text-slate-200">
+              Select any method below to upload your report on Mobile or PC
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handlePopulateSample}
+              className="text-xs font-bold tracking-wide px-3 py-1.5 rounded-xl border-2 border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-950 dark:text-white cursor-pointer flex items-center gap-1.5 transition-colors"
+            >
+              <Layers size={13} />
+              <span>Load Sample</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleClearAllInputs}
+              className="text-xs font-bold tracking-wide px-3 py-1.5 rounded-xl border-2 border-red-300 hover:bg-red-50 text-red-700 dark:border-red-500/40 dark:text-red-400 dark:hover:bg-red-950/30 cursor-pointer flex items-center gap-1.5 transition-colors"
+            >
+              <Trash2 size={13} />
+              <span>Clear</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 3 Prominent Options: Take Photo, From Gallery, From PDF/File */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
           <button
             type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="text-xs font-bold tracking-wide px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white cursor-pointer flex items-center gap-1.5 transition-all shadow-xs"
+            onClick={() => cameraInputRef.current?.click()}
+            className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-black shadow-xs transition-all active:scale-[0.98] cursor-pointer"
           >
-            <Upload size={13} />
-            <span>Upload Report</span>
+            <Camera size={15} />
+            <span>📸 Take Photo</span>
           </button>
+
           <button
             type="button"
-            onClick={() => setIsCameraOpen(true)}
-            className="text-xs font-bold tracking-wide px-3.5 py-1.5 rounded-xl bg-indigo-700 hover:bg-indigo-800 text-white cursor-pointer flex items-center gap-1.5 transition-all shadow-xs"
+            onClick={() => galleryInputRef.current?.click()}
+            className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-black shadow-xs transition-all active:scale-[0.98] cursor-pointer"
           >
-            <Camera size={13} />
-            <span>Live Camera Scan</span>
+            <Upload size={15} />
+            <span>🖼️ From Gallery</span>
           </button>
+
           <button
             type="button"
-            onClick={handlePopulateSample}
-            className="text-xs font-bold tracking-wide px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 cursor-pointer flex items-center gap-1.5 transition-colors"
+            onClick={() => documentInputRef.current?.click()}
+            className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-black shadow-xs transition-all active:scale-[0.98] cursor-pointer"
           >
-            <Layers size={13} />
-            <span>Load sample values</span>
+            <FileText size={15} />
+            <span>📄 From PDF / File</span>
           </button>
         </div>
-        <button
-          type="button"
-          onClick={handleClearAllInputs}
-          className="text-xs font-bold tracking-wide px-3.5 py-1.5 rounded-xl border border-red-200 hover:bg-red-50 text-red-500 dark:border-red-500/20 dark:hover:bg-red-500/10 cursor-pointer flex items-center gap-1.5 transition-colors"
-        >
-          <Trash2 size={13} />
-          <span>Clear inputs</span>
-        </button>
       </div>
 
       {selectedFiles.length > 0 && (
@@ -574,26 +604,35 @@ OFFLINE CRITERIA SYNTHESIS:
               </>
             )}
             {selectedFiles.length < 3 && !isOcrLoading && (
-              <>
+              <div className="flex items-center gap-1.5 shrink-0">
                 <button
                   type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="py-1.5 px-3 rounded-lg text-[11px] font-bold border border-slate-200 dark:border-slate-700 dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 cursor-pointer transition-colors flex items-center gap-1 shrink-0"
-                  title="Add another photo/page from file"
-                >
-                  <Plus size={11} />
-                  <span>Add File</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsCameraOpen(true)}
-                  className="py-1.5 px-3 rounded-lg text-[11px] font-bold border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 cursor-pointer transition-colors flex items-center gap-1 shrink-0"
-                  title="Take photo with camera"
+                  onClick={() => cameraInputRef.current?.click()}
+                  className="py-1.5 px-2.5 rounded-lg text-[11px] font-bold border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 text-emerald-800 dark:text-emerald-300 cursor-pointer transition-colors flex items-center gap-1 shrink-0"
+                  title="Add photo with camera"
                 >
                   <Camera size={11} />
-                  <span>Add via Camera</span>
+                  <span>+ Photo</span>
                 </button>
-              </>
+                <button
+                  type="button"
+                  onClick={() => galleryInputRef.current?.click()}
+                  className="py-1.5 px-2.5 rounded-lg text-[11px] font-bold border border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 text-indigo-800 dark:text-indigo-300 cursor-pointer transition-colors flex items-center gap-1 shrink-0"
+                  title="Add photo from gallery"
+                >
+                  <Upload size={11} />
+                  <span>+ Gallery</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => documentInputRef.current?.click()}
+                  className="py-1.5 px-2.5 rounded-lg text-[11px] font-bold border border-slate-300 dark:border-slate-700 dark:bg-slate-800 hover:bg-slate-100 text-slate-800 dark:text-slate-200 cursor-pointer transition-colors flex items-center gap-1 shrink-0"
+                  title="Add PDF or document"
+                >
+                  <FileText size={11} />
+                  <span>+ PDF/File</span>
+                </button>
+              </div>
             )}
           </div>
         </div>
