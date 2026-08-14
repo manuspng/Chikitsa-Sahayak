@@ -8,6 +8,7 @@ import MetricCard from "./MetricCard";
 import Tesseract from "tesseract.js";
 import { preprocessImageForOcr } from "../utils/ocrPreprocessing";
 import { runGeminiAnalyze, runGeminiExtractReport, getProviderDisplayName } from "../utils/geminiClient";
+import WebcamCaptureModal from "./WebcamCaptureModal";
 
 function getOfflineCbcSummary(inputs: CBCInputs, results: CBCResults): string {
   if (results.abnormalCount === 0) {
@@ -92,6 +93,13 @@ export default function CbcAnalyzer({ onAddRecord }: CbcAnalyzerProps) {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const [isWebcamOpen, setIsWebcamOpen] = useState<boolean>(false);
+
+  const handleWebcamCapture = (file: File) => {
+    const newFiles = [...selectedFiles, file].slice(0, 3);
+    setSelectedFiles(newFiles);
+    runOcrExtract(newFiles, "offline");
+  };
 
   const handleInputChange = (key: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [key]: value }));
@@ -605,7 +613,7 @@ Please write an expert, professional clinical interpretation of these results. M
         <div className="hidden sm:grid sm:grid-cols-2 gap-3">
           <button
             type="button"
-            onClick={() => cameraInputRef.current?.click()}
+            onClick={() => setIsWebcamOpen(true)}
             className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-black shadow-xs transition-all active:scale-[0.98] cursor-pointer"
           >
             <Camera size={15} />
@@ -717,7 +725,7 @@ Please write an expert, professional clinical interpretation of these results. M
                 <div className="hidden sm:flex items-center gap-1.5 shrink-0">
                   <button
                     type="button"
-                    onClick={() => cameraInputRef.current?.click()}
+                    onClick={() => setIsWebcamOpen(true)}
                     className="py-1.5 px-2.5 rounded-lg text-[11px] font-bold border border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 text-indigo-800 dark:text-indigo-300 cursor-pointer transition-colors flex items-center gap-1"
                     title="Take photo with camera"
                   >
@@ -1289,6 +1297,14 @@ Please write an expert, professional clinical interpretation of these results. M
           </div>
         </div>
       )}
+
+      {/* PC Webcam Live Photo Capture Modal */}
+      <WebcamCaptureModal
+        isOpen={isWebcamOpen}
+        onClose={() => setIsWebcamOpen(false)}
+        onCapture={handleWebcamCapture}
+        title="Take CBC Report Photo"
+      />
     </div>
   );
 }

@@ -63,14 +63,14 @@ export default function InstallPrompt() {
             <div className="w-12 h-12 rounded-2xl bg-white border-2 border-emerald-500/40 p-1 shadow-md flex items-center justify-center shrink-0">
               <img 
                 src="/apple-touch-icon.png" 
-                alt="Chiktsa Sahayak Logo" 
+                alt="Chikitsa Sahayak Logo" 
                 className="w-full h-full object-contain select-none pointer-events-none rounded-xl" 
                 referrerPolicy="no-referrer"
               />
             </div>
             <div>
               <h3 className="text-base font-black tracking-tight text-slate-950 dark:text-white flex items-center gap-1.5 font-serif-brand">
-                Chiktsa Sahayak™
+                Chikitsa Sahayak™
               </h3>
               <p className="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-wider">
                 How to Add Web App to Home Screen
@@ -89,7 +89,7 @@ export default function InstallPrompt() {
         {/* Informational Pitch */}
         <div className="px-6 pt-3 pb-1">
           <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-semibold">
-            Install <strong>Chiktsa Sahayak</strong> on your device for instant 1-tap home screen access, full-screen view, and offline diagnostic tools.
+            Install <strong>Chikitsa Sahayak</strong> on your device for instant 1-tap home screen access, full-screen view, and offline diagnostic tools.
           </p>
         </div>
 
@@ -171,7 +171,7 @@ export default function InstallPrompt() {
                   4
                 </div>
                 <div className="text-xs text-slate-800 dark:text-slate-200 leading-normal">
-                  Tap <strong className="text-slate-950 dark:text-white font-black">"Add"</strong> in the top-right corner. The official Chiktsa Sahayak app icon will appear directly on your home screen!
+                  Tap <strong className="text-slate-950 dark:text-white font-black">"Add"</strong> in the top-right corner. The official Chikitsa Sahayak app icon will appear directly on your home screen!
                 </div>
               </div>
             </div>
@@ -242,7 +242,7 @@ export default function InstallPrompt() {
                   3
                 </div>
                 <div className="text-xs text-slate-800 dark:text-slate-200 leading-normal">
-                  Click <strong className="text-slate-950 dark:text-white font-black">"Install"</strong> to launch Chiktsa Sahayak as a standalone desktop application window.
+                  Click <strong className="text-slate-950 dark:text-white font-black">"Install"</strong> to launch Chikitsa Sahayak as a standalone desktop application window.
                 </div>
               </div>
             </div>
