@@ -752,7 +752,7 @@ Please write an expert, professional clinical interpretation of these results. M
                 setPatientName(e.target.value);
                 setCurrentRecordId(null);
               }}
-              className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-bold placeholder-slate-400 focus:ring-2 focus:ring-emerald-500" 
+              className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-bold placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 h-[42px]" 
             />
           </div>
 
@@ -761,7 +761,7 @@ Please write an expert, professional clinical interpretation of these results. M
             <select
               value={formData.gender}
               onChange={e => handleInputChange("gender", e.target.value)}
-              className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-xs font-black text-slate-950 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+              className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-bold focus:ring-2 focus:ring-emerald-500 cursor-pointer h-[42px]"
             >
               <option value="male" className="text-slate-950">Male</option>
               <option value="female" className="text-slate-950">Female</option>
@@ -776,7 +776,7 @@ Please write an expert, professional clinical interpretation of these results. M
                 placeholder="45"
                 value={patientAge}
                 onChange={e => setPatientAge(e.target.value)}
-                className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-12 font-mono focus:ring-2 focus:ring-emerald-500" 
+                className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-12 font-mono focus:ring-2 focus:ring-emerald-500 h-[42px]" 
               />
               <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">Years</span>
             </div>

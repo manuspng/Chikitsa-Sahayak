@@ -297,36 +297,20 @@ Please write an expert, professional clinical interpretation of this patient's m
                 setPatientName(e.target.value);
                 setCurrentRecordId(null);
               }}
-              className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-bold placeholder-slate-400 focus:ring-2 focus:ring-emerald-500" 
+              className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-bold placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 h-[42px]" 
             />
           </div>
 
           <div className="space-y-1.5">
             <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Gender / Sex</label>
-            <div className="flex bg-white rounded-xl p-1 border-2 border-slate-300">
-              <button
-                type="button"
-                onClick={() => handleInputChange("gender", "male")}
-                className={`flex-1 py-1 px-3 text-xs font-black rounded-lg transition-all cursor-pointer ${
-                  formData.gender === "male"
-                    ? "bg-indigo-700 text-white shadow-xs"
-                    : "text-slate-700 hover:text-slate-950"
-                }`}
-              >
-                Male
-              </button>
-              <button
-                type="button"
-                onClick={() => handleInputChange("gender", "female")}
-                className={`flex-1 py-1 px-3 text-xs font-black rounded-lg transition-all cursor-pointer ${
-                  formData.gender === "female"
-                    ? "bg-indigo-700 text-white shadow-xs"
-                    : "text-slate-700 hover:text-slate-950"
-                }`}
-              >
-                Female
-              </button>
-            </div>
+            <select
+              value={formData.gender}
+              onChange={e => handleInputChange("gender", e.target.value)}
+              className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-bold focus:ring-2 focus:ring-emerald-500 cursor-pointer h-[42px]"
+            >
+              <option value="male" className="text-slate-950">Male</option>
+              <option value="female" className="text-slate-950">Female</option>
+            </select>
           </div>
 
           <div className="space-y-1.5">
@@ -337,7 +321,7 @@ Please write an expert, professional clinical interpretation of this patient's m
                 placeholder="45"
                 value={formData.age}
                 onChange={e => handleInputChange("age", e.target.value)}
-                className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-12 font-mono focus:ring-2 focus:ring-emerald-500" 
+                className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-12 font-mono focus:ring-2 focus:ring-emerald-500 h-[42px]" 
               />
               <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">Years</span>
             </div>
