@@ -1045,13 +1045,13 @@ export default function App() {
               </div>
 
               {/* Security Shield Banner */}
-              <div className="p-4 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-xl border border-emerald-100/40 dark:border-emerald-950/30 text-xs text-emerald-850 dark:text-emerald-300 space-y-2 leading-relaxed">
-                <div className="flex items-center gap-2 font-bold mb-1">
-                  <ShieldPlus size={14} className="text-emerald-600 dark:text-emerald-400" />
-                  <span>End-to-End Client Security Guarantee</span>
+              <div className="p-4 bg-emerald-50 rounded-xl border-2 border-emerald-300 text-xs space-y-2 leading-relaxed text-left">
+                <div className="flex items-center gap-2 font-black mb-1">
+                  <ShieldPlus size={16} className="text-emerald-700 shrink-0" />
+                  <span style={{ color: "#000000" }} className="text-slate-950 font-black text-xs">End-to-End Client Security Guarantee</span>
                 </div>
-                <p className="text-justify">
-                  All provider API keys are saved **exclusively** inside your browser's private sandboxed cache (`localStorage`). No keys are ever written to cloud servers or exposed to tracking systems.
+                <p style={{ color: "#000000" }} className="text-justify font-bold text-slate-950 text-xs leading-relaxed">
+                  All provider API keys are saved <strong style={{ color: "#000000" }} className="font-black">exclusively</strong> inside your browser's private sandboxed cache (<code style={{ color: "#000000" }} className="font-mono font-black bg-white px-1 py-0.5 rounded border border-emerald-300">localStorage</code>). No keys are ever written to cloud servers or exposed to tracking systems.
                 </p>
               </div>
 
