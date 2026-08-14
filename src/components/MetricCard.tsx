@@ -48,17 +48,17 @@ export default function MetricCard({
   const normalWidth = range > 0 ? ((maxNormal - minNormal) / range) * 100 : 50;
 
   return (
-    <div className="p-6 bg-white dark:bg-slate-800 rounded-[20px] border border-slate-250 dark:border-slate-700/65 shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-300">
+    <div style={{ backgroundColor: "#ffffff" }} className="p-6 rounded-[20px] border-2 border-slate-300 shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-300">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <span className="card-title block mb-1">
+          <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs block mb-1 uppercase tracking-wider">
             {label}
           </span>
           <div className="flex items-baseline gap-1 mt-1">
-            <span className="text-3xl font-black font-mono tracking-tight text-slate-800 dark:text-slate-100">
+            <span style={{ color: "#000000" }} className="text-3xl font-black font-mono tracking-tight">
               {value}
             </span>
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-300 font-sans">{unit}</span>
+            <span style={{ color: "#000000" }} className="text-xs font-bold font-sans">{unit}</span>
           </div>
         </div>
         <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border tracking-wide uppercase ${badgeColor}`}>
@@ -68,15 +68,15 @@ export default function MetricCard({
 
       <div className="mt-5">
         {/* Progress bar */}
-        <div className="relative h-2 w-full bg-slate-100 dark:bg-slate-700/60 rounded-full overflow-hidden">
+        <div className="relative h-2.5 w-full bg-slate-200 rounded-full overflow-hidden">
           {/* Normal range highlight zone */}
           <div 
-            className="absolute h-full bg-[#22c55e]/15"
+            className="absolute h-full bg-[#22c55e]/25"
             style={{ left: `${normalLeft}%`, width: `${normalWidth}%` }}
           />
           {/* Pinpoint indicator point */}
           <div 
-            className={`absolute top-0 w-2 h-2 rounded-full -ml-1 border border-white shadow-sm transition-all duration-500 ${
+            className={`absolute top-0 w-2.5 h-2.5 rounded-full -ml-1 border border-white shadow-sm transition-all duration-500 ${
               isNormal ? "bg-[#22c55e]" : isLow ? "bg-[#f59e0b]" : "bg-[#ef4444]"
             }`}
             style={{ left: `${percentage}%` }}
@@ -84,15 +84,15 @@ export default function MetricCard({
         </div>
 
         {/* Labels */}
-        <div className="flex justify-between items-center text-[9px] text-[#64748b] dark:text-[#94a3b8] font-mono mt-2 font-bold">
+        <div style={{ color: "#000000" }} className="flex justify-between items-center text-xs font-mono mt-2 font-black">
           <span>Ref Min: {minNormal}</span>
-          <span className="text-emerald-500 font-semibold uppercase tracking-wider text-[8px]">Normal limits</span>
+          <span className="text-emerald-800 font-black uppercase tracking-wider text-[9px]">Normal limits</span>
           <span>Ref Max: {maxNormal}</span>
         </div>
       </div>
 
       {description && (
-        <span className="text-[10px] text-slate-600 dark:text-slate-300 leading-tight mt-3 block font-semibold">
+        <span style={{ color: "#000000" }} className="text-xs leading-relaxed mt-3 block font-bold">
           {description}
         </span>
       )}

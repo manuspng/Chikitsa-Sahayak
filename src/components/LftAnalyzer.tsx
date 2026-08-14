@@ -768,19 +768,19 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
           )}
 
       {/* Manual Input Workspace */}
-      <form onSubmit={handleCalculate} style={{ backgroundColor: "#6b74e6" }} className="bento-card space-y-6">
+      <form onSubmit={handleCalculate} style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 space-y-6">
         <div>
-          <h3 className="text-base font-extrabold text-slate-955 dark:text-white uppercase tracking-wider flex items-center gap-2 font-sans mb-1">
-            <span className="w-1.5 h-4.5 bg-emerald-500 rounded-full shrink-0" />
+          <h3 style={{ color: "#000000" }} className="text-base font-black uppercase tracking-wider flex items-center gap-2 font-sans mb-1">
+            <span className="w-1.5 h-4.5 bg-emerald-600 rounded-full shrink-0" />
             <span>Patient & Analytical Core Parameters</span>
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-300 font-medium">Incorporate patient demographics and clinical parameters evaluated during full liver screening cycles.</p>
+          <p style={{ color: "#000000" }} className="text-xs font-bold">Incorporate patient demographics and clinical parameters evaluated during full liver screening cycles.</p>
         </div>
 
         {/* Patient Demographics Registration Profile */}
-        <div className="p-4 bg-slate-50 dark:bg-slate-900/30 rounded-2xl border border-slate-200/50 dark:border-slate-800/60 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="p-4 bg-slate-50 rounded-2xl border-2 border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Patient Full Name</label>
+            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Full Name</label>
             <input 
               type="text" 
               placeholder="e.g. Robert Chen"
@@ -789,44 +789,44 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 setPatientName(e.target.value);
                 setCurrentRecordId(null);
               }}
-              className="w-full bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-100/10 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-1 focus:ring-indigo-500 bg-transparent" 
+              className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-bold placeholder-slate-400 focus:ring-2 focus:ring-emerald-500" 
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Patient Gender / Sex</label>
+            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Gender / Sex</label>
             <select
               value={patientGender}
               onChange={e => setPatientGender(e.target.value as "male" | "female")}
-              className="w-full bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-100/10 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 focus:ring-1 focus:ring-indigo-500 bg-transparent cursor-pointer"
+              className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-xs font-black text-slate-950 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
             >
-              <option value="male" className="dark:bg-slate-900 text-slate-900 dark:text-slate-100">Male</option>
-              <option value="female" className="dark:bg-slate-900 text-slate-900 dark:text-slate-100">Female</option>
+              <option value="male" className="text-slate-950">Male</option>
+              <option value="female" className="text-slate-950">Female</option>
             </select>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Patient Age</label>
+            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Age</label>
             <div className="relative">
               <input 
                 type="number" 
                 placeholder="45"
                 value={formData.age}
                 onChange={e => handleInputChange("age", e.target.value)}
-                className="w-full bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-100/10 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-12 font-mono focus:ring-1 focus:ring-indigo-500" 
+                className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-12 font-mono focus:ring-2 focus:ring-emerald-500" 
               />
-              <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">Years</span>
+              <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">Years</span>
             </div>
           </div>
         </div>
 
         <div>
-          <h3 className="text-xs font-bold text-[#dfe0ed] uppercase tracking-wide">Biological Core Markers</h3>
+          <h3 style={{ color: "#000000" }} className="text-xs font-black uppercase tracking-wide">Biological Core Markers</h3>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">ALT / SGPT <span className="text-red-500">*</span></label>
+            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">ALT / SGPT <span className="text-red-500">*</span></label>
             <div className="relative">
               <input 
                 type="number" 
@@ -835,14 +835,14 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 placeholder="7-56"
                 value={formData.alt}
                 onChange={e => handleInputChange("alt", e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-10 font-mono focus:outline-emerald-500" 
+                className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-12 font-mono focus:outline-emerald-500" 
               />
-              <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">U/L</span>
+              <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">U/L</span>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">AST / SGOT <span className="text-red-500">*</span></label>
+            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">AST / SGOT <span className="text-red-500">*</span></label>
             <div className="relative">
               <input 
                 type="number" 
@@ -851,14 +851,14 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 placeholder="10-40"
                 value={formData.ast}
                 onChange={e => handleInputChange("ast", e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-10 font-mono focus:outline-emerald-500" 
+                className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-12 font-mono focus:outline-emerald-500" 
               />
-              <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">U/L</span>
+              <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">U/L</span>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Total Bilirubin <span className="text-red-500">*</span></label>
+            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Total Bilirubin <span className="text-red-500">*</span></label>
             <div className="relative">
               <input 
                 type="number" 
@@ -867,14 +867,14 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 placeholder="0.1-1.2"
                 value={formData.totalBilirubin}
                 onChange={e => handleInputChange("totalBilirubin", e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-12 font-mono focus:outline-emerald-500" 
+                className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-14 font-mono focus:outline-emerald-500" 
               />
-              <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">mg/dL</span>
+              <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Albumin <span className="text-red-500">*</span></label>
+            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Albumin <span className="text-red-500">*</span></label>
             <div className="relative">
               <input 
                 type="number" 
@@ -883,19 +883,19 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 placeholder="3.5-5.0"
                 value={formData.albumin}
                 onChange={e => handleInputChange("albumin", e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-10 font-mono focus:outline-emerald-500" 
+                className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-12 font-mono focus:outline-emerald-500" 
               />
-              <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">g/dL</span>
+              <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">g/dL</span>
             </div>
           </div>
         </div>
 
-        <div className="border-t border-slate-50 dark:border-slate-700/30 pt-6">
-          <h4 className="text-xs font-bold text-[#dfe0ed] uppercase tracking-wide mb-4">Additional Screening Elements</h4>
+        <div className="border-t border-slate-200 pt-6">
+          <h4 style={{ color: "#000000" }} className="text-xs font-black uppercase tracking-wide mb-4">Additional Screening Elements</h4>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">ALP (Alk. Phosphatase)</label>
+              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">ALP (Alk. Phosphatase)</label>
               <div className="relative">
                 <input 
                   type="number" 
@@ -903,14 +903,14 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                   placeholder="44-147"
                   value={formData.alp}
                   onChange={e => handleInputChange("alp", e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-10 font-mono focus:outline-emerald-500" 
+                  className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-12 font-mono focus:outline-emerald-500" 
                 />
-                <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">U/L</span>
+                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">U/L</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">GGT (Gamma-Glutamyl)</label>
+              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">GGT (Gamma-Glutamyl)</label>
               <div className="relative">
                 <input 
                   type="number" 
@@ -918,14 +918,14 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                   placeholder="8-61"
                   value={formData.ggt}
                   onChange={e => handleInputChange("ggt", e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-10 font-mono focus:outline-emerald-500" 
+                  className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-12 font-mono focus:outline-emerald-500" 
                 />
-                <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">U/L</span>
+                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">U/L</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Direct Bilirubin</label>
+              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Direct Bilirubin</label>
               <div className="relative">
                 <input 
                   type="number" 
@@ -933,14 +933,14 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                   placeholder="0.0-0.3"
                   value={formData.directBilirubin}
                   onChange={e => handleInputChange("directBilirubin", e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-12 font-mono focus:outline-emerald-500" 
+                  className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-14 font-mono focus:outline-emerald-500" 
                 />
-                <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">mg/dL</span>
+                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Total Protein</label>
+              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Total Protein</label>
               <div className="relative">
                 <input 
                   type="number" 
@@ -948,88 +948,88 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                   placeholder="6.0-8.3"
                   value={formData.totalProtein}
                   onChange={e => handleInputChange("totalProtein", e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-10 font-mono focus:outline-emerald-500" 
+                  className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-12 font-mono focus:outline-emerald-500" 
                 />
-                <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">g/dL</span>
+                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">g/dL</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="border-t border-slate-50 dark:border-slate-700/30 pt-6">
-          <h4 className="text-xs font-bold text-[#dfe0ed] uppercase tracking-wide mb-4">Metadata & Demographic Inputs (FIB-4 & BARD)</h4>
+        <div className="border-t border-slate-200 pt-6">
+          <h4 style={{ color: "#000000" }} className="text-xs font-black uppercase tracking-wide mb-4">Metadata & Demographic Inputs (FIB-4 & BARD)</h4>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Patient Age</label>
+              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Age</label>
               <div className="relative">
                 <input 
                   type="number" 
                   placeholder="45"
                   value={formData.age}
                   onChange={e => handleInputChange("age", e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-10 font-mono focus:outline-emerald-500" 
+                  className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-10 font-mono focus:outline-emerald-500" 
                 />
-                <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">yrs</span>
+                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">yrs</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Platelets</label>
+              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Platelets</label>
               <div className="relative">
                 <input 
                   type="number" 
                   placeholder="150-400"
                   value={formData.platelets}
                   onChange={e => handleInputChange("platelets", e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-14 font-mono focus:outline-emerald-500" 
+                  className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-14 font-mono focus:outline-emerald-500" 
                 />
-                <span className="absolute right-3 top-2.5 text-[8px] font-bold text-slate-400 leading-tight">10^9/L</span>
+                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-[9px] font-black leading-tight">10^9/L</span>
               </div>
               {formData.platelets && !isNaN(parseFloat(formData.platelets)) && (
-                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold font-mono mt-0.5">
+                <p style={{ color: "#065f46" }} className="text-xs font-black font-mono mt-1">
                   Equivalent: {(parseFloat(formData.platelets) / 100).toFixed(2)} lakh/µL
                 </p>
               )}
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Weight (for BMI)</label>
+              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Weight (for BMI)</label>
               <div className="relative">
                 <input 
                   type="number" 
                   placeholder="kg"
                   value={formData.weight}
                   onChange={e => handleInputChange("weight", e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-10 font-mono focus:outline-emerald-500" 
+                  className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-10 font-mono focus:outline-emerald-500" 
                 />
-                <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">kg</span>
+                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">kg</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Height (for BMI)</label>
+              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Height (for BMI)</label>
               <div className="relative">
                 <input 
                   type="number" 
                   placeholder="cm"
                   value={formData.height}
                   onChange={e => handleInputChange("height", e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-10 font-mono focus:outline-emerald-500" 
+                  className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-10 font-mono focus:outline-emerald-500" 
                 />
-                <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">cm</span>
+                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">cm</span>
               </div>
             </div>
           </div>
 
           <div className="pt-4 flex flex-wrap gap-4 items-center">
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">AST ULN (Lab Limit)</label>
+              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">AST ULN (Lab Limit)</label>
               <input 
                 type="number" 
                 value={formData.astUln}
                 onChange={e => handleInputChange("astUln", e.target.value)}
-                className="w-24 bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 font-mono focus:outline-emerald-500" 
+                className="w-24 bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black font-mono focus:outline-emerald-500" 
               />
             </div>
 
@@ -1038,9 +1038,9 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 type="checkbox" 
                 checked={formData.diabetes}
                 onChange={e => handleInputChange("diabetes", e.target.checked)}
-                className="rounded border-slate-300 dark:border-slate-700 text-emerald-500 focus:ring-emerald-500 w-4 h-4"
+                className="rounded border-slate-300 text-emerald-800 focus:ring-emerald-600 w-4 h-4"
               />
-              <span className="text-xs font-semibold text-[#dfe0ed]">
+              <span style={{ color: "#000000" }} className="text-xs font-black">
                 Patient has Type 2 Diabetes (+1 point to BARD)
               </span>
             </label>
@@ -1048,21 +1048,21 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
         </div>
 
         {/* Metabolic & Kidney Function Panel */}
-        <div className="border border-slate-100 dark:border-slate-800/80 rounded-2xl p-4 space-y-4">
+        <div className="border-2 border-slate-300 rounded-2xl p-4 space-y-4">
           <button
             type="button"
             onClick={() => setMetabolicPanelOpen(!metabolicPanelOpen)}
             className="flex items-center justify-between w-full text-left"
           >
             <div className="space-y-0.5">
-              <h3 className="text-sm font-bold text-[#dfe0ed]">
+              <h3 style={{ color: "#000000" }} className="text-sm font-black">
                 Metabolic & Kidney Panel (Optional)
               </h3>
-              <p className="text-[10px] text-slate-200">
+              <p style={{ color: "#000000" }} className="text-xs font-bold">
                 Analyze metabolic syndrome risk (NCEP ATP III) & renal health staging (Urine ACR)
               </p>
             </div>
-            <div className="text-slate-200">
+            <div style={{ color: "#000000" }}>
               {metabolicPanelOpen ? (
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -1076,102 +1076,102 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
           </button>
 
           {metabolicPanelOpen && (
-            <div className="pt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-left border-t border-slate-50 dark:border-slate-850/40">
+            <div className="pt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-left border-t border-slate-200">
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Waist Circumference</label>
+                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Waist Circumference</label>
                 <div className="relative">
                   <input
                     type="number"
                     placeholder="e.g., 94"
                     value={formData.waistCircumference}
                     onChange={e => handleInputChange("waistCircumference", e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-10 font-mono focus:outline-emerald-500"
+                    className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-10 font-mono focus:outline-emerald-500"
                   />
-                  <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">cm</span>
+                  <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">cm</span>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Fasting Blood Glucose</label>
+                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Fasting Blood Glucose</label>
                 <div className="relative">
                   <input
                     type="number"
                     placeholder="e.g., 98"
                     value={formData.fastingBloodGlucose}
                     onChange={e => handleInputChange("fastingBloodGlucose", e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-12 font-mono focus:outline-emerald-500"
+                    className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-14 font-mono focus:outline-emerald-500"
                   />
-                  <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">mg/dL</span>
+                  <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Triglycerides</label>
+                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Triglycerides</label>
                 <div className="relative">
                   <input
                     type="number"
                     placeholder="e.g., 145"
                     value={formData.triglycerides}
                     onChange={e => handleInputChange("triglycerides", e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-12 font-mono focus:outline-emerald-500"
+                    className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-14 font-mono focus:outline-emerald-500"
                   />
-                  <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">mg/dL</span>
+                  <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">HDL Cholesterol</label>
+                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">HDL Cholesterol</label>
                 <div className="relative">
                   <input
                     type="number"
                     placeholder="e.g., 45"
                     value={formData.hdlCholesterol}
                     onChange={e => handleInputChange("hdlCholesterol", e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-12 font-mono focus:outline-emerald-500"
+                    className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-14 font-mono focus:outline-emerald-500"
                   />
-                  <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">mg/dL</span>
+                  <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Systolic BP</label>
+                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Systolic BP</label>
                 <div className="relative">
                   <input
                     type="number"
                     placeholder="e.g., 120"
                     value={formData.systolicBp}
                     onChange={e => handleInputChange("systolicBp", e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-12 font-mono focus:outline-emerald-500"
+                    className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-14 font-mono focus:outline-emerald-500"
                   />
-                  <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">mmHg</span>
+                  <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mmHg</span>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Diastolic BP</label>
+                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Diastolic BP</label>
                 <div className="relative">
                   <input
                     type="number"
                     placeholder="e.g., 80"
                     value={formData.diastolicBp}
                     onChange={e => handleInputChange("diastolicBp", e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-12 font-mono focus:outline-emerald-500"
+                    className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-14 font-mono focus:outline-emerald-500"
                   />
-                  <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">mmHg</span>
+                  <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mmHg</span>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Urine ACR (Microalbuminuria)</label>
+                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Urine ACR (Microalbuminuria)</label>
                 <div className="relative">
                   <input
                     type="number"
                     placeholder="e.g., 24"
                     value={formData.urineAcr}
                     onChange={e => handleInputChange("urineAcr", e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-12 font-mono focus:outline-emerald-500"
+                    className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-14 font-mono focus:outline-emerald-500"
                   />
-                  <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">mg/g</span>
+                  <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/g</span>
                 </div>
               </div>
 
@@ -1181,9 +1181,9 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                     type="checkbox"
                     checked={formData.onHypertensionMeds}
                     onChange={e => handleInputChange("onHypertensionMeds", e.target.checked)}
-                    className="rounded border-slate-300 dark:border-slate-700 text-emerald-500 focus:ring-emerald-500 w-4 h-4"
+                    className="rounded border-slate-300 text-emerald-800 focus:ring-emerald-600 w-4 h-4"
                   />
-                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  <span style={{ color: "#000000" }} className="text-xs font-black">
                     Patient is on active treatment for systemic hypertension
                   </span>
                 </label>
@@ -1193,19 +1193,19 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
         </div>
 
         {/* Clinical Safety Verification Checkbox */}
-        <div className="bg-slate-50 border border-slate-300 rounded-2xl p-4 flex items-start gap-4 select-none my-2 text-left shadow-xs">
+        <div className="bg-slate-50 border-2 border-slate-300 rounded-2xl p-4 flex items-start gap-4 select-none my-2 text-left shadow-xs">
           <input
             type="checkbox"
             checked={isVerifiedCheck}
             onChange={(e) => setIsVerifiedCheck(e.target.checked)}
             id="lft-verification-calc-checkbox"
-            className="mt-0.5 rounded border-slate-300 text-[#2d5a37] focus:ring-[#2d5a37] cursor-pointer bg-white w-4 h-4 shrink-0"
+            className="mt-0.5 rounded border-slate-300 text-emerald-800 focus:ring-emerald-600 cursor-pointer bg-white w-4 h-4 shrink-0"
           />
           <div className="space-y-1">
-            <label htmlFor="lft-verification-calc-checkbox" className="text-xs font-bold text-slate-800 cursor-pointer leading-tight block">
+            <label htmlFor="lft-verification-calc-checkbox" style={{ color: "#000000" }} className="text-xs font-black cursor-pointer leading-tight block">
               I have verified the extracted values against the original report
             </label>
-            <p className="text-[10px] text-slate-600 leading-normal">
+            <p style={{ color: "#000000" }} className="text-xs font-bold leading-normal">
               Confirming that all decimal points, values, and units are accurate prevents critical clinical and OCR errors.
             </p>
           </div>
@@ -1214,7 +1214,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
         <button 
           type="submit"
           disabled={!isVerifiedCheck}
-          className="w-full py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold text-sm tracking-wide transition-all duration-300 flex items-center justify-center gap-1.5 shadow-lg shadow-indigo-600/10 cursor-pointer disabled:opacity-45 disabled:cursor-not-allowed disabled:scale-100"
+          className="w-full py-3.5 rounded-2xl bg-indigo-700 hover:bg-indigo-800 text-white font-black text-sm tracking-wide transition-all duration-300 flex items-center justify-center gap-1.5 shadow-md cursor-pointer disabled:opacity-45 disabled:cursor-not-allowed disabled:scale-100"
         >
           <span>Calculate All Hepatic Scores</span>
         </button>
@@ -1231,7 +1231,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
             riskLevel={results.nafldRisk}
           />
           
-          <div className="p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+          <div style={{ backgroundColor: "#f0fdf4", color: "#000000" }} className="p-4 border-2 border-emerald-300 rounded-2xl text-xs leading-relaxed font-bold">
             {results.nafldDescription}
           </div>
 
@@ -1265,200 +1265,200 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
           </div>
 
           {/* Advanced scoring metrics */}
-          <div className="bento-card dark:bg-slate-800 space-y-4 p-6">
-            <h4 className="text-sm font-extrabold text-slate-955 dark:text-white flex items-center gap-2 uppercase tracking-wide font-sans">
-              <span className="w-1.5 h-3.5 bg-emerald-500 rounded-full shrink-0" />
+          <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 space-y-4 p-6">
+            <h4 style={{ color: "#000000" }} className="text-sm font-black flex items-center gap-2 uppercase tracking-wide font-sans">
+              <span className="w-1.5 h-3.5 bg-emerald-600 rounded-full shrink-0" />
               <span>Advanced Clinical Risk Indexes</span>
             </h4>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* FIB-4 Card */}
-              <div className="bento-card dark:bg-slate-905 p-5 space-y-2">
-                <span className="card-title">FIB-4 Index (Fibrosis Triage)</span>
+              <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 p-5 space-y-2">
+                <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block">FIB-4 Index (Fibrosis Triage)</span>
                 {results.fib4Score !== undefined ? (
                   <div>
                     <div className={`score-big ${
                       results.fib4Risk === "low" 
-                        ? "text-emerald-600 dark:text-emerald-400" 
+                        ? "text-emerald-600" 
                         : results.fib4Risk === "moderate" 
-                          ? "text-amber-500 dark:text-amber-400" 
-                          : "text-rose-600 dark:text-rose-500"
+                          ? "text-amber-600" 
+                          : "text-rose-600"
                     }`}>{results.fib4Score}</div>
-                    <p className="text-xs text-slate-500 leading-relaxed mt-1">{results.fib4Interpretation}</p>
+                    <p style={{ color: "#000000" }} className="text-xs font-bold leading-relaxed mt-1">{results.fib4Interpretation}</p>
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-400">Lock: Platelets and Age needed to trigger FIB-4 calculation.</p>
+                  <p style={{ color: "#000000" }} className="text-xs font-bold">Lock: Platelets and Age needed to trigger FIB-4 calculation.</p>
                 )}
               </div>
 
               {/* APRI Card */}
-              <div className="bento-card dark:bg-slate-905 p-5 space-y-2">
-                <span className="card-title">APRI Index (Platelet Ratio)</span>
+              <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 p-5 space-y-2">
+                <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block">APRI Index (Platelet Ratio)</span>
                 {results.apriScore !== undefined ? (
                   <div>
                     <div className={`score-big ${
                       results.apriRisk === "low" 
-                        ? "text-emerald-600 dark:text-emerald-400" 
+                        ? "text-emerald-600" 
                         : results.apriRisk === "moderate" 
-                          ? "text-amber-500 dark:text-amber-400" 
-                          : "text-rose-600 dark:text-rose-500"
+                          ? "text-amber-600" 
+                          : "text-rose-600"
                     }`}>{results.apriScore}</div>
-                    <p className="text-xs text-slate-500 leading-relaxed mt-1">{results.apriInterpretation}</p>
+                    <p style={{ color: "#000000" }} className="text-xs font-bold leading-relaxed mt-1">{results.apriInterpretation}</p>
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-400">Lock: Platelets and AST ULN limit needed for calculation.</p>
+                  <p style={{ color: "#000000" }} className="text-xs font-bold">Lock: Platelets and AST ULN limit needed for calculation.</p>
                 )}
               </div>
 
               {/* BARD Card */}
-              <div className="bento-card dark:bg-slate-905 p-5 space-y-2">
-                <span className="card-title">BARD Score (NASH Fatty-Infiltration)</span>
+              <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 p-5 space-y-2">
+                <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block">BARD Score (NASH Fatty-Infiltration)</span>
                 {results.bardScore !== undefined ? (
                   <div>
                     <div className={`score-big ${
                       results.bardScore <= 1 
-                        ? "text-emerald-600 dark:text-emerald-400" 
-                        : "text-rose-600 dark:text-rose-500"
-                    }`}>{results.bardScore} <span className="text-xl font-bold text-slate-400">/ 4</span></div>
-                    <p className="text-xs text-slate-500 leading-relaxed mt-1">{results.bardRisk}</p>
+                        ? "text-emerald-600" 
+                        : "text-rose-600"
+                    }`}>{results.bardScore} <span style={{ color: "#000000" }} className="text-xl font-black">/ 4</span></div>
+                    <p style={{ color: "#000000" }} className="text-xs font-bold leading-relaxed mt-1">{results.bardRisk}</p>
                     <div className="flex flex-wrap gap-1.5 mt-2">
                       {results.bardDetails?.map((d, idx) => (
-                        <span key={idx} className="text-[9px] bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 font-mono px-2 py-0.5 rounded">
+                        <span key={idx} className="text-[9px] bg-slate-200 text-slate-950 font-black font-mono px-2 py-0.5 rounded border border-slate-300">
                           {d}
                         </span>
                       ))}
                     </div>
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-400">Lock: Patient Weight and Height needed for BARD BMI analysis.</p>
+                  <p style={{ color: "#000000" }} className="text-xs font-bold">Lock: Patient Weight and Height needed for BARD BMI analysis.</p>
                 )}
               </div>
 
               {/* Child-Pugh Card */}
-              <div className="bento-card dark:bg-slate-905 p-5 space-y-2">
-                <span className="card-title">Child-Pugh Staging & MELD</span>
+              <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 p-5 space-y-2">
+                <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block">Child-Pugh Staging & MELD</span>
                 {results.childPughScore !== undefined ? (
                   <div className="space-y-2">
                     <div>
-                      <div className="text-base font-bold text-slate-800 dark:text-slate-100">Child-Pugh Grade: <span className="text-indigo-600 font-mono">{results.childPughClass}</span></div>
-                      <p className="text-[11px] text-slate-400 font-mono mt-0.5">Calculated Score: {results.childPughScore}/15</p>
+                      <div style={{ color: "#000000" }} className="text-base font-black">Child-Pugh Grade: <span className="text-indigo-700 font-mono">{results.childPughClass}</span></div>
+                      <p style={{ color: "#000000" }} className="text-xs font-black font-mono mt-0.5">Calculated Score: {results.childPughScore}/15</p>
                     </div>
                     {results.meldScore !== undefined && (
-                      <div className="pt-2 border-t border-slate-100 dark:border-slate-700/50">
-                        <div className="text-sm font-bold text-slate-700 dark:text-slate-300">
-                          MELD Staging: <span className="text-red-500 font-mono font-extrabold">{results.meldScore}</span>
+                      <div className="pt-2 border-t border-slate-200">
+                        <div style={{ color: "#000000" }} className="text-sm font-black">
+                          MELD Staging: <span className="text-red-600 font-mono font-black">{results.meldScore}</span>
                         </div>
-                        <p className="text-[10px] text-slate-400">Predicted clinical 90-day mortality risk stratification.</p>
+                        <p style={{ color: "#000000" }} className="text-xs font-bold">Predicted clinical 90-day mortality risk stratification.</p>
                       </div>
                     )}
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-400">Lock: INR input required to compute Child-Pugh and MELD scales.</p>
+                  <p style={{ color: "#000000" }} className="text-xs font-bold">Lock: INR input required to compute Child-Pugh and MELD scales.</p>
                 )}
               </div>
 
               {/* Metabolic Syndrome Card */}
-              <div className="bento-card dark:bg-slate-905 p-5 space-y-3">
-                <span className="card-title">Metabolic Syndrome (NCEP ATP III)</span>
+              <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 p-5 space-y-3">
+                <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block">Metabolic Syndrome (NCEP ATP III)</span>
                 {results.ncepMetabolicSyndrome ? (
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
                         results.ncepMetabolicSyndrome.met
-                          ? "bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400"
-                          : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400"
+                          ? "bg-rose-100 text-rose-900 border border-rose-300"
+                          : "bg-emerald-100 text-emerald-900 border border-emerald-300"
                       }`}>
                         {results.ncepMetabolicSyndrome.met ? "Criteria Met" : "Low Risk"}
                       </span>
-                      <span className="text-xs font-mono font-bold text-slate-700 dark:text-slate-300">
+                      <span style={{ color: "#000000" }} className="text-xs font-mono font-black">
                         {results.ncepMetabolicSyndrome.count} / 5 Criteria
                       </span>
                     </div>
-                    <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                    <p style={{ color: "#000000" }} className="text-xs font-black">
                       {results.ncepMetabolicSyndrome.conclusion}
                     </p>
-                    <div className="space-y-1 pt-1 border-t border-slate-100 dark:border-slate-800/40">
-                      <div className="text-[9px] uppercase font-bold text-slate-400">Met Criteria:</div>
+                    <div className="space-y-1 pt-1 border-t border-slate-200">
+                      <div style={{ color: "#000000" }} className="text-[10px] uppercase font-black">Met Criteria:</div>
                       {results.ncepMetabolicSyndrome.criteriaMet.length > 0 ? (
                         results.ncepMetabolicSyndrome.criteriaMet.map((c: string, idx: number) => (
-                          <div key={idx} className="flex items-start gap-1 text-[10px] text-rose-600 dark:text-rose-400 font-medium">
+                          <div key={idx} className="flex items-start gap-1 text-xs text-rose-700 font-bold">
                             <span>●</span> <span className="text-left">{c}</span>
                           </div>
                         ))
                       ) : (
-                        <div className="text-[10px] text-slate-400 italic">None</div>
+                        <div style={{ color: "#000000" }} className="text-xs italic font-bold">None</div>
                       )}
                     </div>
                     <div className="space-y-1">
-                      <div className="text-[9px] uppercase font-bold text-slate-400">Other / Unmet Criteria:</div>
+                      <div style={{ color: "#000000" }} className="text-[10px] uppercase font-black">Other / Unmet Criteria:</div>
                       {results.ncepMetabolicSyndrome.criteriaNotMet.map((c: string, idx: number) => (
-                        <div key={idx} className="flex items-start gap-1 text-[10px] text-slate-500 font-medium">
-                          <span>○</span> <span className="text-slate-400 dark:text-slate-400 text-left">{c}</span>
+                        <div key={idx} className="flex items-start gap-1 text-xs text-slate-800 font-bold">
+                          <span>○</span> <span className="text-left">{c}</span>
                         </div>
                       ))}
                     </div>
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-400">Lock: Fasting Glucose, Lipids, BP, or Waist Circumference needed to compute Metabolic Syndrome criteria.</p>
+                  <p style={{ color: "#000000" }} className="text-xs font-bold">Lock: Fasting Glucose, Lipids, BP, or Waist Circumference needed to compute Metabolic Syndrome criteria.</p>
                 )}
               </div>
 
               {/* Kidney Risk Assessment Card */}
-              <div className="bento-card dark:bg-slate-905 p-5 space-y-3">
-                <span className="card-title">Kidney Risk Assessment (Urine ACR)</span>
+              <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 p-5 space-y-3">
+                <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block">Kidney Risk Assessment (Urine ACR)</span>
                 {results.acrAssessment ? (
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
                         results.acrAssessment.value < 30
-                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400"
+                          ? "bg-emerald-100 text-emerald-900 border border-emerald-300"
                           : results.acrAssessment.value <= 300
-                            ? "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400"
-                            : "bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400"
+                            ? "bg-amber-100 text-amber-900 border border-amber-300"
+                            : "bg-rose-100 text-rose-900 border border-rose-300"
                       }`}>
                         {results.acrAssessment.category}
                       </span>
                     </div>
                     <div>
-                      <div className="text-lg font-mono font-bold text-slate-800 dark:text-slate-100">
-                        {results.acrAssessment.value} <span className="text-xs text-slate-400">mg/g</span>
+                      <div style={{ color: "#000000" }} className="text-lg font-mono font-black">
+                        {results.acrAssessment.value} <span className="text-xs font-sans font-bold">mg/g</span>
                       </div>
-                      <p className="text-[11px] text-slate-500 mt-1 dark:text-slate-400 leading-relaxed text-justify">
+                      <p style={{ color: "#000000" }} className="text-xs mt-1 leading-relaxed text-justify font-bold">
                         {results.acrAssessment.description}
                       </p>
                     </div>
-                    <div className="pt-2 border-t border-slate-100 dark:border-slate-850/50">
-                      <div className="text-[9px] uppercase font-extrabold text-slate-400">Clinical Impact:</div>
-                      <p className="text-[10px] text-slate-600 dark:text-slate-400 italic font-medium leading-normal mt-0.5 text-justify">
+                    <div className="pt-2 border-t border-slate-200">
+                      <div style={{ color: "#000000" }} className="text-[10px] uppercase font-black">Clinical Impact:</div>
+                      <p style={{ color: "#000000" }} className="text-xs italic font-bold leading-normal mt-0.5 text-justify">
                         {results.acrAssessment.clinicalSignificance}
                       </p>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-400">Lock: Urine ACR (Albumin-Creatinine Ratio) measurement required to evaluate kidney disease risk.</p>
+                  <p style={{ color: "#000000" }} className="text-xs font-bold">Lock: Urine ACR (Albumin-Creatinine Ratio) measurement required to evaluate kidney disease risk.</p>
                 )}
               </div>
             </div>
           </div>
 
           {/* Local & AI Clinical Interpretation Panel */}
-          <div className="p-6 bg-slate-100/90 border border-slate-300 text-slate-900 rounded-3xl space-y-4 shadow-sm">
-            <div className="flex justify-between items-center pb-2 border-b border-slate-200">
-              <h4 className="text-sm font-extrabold tracking-wider text-[#2d5a37] uppercase flex items-center gap-1.5">
+          <div style={{ backgroundColor: "#f8fafc" }} className="p-6 border-2 border-slate-300 rounded-3xl space-y-4 shadow-sm">
+            <div className="flex justify-between items-center pb-2 border-b border-slate-300">
+              <h4 style={{ color: "#065f46" }} className="text-sm font-black tracking-wider uppercase flex items-center gap-1.5">
                 <FileText size={16} />
                 <span>Clinical Diagnostics Board</span>
               </h4>
-              <span className="text-[9px] bg-slate-200 text-slate-800 px-2 py-0.5 rounded font-extrabold uppercase tracking-wider">
+              <span className="text-[10px] bg-emerald-100 text-emerald-950 px-2.5 py-1 rounded-md font-black uppercase tracking-wider border border-emerald-300">
                 Local + AI
               </span>
             </div>
 
             {/* Part A: Offline Rule-Based Basic Interpretation */}
-            <div className="space-y-1 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-              <span className="text-[10px] uppercase font-extrabold tracking-widest text-[#2d5a37]">
+            <div style={{ backgroundColor: "#ffffff" }} className="space-y-1 p-4 rounded-2xl border-2 border-slate-300 shadow-xs">
+              <span style={{ color: "#065f46" }} className="text-xs uppercase font-black tracking-widest block">
                 Local Basic Interpretation (Offline)
               </span>
-              <p className="text-xs text-slate-800 leading-relaxed font-semibold mt-1 text-justify">
+              <p style={{ color: "#000000" }} className="text-xs leading-relaxed font-semibold mt-1 text-justify">
                 {results ? getOfflineLftSummary({
                   alt: parseFloat(formData.alt) || 0,
                   ast: parseFloat(formData.ast) || 0,
@@ -1482,20 +1482,20 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
             {/* Part B: On-Demand AI Interpretation */}
             <div className="space-y-3 pt-1">
               {!aiInsight && !isAiLoading && !aiError && (
-                <div className="relative flex flex-col items-center justify-center p-5 bg-white border border-dashed border-slate-300 rounded-2xl space-y-4">
-                  <p className="text-[11px] text-slate-700 text-center font-medium leading-relaxed">
+                <div style={{ backgroundColor: "#ffffff" }} className="relative flex flex-col items-center justify-center p-5 border-2 border-dashed border-slate-300 rounded-2xl space-y-4">
+                  <p style={{ color: "#000000" }} className="text-xs text-center font-bold leading-relaxed">
                     Need an deep expert clinical review of potential NAFLD/MASH progression, liver fibrosis risk scores, or hepatology staging trends with {activeProviderName}?
                   </p>
                   
-                  <label className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer select-none max-w-sm text-left transition-colors hover:bg-slate-100">
+                  <label className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border-2 border-slate-300 cursor-pointer select-none max-w-sm text-left transition-colors hover:bg-slate-100">
                     <input
                       type="checkbox"
                       checked={isVerifiedCheck}
                       onChange={(e) => setIsVerifiedCheck(e.target.checked)}
                       id="lft-verification-checkbox"
-                      className="mt-0.5 rounded border-slate-300 text-[#2d5a37] focus:ring-[#2d5a37] cursor-pointer bg-white w-4 h-4 shrink-0"
+                      className="mt-0.5 rounded border-slate-300 text-emerald-800 focus:ring-emerald-600 cursor-pointer bg-white w-4 h-4 shrink-0"
                     />
-                    <span className="text-[11px] text-slate-800 leading-normal font-semibold">
+                    <span style={{ color: "#000000" }} className="text-xs leading-normal font-black">
                       I have verified the extracted values against the original report
                     </span>
                   </label>
@@ -1504,31 +1504,31 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                     type="button"
                     onClick={handleTriggerAiAnalysis}
                     disabled={isAiLoading || !isVerifiedCheck}
-                    className="px-5 py-2.5 rounded-xl bg-[#2d5a37] hover:bg-[#23482c] text-white text-xs font-bold transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-md shadow-[#2d5a37]/20 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="px-5 py-2.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-black transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    <RefreshCw size={12} className={isAiLoading ? "animate-spin" : ""} />
+                    <RefreshCw size={13} className={isAiLoading ? "animate-spin" : ""} />
                     <span>Interpret Using AI</span>
                   </button>
                 </div>
               )}
 
               {isAiLoading && (
-                <div className="h-28 flex flex-col items-center justify-center space-y-2 bg-white rounded-2xl border border-slate-200">
-                  <RefreshCw className="animate-spin text-[#2d5a37]" size={24} />
-                  <p className="text-xs text-slate-800 font-bold">Generating expert clinical interpretation with {activeProviderName}...</p>
+                <div style={{ backgroundColor: "#ffffff" }} className="h-28 flex flex-col items-center justify-center space-y-2 rounded-2xl border-2 border-slate-300">
+                  <RefreshCw className="animate-spin text-emerald-800" size={24} />
+                  <p style={{ color: "#000000" }} className="text-xs font-black">Generating expert clinical interpretation with {activeProviderName}...</p>
                 </div>
               )}
 
               {aiError && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-2xl space-y-3">
-                  <div className="text-xs text-red-800 flex flex-col gap-2 font-medium text-left">
-                    <div className="flex items-center gap-1.5 font-bold">
-                      <AlertCircle size={14} className="shrink-0 text-red-600" />
+                <div style={{ backgroundColor: "#fef2f2" }} className="p-4 border-2 border-red-300 rounded-2xl space-y-3">
+                  <div style={{ color: "#991b1b" }} className="text-xs flex flex-col gap-2 font-bold text-left">
+                    <div className="flex items-center gap-1.5 font-black">
+                      <AlertCircle size={15} className="shrink-0 text-red-600" />
                       <span>{aiError}</span>
                     </div>
                     {aiErrorStack && (
                       <details className="mt-1">
-                        <summary className="cursor-pointer text-[10px] text-red-700 font-medium hover:underline">
+                        <summary className="cursor-pointer text-xs text-red-700 font-bold hover:underline">
                           Show Error Trace
                         </summary>
                         <pre className="mt-2 p-2 bg-white border border-red-200 text-red-900 font-mono text-[10px] whitespace-pre-wrap rounded-lg overflow-auto max-h-40 text-left">
@@ -1544,9 +1544,9 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                       checked={isVerifiedCheck}
                       onChange={(e) => setIsVerifiedCheck(e.target.checked)}
                       id="lft-verification-retry-checkbox"
-                      className="mt-0.5 rounded border-slate-300 text-[#2d5a37] focus:ring-[#2d5a37] cursor-pointer bg-white w-4 h-4 shrink-0"
+                      className="mt-0.5 rounded border-slate-300 text-emerald-800 focus:ring-emerald-600 cursor-pointer bg-white w-4 h-4 shrink-0"
                     />
-                    <span className="text-[11px] text-slate-800 leading-normal font-semibold">
+                    <span style={{ color: "#000000" }} className="text-xs leading-normal font-black">
                       I have verified the extracted values against the original report
                     </span>
                   </label>
@@ -1555,7 +1555,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                     type="button"
                     onClick={handleTriggerAiAnalysis}
                     disabled={isAiLoading || !isVerifiedCheck}
-                    className="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-[10px] font-bold uppercase transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="px-4 py-2 bg-red-700 hover:bg-red-800 text-white rounded-lg text-xs font-black uppercase transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     Retry AI analysis
                   </button>
@@ -1563,35 +1563,35 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
               )}
 
               {aiInsight && (
-                <div className="space-y-2 p-4 bg-white border border-slate-200 rounded-2xl shadow-xs">
-                  <span className="text-[10px] uppercase font-bold tracking-widest text-[#2d5a37]">
+                <div style={{ backgroundColor: "#ffffff" }} className="space-y-2 p-4 border-2 border-slate-300 rounded-2xl shadow-xs">
+                  <span style={{ color: "#065f46" }} className="text-xs uppercase font-black tracking-widest block">
                     Clinical AI Analysis ({activeProviderName})
                   </span>
-                  <div className="text-slate-800 text-xs sm:text-sm whitespace-pre-wrap leading-relaxed text-justify pr-2 max-h-96 overflow-y-auto font-medium">
+                  <div style={{ color: "#000000" }} className="text-xs sm:text-sm whitespace-pre-wrap leading-relaxed text-justify pr-2 max-h-96 overflow-y-auto font-medium">
                     {aiInsight}
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="border-t border-slate-800 pt-3 text-[10px] text-slate-500 font-medium space-y-1.5 leading-relaxed">
+            <div style={{ color: "#000000" }} className="border-t border-slate-300 pt-3 text-xs font-bold space-y-1.5 leading-relaxed">
               <p>
-                <strong>Medical Disclaimer:</strong> Decision-support only. This information should always be analyzed alongside professional clinicians.
+                <strong style={{ color: "#000000" }} className="font-black">Medical Disclaimer:</strong> Decision-support only. This information should always be analyzed alongside professional clinicians.
               </p>
-              <p className="text-slate-400 font-bold border-l-2 border-emerald-500/40 pl-2">
+              <p className="border-l-2 border-emerald-600 pl-2">
                 AI-generated interpretation. Not a medical diagnosis. Consult a qualified doctor.
               </p>
             </div>
           </div>
 
           {/* Save panel */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-4 border-t border-slate-200/50 dark:border-slate-800/40 gap-4">
-            <span className="text-xs text-slate-400 text-justify">Ensure values are verified before sharing or saving to logs.</span>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-4 border-t border-slate-300 gap-4">
+            <span style={{ color: "#000000" }} className="text-xs font-bold text-justify">Ensure values are verified before sharing or saving to logs.</span>
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"
                 onClick={handlePrintPDF}
-                className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all duration-300 flex items-center gap-1.5 shadow-md shadow-indigo-600/10 cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-black transition-all duration-300 flex items-center gap-1.5 shadow-sm cursor-pointer"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
@@ -1604,13 +1604,13 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 <button
                   type="button"
                   onClick={handleSave}
-                  className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-900 text-xs font-bold transition-all duration-300 flex items-center gap-1.5 shadow-md shadow-emerald-500/10 cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition-all duration-300 flex items-center gap-1.5 shadow-sm cursor-pointer"
                 >
                   <Save size={14} />
                   <span>Save to History Logs</span>
                 </button>
               ) : (
-                <div className="inline-flex items-center gap-1 text-xs text-emerald-500 bg-emerald-50/10 border border-emerald-500/10 px-4 py-2 rounded-xl font-bold">
+                <div className="inline-flex items-center gap-1 text-xs text-emerald-950 bg-emerald-100 border border-emerald-400 px-4 py-2 rounded-xl font-black">
                   <Check size={14} />
                   <span>Saved successfully</span>
                 </div>

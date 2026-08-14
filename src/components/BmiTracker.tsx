@@ -276,19 +276,19 @@ Please write an expert, professional clinical interpretation of this patient's m
       </div>
 
       {/* Manual Input Workspace */}
-      <form onSubmit={handleCalculate} style={{ backgroundColor: "#6b74e6" }} className="bento-card space-y-6">
+      <form onSubmit={handleCalculate} style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 space-y-6">
         <div>
-          <h3 className="text-base font-extrabold text-white uppercase tracking-wider flex items-center gap-2 font-sans mb-1">
-            <span className="w-1.5 h-4.5 bg-emerald-400 rounded-full shrink-0" />
+          <h3 style={{ color: "#000000" }} className="text-base font-black uppercase tracking-wider flex items-center gap-2 font-sans mb-1">
+            <span className="w-1.5 h-4.5 bg-emerald-600 rounded-full shrink-0" />
             <span>Patient & Metabolic Core Parameters</span>
           </h3>
-          <p className="text-xs text-slate-100 font-medium">Incorporate patient demographics and clinical panels evaluated during full diagnostic screening cycles.</p>
+          <p style={{ color: "#000000" }} className="text-xs font-bold">Incorporate patient demographics and clinical panels evaluated during full diagnostic screening cycles.</p>
         </div>
 
         {/* Patient Demographics Registration Profile */}
-        <div className="p-4 bg-slate-900/30 rounded-2xl border border-white/10 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="p-4 bg-slate-50 rounded-2xl border-2 border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Patient Full Name</label>
+            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Full Name</label>
             <input 
               type="text" 
               placeholder="e.g. Robert Chen"
@@ -297,20 +297,20 @@ Please write an expert, professional clinical interpretation of this patient's m
                 setPatientName(e.target.value);
                 setCurrentRecordId(null);
               }}
-              className="w-full bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-100/10 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-1 focus:ring-indigo-500" 
+              className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-bold placeholder-slate-400 focus:ring-2 focus:ring-emerald-500" 
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Patient Gender / Sex</label>
-            <div className="flex bg-white dark:bg-slate-900/60 rounded-xl p-1 border border-slate-200 dark:border-slate-100/10">
+            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Gender / Sex</label>
+            <div className="flex bg-white rounded-xl p-1 border-2 border-slate-300">
               <button
                 type="button"
                 onClick={() => handleInputChange("gender", "male")}
-                className={`flex-1 py-1 px-3 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                className={`flex-1 py-1 px-3 text-xs font-black rounded-lg transition-all cursor-pointer ${
                   formData.gender === "male"
-                    ? "bg-indigo-600 text-white shadow-xs"
-                    : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                    ? "bg-indigo-700 text-white shadow-xs"
+                    : "text-slate-700 hover:text-slate-950"
                 }`}
               >
                 Male
@@ -318,10 +318,10 @@ Please write an expert, professional clinical interpretation of this patient's m
               <button
                 type="button"
                 onClick={() => handleInputChange("gender", "female")}
-                className={`flex-1 py-1 px-3 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                className={`flex-1 py-1 px-3 text-xs font-black rounded-lg transition-all cursor-pointer ${
                   formData.gender === "female"
-                    ? "bg-indigo-600 text-white shadow-xs"
-                    : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                    ? "bg-indigo-700 text-white shadow-xs"
+                    : "text-slate-700 hover:text-slate-950"
                 }`}
               >
                 Female
@@ -330,24 +330,24 @@ Please write an expert, professional clinical interpretation of this patient's m
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Patient Age</label>
+            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Age</label>
             <div className="relative">
               <input 
                 type="number" 
                 placeholder="45"
                 value={formData.age}
                 onChange={e => handleInputChange("age", e.target.value)}
-                className="w-full bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-100/10 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-12 font-mono focus:ring-1 focus:ring-indigo-500 font-semibold" 
+                className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-12 font-mono focus:ring-2 focus:ring-emerald-500" 
               />
-              <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">Years</span>
+              <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">Years</span>
             </div>
           </div>
         </div>
 
-        <div className="flex justify-between items-center flex-wrap gap-4 border-t border-white/15 pt-4">
+        <div className="flex justify-between items-center flex-wrap gap-4 border-t border-slate-200 pt-4">
           <div>
-            <h3 className="text-xs font-extrabold text-white uppercase tracking-wide flex items-center gap-2">
-              <span className="w-1.5 h-3 bg-emerald-400 rounded-full shrink-0" />
+            <h3 style={{ color: "#000000" }} className="text-xs font-black uppercase tracking-wide flex items-center gap-2">
+              <span className="w-1.5 h-3 bg-emerald-600 rounded-full shrink-0" />
               <span>Biological Core Markers</span>
             </h3>
           </div>
@@ -355,7 +355,7 @@ Please write an expert, professional clinical interpretation of this patient's m
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Weight <span className="text-red-300">*</span></label>
+            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Weight <span className="text-red-500">*</span></label>
             <div className="relative">
               <input 
                 type="number" 
@@ -364,14 +364,14 @@ Please write an expert, professional clinical interpretation of this patient's m
                 placeholder="e.g. 75"
                 value={formData.weight}
                 onChange={e => handleInputChange("weight", e.target.value)}
-                className="w-full bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-100/10 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-10 font-mono focus:ring-1 focus:ring-indigo-500 font-semibold" 
+                className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-10 font-mono focus:ring-2 focus:ring-emerald-500" 
               />
-              <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">kg</span>
+              <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">kg</span>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Height <span className="text-red-300">*</span></label>
+            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Height <span className="text-red-500">*</span></label>
             <div className="relative">
               <input 
                 type="number" 
@@ -380,41 +380,41 @@ Please write an expert, professional clinical interpretation of this patient's m
                 placeholder="e.g. 175"
                 value={formData.height}
                 onChange={e => handleInputChange("height", e.target.value)}
-                className="w-full bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-100/10 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-10 font-mono focus:ring-1 focus:ring-indigo-500 font-semibold" 
+                className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-10 font-mono focus:ring-2 focus:ring-emerald-500" 
               />
-              <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">cm</span>
+              <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">cm</span>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Age</label>
+            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Age</label>
             <div className="relative">
               <input 
                 type="number" 
                 placeholder="e.g. 35"
                 value={formData.age}
                 onChange={e => handleInputChange("age", e.target.value)}
-                className="w-full bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-100/10 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-10 font-mono focus:ring-1 focus:ring-indigo-500 font-semibold" 
+                className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-10 font-mono focus:ring-2 focus:ring-emerald-500" 
               />
-              <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">yrs</span>
+              <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">yrs</span>
             </div>
           </div>
         </div>
 
-        <div className="border-t border-white/15 pt-6">
+        <div className="border-t border-slate-200 pt-6">
           <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
-            <h4 className="text-xs font-extrabold text-white uppercase tracking-wide flex items-center gap-2">
-              <span className="w-1.5 h-3 bg-emerald-400 rounded-full shrink-0" />
+            <h4 style={{ color: "#000000" }} className="text-xs font-black uppercase tracking-wide flex items-center gap-2">
+              <span className="w-1.5 h-3 bg-emerald-600 rounded-full shrink-0" />
               <span>Visceral Fat Adiposity Parameters (WHR Ratio)</span>
             </h4>
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={() => handleInputChange("gender", "male")}
-                className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1 rounded-xl text-xs font-black transition-all cursor-pointer ${
                   formData.gender === "male"
-                    ? "bg-white text-indigo-900 shadow-xs"
-                    : "bg-white/20 text-white hover:bg-white/30"
+                    ? "bg-indigo-700 text-white shadow-xs"
+                    : "bg-slate-200 text-slate-950 hover:bg-slate-300"
                 }`}
               >
                 Male Thresholds
@@ -422,10 +422,10 @@ Please write an expert, professional clinical interpretation of this patient's m
               <button
                 type="button"
                 onClick={() => handleInputChange("gender", "female")}
-                className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1 rounded-xl text-xs font-black transition-all cursor-pointer ${
                   formData.gender === "female"
-                    ? "bg-white text-indigo-900 shadow-xs"
-                    : "bg-white/20 text-white hover:bg-white/30"
+                    ? "bg-indigo-700 text-white shadow-xs"
+                    : "bg-slate-200 text-slate-950 hover:bg-slate-300"
                 }`}
               >
                 Female Thresholds
@@ -435,7 +435,7 @@ Please write an expert, professional clinical interpretation of this patient's m
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Waist Circumference</label>
+              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Waist Circumference</label>
               <div className="relative">
                 <input 
                   type="number" 
@@ -443,14 +443,14 @@ Please write an expert, professional clinical interpretation of this patient's m
                   placeholder="e.g. 90 cm"
                   value={formData.waist}
                   onChange={e => handleInputChange("waist", e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-100/10 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-10 font-mono focus:ring-1 focus:ring-indigo-500 font-semibold" 
+                  className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-10 font-mono focus:ring-2 focus:ring-emerald-500" 
                 />
-                <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">cm</span>
+                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">cm</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Hip Circumference</label>
+              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Hip Circumference</label>
               <div className="relative">
                 <input 
                   type="number" 
@@ -458,9 +458,9 @@ Please write an expert, professional clinical interpretation of this patient's m
                   placeholder="e.g. 95 cm"
                   value={formData.hip}
                   onChange={e => handleInputChange("hip", e.target.value)}
-                  className="w-full bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-100/10 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-10 font-mono focus:ring-1 focus:ring-indigo-500 font-semibold" 
+                  className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-10 font-mono focus:ring-2 focus:ring-emerald-500" 
                 />
-                <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">cm</span>
+                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">cm</span>
               </div>
             </div>
           </div>
@@ -468,7 +468,7 @@ Please write an expert, professional clinical interpretation of this patient's m
 
         <button 
           type="submit"
-          className="w-full py-3.5 rounded-2xl bg-indigo-900 hover:bg-indigo-950 text-white font-extrabold text-sm tracking-wide transition-all duration-300 flex items-center justify-center gap-1.5 shadow-lg shadow-indigo-950/20 cursor-pointer"
+          className="w-full py-3.5 rounded-2xl bg-indigo-700 hover:bg-indigo-800 text-white font-black text-sm tracking-wide transition-all duration-300 flex items-center justify-center gap-1.5 shadow-md cursor-pointer"
         >
           <span>Calculate Visceral Metabolic Indexes</span>
         </button>
@@ -485,58 +485,58 @@ Please write an expert, professional clinical interpretation of this patient's m
             riskLevel={results.riskLevel}
           />
           
-          <div className="p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
-            Category classification: <span className="font-extrabold text-slate-800 dark:text-slate-100">{results.category}</span>. {results.metabolicRisk}
+          <div style={{ backgroundColor: "#f0fdf4", color: "#000000" }} className="p-4 border-2 border-emerald-300 rounded-2xl text-xs leading-relaxed font-bold">
+            Category classification: <span className="font-black text-slate-950">{results.category}</span>. {results.metabolicRisk}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Ideal Weight Card */}
-            <div className="bento-card dark:bg-slate-800 space-y-1.5 p-6">
-              <span className="card-title">Clinician Healthy Target Weight Range</span>
-              <div className="text-xl font-extrabold text-slate-800 dark:text-slate-100 font-mono">
-                {results.idealWeightMin} - {results.idealWeightMax} <span className="text-xs font-semibold text-slate-500 font-sans">kg</span>
+            <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 space-y-1.5 p-6">
+              <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block">Clinician Healthy Target Weight Range</span>
+              <div style={{ color: "#000000" }} className="text-xl font-black font-mono">
+                {results.idealWeightMin} - {results.idealWeightMax} <span className="text-xs font-bold font-sans">kg</span>
               </div>
-              <p className="text-[11px] text-slate-400 leading-normal">
+              <p style={{ color: "#000000" }} className="text-xs font-bold leading-normal">
                 Weight parameters required to represent a standard compensated body index (18.5 - 24.9) at current stature limits.
               </p>
             </div>
 
             {/* WHR Card */}
-            <div className="bento-card dark:bg-slate-800 space-y-1.5 p-6">
-              <span className="card-title">Waist-to-Hip Ratio (WHR)</span>
+            <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 space-y-1.5 p-6">
+              <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block">Waist-to-Hip Ratio (WHR)</span>
               {results.whr !== undefined ? (
                 <div>
-                  <div className="text-xl font-extrabold text-slate-800 dark:text-slate-100 font-mono">
+                  <div style={{ color: "#000000" }} className="text-xl font-black font-mono">
                     {results.whr}
                   </div>
-                  <p className="text-[11px] text-slate-400 leading-normal">
+                  <p style={{ color: "#000000" }} className="text-xs font-bold leading-normal">
                     {results.whrInterpretation}
                   </p>
                 </div>
               ) : (
-                <p className="text-xs text-slate-400 pt-1">Lock: Enter waist and hip values to track active abdominal lipid metrics.</p>
+                <p style={{ color: "#000000" }} className="text-xs font-bold pt-1">Lock: Enter waist and hip values to track active abdominal lipid metrics.</p>
               )}
             </div>
           </div>
 
           {/* Local & AI Clinical Interpretation Panel */}
-          <div className="p-6 bg-slate-100/90 border border-slate-300 text-slate-900 rounded-3xl space-y-4 shadow-sm">
-            <div className="flex justify-between items-center pb-2 border-b border-slate-200">
-              <h4 className="text-sm font-extrabold tracking-wider text-[#2d5a37] uppercase flex items-center gap-1.5">
+          <div style={{ backgroundColor: "#f8fafc" }} className="p-6 border-2 border-slate-300 rounded-3xl space-y-4 shadow-sm">
+            <div className="flex justify-between items-center pb-2 border-b border-slate-300">
+              <h4 style={{ color: "#065f46" }} className="text-sm font-black tracking-wider uppercase flex items-center gap-1.5">
                 <FileText size={16} />
                 <span>Clinical Diagnostics Board</span>
               </h4>
-              <span className="text-[9px] bg-slate-200 text-slate-800 px-2 py-0.5 rounded font-extrabold uppercase tracking-wider">
+              <span className="text-[10px] bg-emerald-100 text-emerald-950 px-2.5 py-1 rounded-md font-black uppercase tracking-wider border border-emerald-300">
                 Local + AI
               </span>
             </div>
 
             {/* Part A: Offline Rule-Based Basic Interpretation */}
-            <div className="space-y-1 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-              <span className="text-[10px] uppercase font-extrabold tracking-widest text-[#2d5a37]">
+            <div style={{ backgroundColor: "#ffffff" }} className="space-y-1 p-4 rounded-2xl border-2 border-slate-300 shadow-xs">
+              <span style={{ color: "#065f46" }} className="text-xs uppercase font-black tracking-widest block">
                 Local Basic Interpretation (Offline)
               </span>
-              <p className="text-xs text-slate-800 leading-relaxed font-semibold mt-1 text-justify">
+              <p style={{ color: "#000000" }} className="text-xs leading-relaxed font-semibold mt-1 text-justify">
                 {results ? getOfflineBmiSummary({
                   weight: parseFloat(formData.weight) || 0,
                   height: parseFloat(formData.height) || 0,
@@ -551,40 +551,40 @@ Please write an expert, professional clinical interpretation of this patient's m
             {/* Part B: On-Demand AI Interpretation */}
             <div className="space-y-3 pt-1">
               {!aiInsight && !isAiLoading && !aiError && (
-                <div className="flex flex-col items-center justify-center p-4 bg-white border border-dashed border-slate-300 rounded-2xl space-y-3">
-                  <p className="text-[11px] text-slate-700 text-center font-medium leading-relaxed">
+                <div style={{ backgroundColor: "#ffffff" }} className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-300 rounded-2xl space-y-3">
+                  <p style={{ color: "#000000" }} className="text-xs text-center font-bold leading-relaxed">
                     Need an deep expert clinical review of obesity/metabolic indexes, fat deposit locations, and customized dietary and health plans with {activeProviderName}?
                   </p>
                   <button
                     type="button"
                     onClick={handleTriggerAiAnalysis}
                     disabled={isAiLoading}
-                    className="px-5 py-2.5 rounded-xl bg-[#2d5a37] hover:bg-[#23482c] text-white text-xs font-bold transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-md shadow-[#2d5a37]/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-5 py-2.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-black transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <RefreshCw size={12} className={isAiLoading ? "animate-spin" : ""} />
+                    <RefreshCw size={13} className={isAiLoading ? "animate-spin" : ""} />
                     <span>Interpret Using AI</span>
                   </button>
                 </div>
               )}
 
               {isAiLoading && (
-                <div className="h-28 flex flex-col items-center justify-center space-y-2 bg-white rounded-2xl border border-slate-200">
-                  <RefreshCw className="animate-spin text-[#2d5a37]" size={24} />
-                  <p className="text-xs text-slate-800 font-bold">Generating expert clinical interpretation with {activeProviderName}...</p>
+                <div style={{ backgroundColor: "#ffffff" }} className="h-28 flex flex-col items-center justify-center space-y-2 rounded-2xl border-2 border-slate-300">
+                  <RefreshCw className="animate-spin text-emerald-800" size={24} />
+                  <p style={{ color: "#000000" }} className="text-xs font-black">Generating expert clinical interpretation with {activeProviderName}...</p>
                 </div>
               )}
 
               {aiError && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-2xl space-y-2">
-                  <p className="text-xs text-red-800 flex items-center gap-1.5 font-bold">
-                    <AlertCircle size={14} className="text-red-600" />
+                <div style={{ backgroundColor: "#fef2f2" }} className="p-4 border-2 border-red-300 rounded-2xl space-y-2">
+                  <p style={{ color: "#991b1b" }} className="text-xs flex items-center gap-1.5 font-black">
+                    <AlertCircle size={15} className="text-red-600" />
                     <span>{aiError}</span>
                   </p>
                   <button
                     type="button"
                     onClick={handleTriggerAiAnalysis}
                     disabled={isAiLoading}
-                    className="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-[10px] font-bold uppercase transition-colors"
+                    className="px-4 py-2 bg-red-700 hover:bg-red-800 text-white rounded-lg text-xs font-black uppercase transition-colors"
                   >
                     Retry AI analysis
                   </button>
@@ -592,35 +592,35 @@ Please write an expert, professional clinical interpretation of this patient's m
               )}
 
               {aiInsight && (
-                <div className="space-y-2 p-4 bg-white border border-slate-200 rounded-2xl shadow-xs">
-                  <span className="text-[10px] uppercase font-bold tracking-widest text-[#2d5a37]">
+                <div style={{ backgroundColor: "#ffffff" }} className="space-y-2 p-4 border-2 border-slate-300 rounded-2xl shadow-xs">
+                  <span style={{ color: "#065f46" }} className="text-xs uppercase font-black tracking-widest block">
                     Clinical AI Analysis ({activeProviderName})
                   </span>
-                  <div className="text-slate-800 text-xs sm:text-sm whitespace-pre-wrap leading-relaxed text-justify pr-2 max-h-96 overflow-y-auto font-medium">
+                  <div style={{ color: "#000000" }} className="text-xs sm:text-sm whitespace-pre-wrap leading-relaxed text-justify pr-2 max-h-96 overflow-y-auto font-medium">
                     {aiInsight}
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="border-t border-slate-800 pt-3 text-[10px] text-slate-500 font-medium space-y-1.5 leading-relaxed">
+            <div style={{ color: "#000000" }} className="border-t border-slate-300 pt-3 text-xs font-bold space-y-1.5 leading-relaxed">
               <p>
-                <strong>Medical Disclaimer:</strong> Decision-support only. This information should always be analyzed alongside professional clinicians.
+                <strong style={{ color: "#000000" }} className="font-black">Medical Disclaimer:</strong> Decision-support only. This information should always be analyzed alongside professional clinicians.
               </p>
-              <p className="text-slate-400 font-bold border-l-2 border-emerald-500/40 pl-2">
+              <p className="border-l-2 border-emerald-600 pl-2">
                 AI-generated interpretation. Not a medical diagnosis. Consult a qualified doctor.
               </p>
             </div>
           </div>
 
           {/* Save panel */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-4 border-t border-slate-200/50 dark:border-slate-800/40 gap-4">
-            <span className="text-xs text-slate-400">Ensure values are verified before sharing or saving to logs.</span>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-4 border-t border-slate-300 gap-4">
+            <span style={{ color: "#000000" }} className="text-xs font-bold">Ensure values are verified before sharing or saving to logs.</span>
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"
                 onClick={handlePrintPDF}
-                className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all duration-300 flex items-center gap-1.5 shadow-md shadow-indigo-600/10 cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-black transition-all duration-300 flex items-center gap-1.5 shadow-sm cursor-pointer"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
@@ -633,13 +633,13 @@ Please write an expert, professional clinical interpretation of this patient's m
                 <button
                   type="button"
                   onClick={handleSave}
-                  className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-900 text-xs font-bold transition-all duration-300 flex items-center gap-1.5 shadow-md shadow-emerald-500/10 cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition-all duration-300 flex items-center gap-1.5 shadow-sm cursor-pointer"
                 >
                   <Save size={14} />
                   <span>Save to History Logs</span>
                 </button>
               ) : (
-                <div className="inline-flex items-center gap-1 text-xs text-emerald-500 bg-emerald-50/10 border border-emerald-500/10 px-4 py-2 rounded-xl font-bold">
+                <div className="inline-flex items-center gap-1 text-xs text-emerald-950 bg-emerald-100 border border-emerald-400 px-4 py-2 rounded-xl font-black">
                   <Check size={14} />
                   <span>Saved successfully</span>
                 </div>

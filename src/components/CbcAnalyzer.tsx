@@ -731,19 +731,19 @@ Please write an expert, professional clinical interpretation of these results. M
           )}
 
       {/* Manual Input Workspace */}
-      <form onSubmit={handleCalculate} style={{ backgroundColor: "#6b74e6" }} className="bento-card space-y-6">
+      <form onSubmit={handleCalculate} style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 space-y-6">
         <div>
-          <h3 className="text-base font-extrabold text-slate-950 dark:text-white uppercase tracking-wider flex items-center gap-2 font-sans mb-1">
-            <span className="w-1.5 h-4.5 bg-emerald-500 rounded-full shrink-0" />
+          <h3 style={{ color: "#000000" }} className="text-base font-black uppercase tracking-wider flex items-center gap-2 font-sans mb-1">
+            <span className="w-1.5 h-4.5 bg-emerald-600 rounded-full shrink-0" />
             <span>Patient & Analytical Core Parameters</span>
           </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-300 font-medium">Incorporate patient demographics and clinical panels evaluated during full diagnostic screening cycles.</p>
+          <p style={{ color: "#000000" }} className="text-xs font-bold">Incorporate patient demographics and clinical panels evaluated during full diagnostic screening cycles.</p>
         </div>
 
         {/* Patient Demographics Registration Profile */}
-        <div className="p-4 bg-slate-50 dark:bg-slate-900/30 rounded-2xl border border-slate-200/50 dark:border-slate-800/60 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="p-4 bg-slate-50 rounded-2xl border-2 border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Patient Full Name</label>
+            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Full Name</label>
             <input 
               type="text" 
               placeholder="e.g. Robert Chen"
@@ -752,47 +752,47 @@ Please write an expert, professional clinical interpretation of these results. M
                 setPatientName(e.target.value);
                 setCurrentRecordId(null);
               }}
-              className="w-full bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-100/10 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:ring-1 focus:ring-indigo-500 bg-transparent" 
+              className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-bold placeholder-slate-400 focus:ring-2 focus:ring-emerald-500" 
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Patient Gender / Sex</label>
+            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Gender / Sex</label>
             <select
               value={formData.gender}
               onChange={e => handleInputChange("gender", e.target.value)}
-              className="w-full bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-100/10 rounded-xl px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-100 focus:ring-1 focus:ring-indigo-500 bg-transparent cursor-pointer"
+              className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-xs font-black text-slate-950 focus:ring-2 focus:ring-emerald-500 cursor-pointer"
             >
-              <option value="male" className="dark:bg-slate-900 text-slate-900 dark:text-slate-100">Male</option>
-              <option value="female" className="dark:bg-slate-900 text-slate-900 dark:text-slate-100">Female</option>
+              <option value="male" className="text-slate-950">Male</option>
+              <option value="female" className="text-slate-950">Female</option>
             </select>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Patient Age</label>
+            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Age</label>
             <div className="relative">
               <input 
                 type="number" 
                 placeholder="45"
                 value={patientAge}
                 onChange={e => setPatientAge(e.target.value)}
-                className="w-full bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-100/10 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-12 font-mono focus:ring-1 focus:ring-indigo-500 bg-transparent" 
+                className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-12 font-mono focus:ring-2 focus:ring-emerald-500" 
               />
-              <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">Years</span>
+              <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">Years</span>
             </div>
           </div>
         </div>
 
-        <div className="border-t border-slate-100 dark:border-slate-800/40 pt-4">
+        <div className="border-t border-slate-200 pt-4">
           <div>
-            <h3 className="text-xs font-bold text-[#dfe0ed] uppercase tracking-wide">Blood Volume Core Panels</h3>
-            <p className="text-xs text-slate-200">Core metrics used to trace anemia and immune response flags.</p>
+            <h3 style={{ color: "#000000" }} className="text-xs font-black uppercase tracking-wide">Blood Volume Core Panels</h3>
+            <p style={{ color: "#000000" }} className="text-xs font-bold">Core metrics used to trace anemia and immune response flags.</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Hemoglobin <span className="text-red-500">*</span></label>
+            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Hemoglobin <span className="text-red-500">*</span></label>
             <div className="relative">
               <input 
                 type="number" 
@@ -801,14 +801,14 @@ Please write an expert, professional clinical interpretation of these results. M
                 placeholder={formData.gender === "male" ? "13.5-17.5" : "12.0-15.5"}
                 value={formData.hemoglobin}
                 onChange={e => handleInputChange("hemoglobin", e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-10 font-mono focus:outline-emerald-500" 
+                className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-12 font-mono focus:outline-emerald-500" 
               />
-              <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">g/dL</span>
+              <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">g/dL</span>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Hematocrit <span className="text-red-500">*</span></label>
+            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Hematocrit <span className="text-red-500">*</span></label>
             <div className="relative">
               <input 
                 type="number" 
@@ -817,14 +817,14 @@ Please write an expert, professional clinical interpretation of these results. M
                 placeholder={formData.gender === "male" ? "38-48" : "35-45"}
                 value={formData.hematocrit}
                 onChange={e => handleInputChange("hematocrit", e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-8 font-mono focus:outline-emerald-500" 
+                className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-10 font-mono focus:outline-emerald-500" 
               />
-              <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">%</span>
+              <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">%</span>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">RBC (Red Cells) <span className="text-red-500">*</span></label>
+            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">RBC (Red Cells) <span className="text-red-500">*</span></label>
             <div className="relative">
               <input 
                 type="number" 
@@ -833,14 +833,14 @@ Please write an expert, professional clinical interpretation of these results. M
                 placeholder={formData.gender === "male" ? "4.3-5.9" : "3.8-5.2"}
                 value={formData.rbc}
                 onChange={e => handleInputChange("rbc", e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-14 font-mono focus:outline-emerald-500" 
+                className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-14 font-mono focus:outline-emerald-500" 
               />
-              <span className="absolute right-3 top-2.5 text-[8px] font-bold text-slate-400 leading-tight">10^12/L</span>
+              <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-[9px] font-black leading-tight">10^12/L</span>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">WBC (White Cells) <span className="text-red-500">*</span></label>
+            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">WBC (White Cells) <span className="text-red-500">*</span></label>
             <div className="relative">
               <input 
                 type="number" 
@@ -849,19 +849,19 @@ Please write an expert, professional clinical interpretation of these results. M
                 placeholder="4.5-11.0"
                 value={formData.wbc}
                 onChange={e => handleInputChange("wbc", e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-14 font-mono focus:outline-emerald-500" 
+                className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-14 font-mono focus:outline-emerald-500" 
               />
-              <span className="absolute right-3 top-2.5 text-[8px] font-bold text-slate-400 leading-tight">10^9/L</span>
+              <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-[9px] font-black leading-tight">10^9/L</span>
             </div>
           </div>
         </div>
 
-        <div className="border-t border-slate-50 dark:border-slate-700/30 pt-6">
-          <h4 className="text-xs font-bold text-[#dfe0ed] uppercase tracking-wide mb-4">Core Indexes (Red Cell Size & Weight)</h4>
+        <div className="border-t border-slate-200 pt-6">
+          <h4 style={{ color: "#000000" }} className="text-xs font-black uppercase tracking-wide mb-4">Core Indexes (Red Cell Size & Weight)</h4>
           
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">MCV (Mean Corpuscular Vol)<span className="text-red-500">*</span></label>
+              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">MCV (Mean Corpuscular Vol)<span className="text-red-500">*</span></label>
               <div className="relative">
                 <input 
                   type="number" 
@@ -870,14 +870,14 @@ Please write an expert, professional clinical interpretation of these results. M
                   placeholder="80-100"
                   value={formData.mcv}
                   onChange={e => handleInputChange("mcv", e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-8 font-mono focus:outline-emerald-500" 
+                  className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-10 font-mono focus:outline-emerald-500" 
                 />
-                <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">fL</span>
+                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">fL</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">MCH (Mean Corpuscular Hb)<span className="text-red-500">*</span></label>
+              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">MCH (Mean Corpuscular Hb)<span className="text-red-500">*</span></label>
               <div className="relative">
                 <input 
                   type="number" 
@@ -886,14 +886,14 @@ Please write an expert, professional clinical interpretation of these results. M
                   placeholder="27-33"
                   value={formData.mch}
                   onChange={e => handleInputChange("mch", e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-8 font-mono focus:outline-emerald-500" 
+                  className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-10 font-mono focus:outline-emerald-500" 
                 />
-                <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">pg</span>
+                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">pg</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">MCHC (Mean Corp Hb Conc)<span className="text-red-500">*</span></label>
+              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">MCHC (Mean Corp Hb Conc)<span className="text-red-500">*</span></label>
               <div className="relative">
                 <input 
                   type="number" 
@@ -902,23 +902,23 @@ Please write an expert, professional clinical interpretation of these results. M
                   placeholder="32-36"
                   value={formData.mchc}
                   onChange={e => handleInputChange("mchc", e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-10 font-mono focus:outline-emerald-500" 
+                  className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-12 font-mono focus:outline-emerald-500" 
                 />
-                <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">g/dL</span>
+                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">g/dL</span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="border-t border-slate-50 dark:border-slate-700/30 pt-6">
+        <div className="border-t border-slate-200 pt-6">
           <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
-            <h4 className="text-xs font-bold text-[#dfe0ed] uppercase tracking-wide">Platelets & Immunological Differentials (NLR Ratio)</h4>
-            <span className="text-[10px] text-slate-200 font-medium">Neutrophils and Lymphocytes required to unlock NLR scoring</span>
+            <h4 style={{ color: "#000000" }} className="text-xs font-black uppercase tracking-wide">Platelets & Immunological Differentials (NLR Ratio)</h4>
+            <span style={{ color: "#000000" }} className="text-xs font-bold">Neutrophils and Lymphocytes required to unlock NLR scoring</span>
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block">Platelets <span className="text-red-500">*</span></label>
+              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Platelets <span className="text-red-500">*</span></label>
               <div className="relative">
                 <input 
                   type="number" 
@@ -926,61 +926,61 @@ Please write an expert, professional clinical interpretation of these results. M
                   placeholder="150-400"
                   value={formData.platelets}
                   onChange={e => handleInputChange("platelets", e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-14 font-mono focus:outline-emerald-500" 
+                  className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-14 font-mono focus:outline-emerald-500" 
                 />
-                <span className="absolute right-3 top-2.5 text-[8px] font-bold text-slate-400 leading-tight">10^9/L</span>
+                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-[9px] font-black leading-tight">10^9/L</span>
               </div>
               {formData.platelets && !isNaN(parseFloat(formData.platelets)) && (
-                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold font-mono mt-0.5">
+                <p style={{ color: "#065f46" }} className="text-xs font-black font-mono mt-1">
                   Equivalent: {(parseFloat(formData.platelets) / 100).toFixed(2)} lakh/µL
                 </p>
               )}
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block font-mono">Neutrophils (%)</label>
+              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block font-mono">Neutrophils (%)</label>
               <div className="relative">
                 <input 
                   type="number" 
                   placeholder="40-70"
                   value={formData.neutrophils}
                   onChange={e => handleInputChange("neutrophils", e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-8 font-mono focus:outline-emerald-500" 
+                  className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-10 font-mono focus:outline-emerald-500" 
                 />
-                <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">%</span>
+                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">%</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-[#dfe0ed] tracking-wide block font-mono">Lymphocytes (%)</label>
+              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block font-mono">Lymphocytes (%)</label>
               <div className="relative">
                 <input 
                   type="number" 
                   placeholder="20-40"
                   value={formData.lymphocytes}
                   onChange={e => handleInputChange("lymphocytes", e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-700/60 rounded-xl px-3 py-2 text-sm text-slate-800 dark:text-slate-100 pr-8 font-mono focus:outline-emerald-500" 
+                  className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-10 font-mono focus:outline-emerald-500" 
                 />
-                <span className="absolute right-3 top-2.5 text-[10px] font-bold text-slate-400">%</span>
+                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">%</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Clinical Safety Verification Checkbox */}
-        <div className="bg-slate-50 border border-slate-300 rounded-2xl p-4 flex items-start gap-4 select-none my-2 text-left shadow-xs">
+        <div className="bg-slate-50 border-2 border-slate-300 rounded-2xl p-4 flex items-start gap-4 select-none my-2 text-left shadow-xs">
           <input
             type="checkbox"
             checked={isVerifiedCheck}
             onChange={(e) => setIsVerifiedCheck(e.target.checked)}
             id="cbc-verification-calc-checkbox"
-            className="mt-0.5 rounded border-slate-300 text-[#2d5a37] focus:ring-[#2d5a37] cursor-pointer bg-white w-4 h-4 shrink-0"
+            className="mt-0.5 rounded border-slate-300 text-emerald-800 focus:ring-emerald-600 cursor-pointer bg-white w-4 h-4 shrink-0"
           />
           <div className="space-y-1">
-            <label htmlFor="cbc-verification-calc-checkbox" className="text-xs font-bold text-slate-800 cursor-pointer leading-tight block">
+            <label htmlFor="cbc-verification-calc-checkbox" style={{ color: "#000000" }} className="text-xs font-black cursor-pointer leading-tight block">
               I have verified the extracted values against the original report
             </label>
-            <p className="text-[10px] text-slate-600 leading-normal">
+            <p style={{ color: "#000000" }} className="text-xs font-bold leading-normal">
               Confirming that all decimal points, values, and units are accurate prevents critical clinical and OCR errors.
             </p>
           </div>
@@ -989,7 +989,7 @@ Please write an expert, professional clinical interpretation of these results. M
         <button 
           type="submit"
           disabled={!isVerifiedCheck}
-          className="w-full py-3.5 rounded-2xl bg-cyan-600 hover:bg-cyan-500 text-white font-extrabold text-sm tracking-wide transition-all duration-300 flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-600/10 cursor-pointer disabled:opacity-45 disabled:cursor-not-allowed disabled:scale-100"
+          className="w-full py-3.5 rounded-2xl bg-cyan-700 hover:bg-cyan-800 text-white font-black text-sm tracking-wide transition-all duration-300 flex items-center justify-center gap-1.5 shadow-md cursor-pointer disabled:opacity-45 disabled:cursor-not-allowed disabled:scale-100"
         >
           <span>Calculate CBC Clinical Indexes</span>
         </button>
@@ -1006,7 +1006,7 @@ Please write an expert, professional clinical interpretation of these results. M
             riskLevel={results.riskLevel}
           />
           
-          <div className="p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+          <div style={{ backgroundColor: "#f0fdf4", color: "#000000" }} className="p-4 border-2 border-emerald-300 rounded-2xl text-xs leading-relaxed font-bold">
             {results.overallStatus}
           </div>
 
@@ -1040,38 +1040,38 @@ Please write an expert, professional clinical interpretation of these results. M
           </div>
 
           {/* Advanced scoring metrics */}
-          <div className="bento-card dark:bg-slate-800 space-y-4 p-6">
-            <h4 className="text-sm font-extrabold text-slate-950 dark:text-white flex items-center gap-2 uppercase tracking-wide font-sans">
-              <span className="w-1.5 h-3.5 bg-emerald-500 rounded-full shrink-0" />
+          <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 space-y-4 p-6">
+            <h4 style={{ color: "#000000" }} className="text-sm font-black flex items-center gap-2 uppercase tracking-wide font-sans">
+              <span className="w-1.5 h-3.5 bg-emerald-600 rounded-full shrink-0" />
               <span>Immunology and Nutrient Status Panels</span>
             </h4>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* NLR Card */}
-              <div className="bento-card dark:bg-slate-905 p-5 space-y-2">
-                <span className="card-title">Neutrophil-to-Lymphocyte Ratio (NLR)</span>
+              <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 p-5 space-y-2">
+                <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block">Neutrophil-to-Lymphocyte Ratio (NLR)</span>
                 {results.nlratio !== undefined ? (
                   <div>
                     <div className={`score-big ${
                       results.nlratio > 3.0 
-                        ? "text-rose-600 dark:text-rose-500" 
+                        ? "text-rose-600" 
                         : results.nlratio < 1.0 
-                          ? "text-amber-500 dark:text-amber-400" 
-                          : "text-emerald-600 dark:text-emerald-400"
+                          ? "text-amber-600" 
+                          : "text-emerald-600"
                     }`}>{results.nlratio}</div>
-                    <p className="text-xs text-slate-500 leading-relaxed mt-1">{results.nlratioInterpretation}</p>
+                    <p style={{ color: "#000000" }} className="text-xs font-bold leading-relaxed mt-1">{results.nlratioInterpretation}</p>
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-400">Lock: Neutrophil and Lymphocyte differentials required to calculate NLR.</p>
+                  <p style={{ color: "#000000" }} className="text-xs font-bold">Lock: Neutrophil and Lymphocyte differentials required to calculate NLR.</p>
                 )}
               </div>
 
               {/* Anemia Index Card */}
-              <div className="bento-card dark:bg-slate-905 p-5 space-y-2">
-                <span className="card-title">Nutritional Anemia Vector</span>
+              <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 p-5 space-y-2">
+                <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block">Nutritional Anemia Vector</span>
                 <div>
-                  <div className="text-base font-bold text-slate-800 dark:text-slate-100">Type: <span className="text-slate-500">{results.anemiaType || "Normal profile (no active anemia)"}</span></div>
-                  <p className="text-xs text-slate-500 leading-relaxed mt-2">
+                  <div style={{ color: "#000000" }} className="text-base font-black">Type: <span className="text-emerald-800">{results.anemiaType || "Normal profile (no active anemia)"}</span></div>
+                  <p style={{ color: "#000000" }} className="text-xs font-bold leading-relaxed mt-2">
                     Size (MCV) and weight (MCH/MCHC) parameters are integrated to determine if any microcytic or macrocytic iron-deficiency markers exist.
                   </p>
                 </div>
@@ -1080,23 +1080,23 @@ Please write an expert, professional clinical interpretation of these results. M
           </div>
 
           {/* Local & AI Clinical Interpretation Panel */}
-          <div className="p-6 bg-slate-100/90 border border-slate-300 text-slate-900 rounded-3xl space-y-4 shadow-sm">
-            <div className="flex justify-between items-center pb-2 border-b border-slate-200">
-              <h4 className="text-sm font-extrabold tracking-wider text-[#2d5a37] uppercase flex items-center gap-1.5">
+          <div style={{ backgroundColor: "#f8fafc" }} className="p-6 border-2 border-slate-300 rounded-3xl space-y-4 shadow-sm">
+            <div className="flex justify-between items-center pb-2 border-b border-slate-300">
+              <h4 style={{ color: "#065f46" }} className="text-sm font-black tracking-wider uppercase flex items-center gap-1.5">
                 <FileText size={16} />
                 <span>Clinical Diagnostics Board</span>
               </h4>
-              <span className="text-[9px] bg-slate-200 text-slate-800 px-2 py-0.5 rounded font-extrabold uppercase tracking-wider">
+              <span className="text-[10px] bg-emerald-100 text-emerald-950 px-2.5 py-1 rounded-md font-black uppercase tracking-wider border border-emerald-300">
                 Local + AI
               </span>
             </div>
 
             {/* Part A: Offline Rule-Based Basic Interpretation */}
-            <div className="space-y-1 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
-              <span className="text-[10px] uppercase font-extrabold tracking-widest text-[#2d5a37]">
+            <div style={{ backgroundColor: "#ffffff" }} className="space-y-1 p-4 rounded-2xl border-2 border-slate-300 shadow-xs">
+              <span style={{ color: "#065f46" }} className="text-xs uppercase font-black tracking-widest block">
                 Local Basic Interpretation (Offline)
               </span>
-              <p className="text-xs text-slate-800 leading-relaxed font-semibold mt-1 text-justify">
+              <p style={{ color: "#000000" }} className="text-xs leading-relaxed font-semibold mt-1 text-justify">
                 {results ? getOfflineCbcSummary({
                   hemoglobin: parseFloat(formData.hemoglobin) || 0,
                   hematocrit: parseFloat(formData.hematocrit) || 0,
@@ -1116,20 +1116,20 @@ Please write an expert, professional clinical interpretation of these results. M
             {/* Part B: On-Demand AI Interpretation */}
             <div className="space-y-3 pt-1">
               {!aiInsight && !isAiLoading && !aiError && (
-                <div className="relative flex flex-col items-center justify-center p-5 bg-white border border-dashed border-slate-300 rounded-2xl space-y-4">
-                  <p className="text-[11px] text-slate-700 text-center font-medium leading-relaxed">
+                <div style={{ backgroundColor: "#ffffff" }} className="relative flex flex-col items-center justify-center p-5 border-2 border-dashed border-slate-300 rounded-2xl space-y-4">
+                  <p style={{ color: "#000000" }} className="text-xs text-center font-bold leading-relaxed">
                     Need an deep expert clinical review of potential microcytic/macrocytic anomalies, inflammatory stress markers, or full diagnostic trends with {activeProviderName}?
                   </p>
                   
-                  <label className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer select-none max-w-sm text-left transition-colors hover:bg-slate-100">
+                  <label className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border-2 border-slate-300 cursor-pointer select-none max-w-sm text-left transition-colors hover:bg-slate-100">
                     <input
                       type="checkbox"
                       checked={isVerifiedCheck}
                       onChange={(e) => setIsVerifiedCheck(e.target.checked)}
                       id="cbc-verification-checkbox"
-                      className="mt-0.5 rounded border-slate-300 text-[#2d5a37] focus:ring-[#2d5a37] cursor-pointer bg-white w-4 h-4 shrink-0"
+                      className="mt-0.5 rounded border-slate-300 text-emerald-800 focus:ring-emerald-600 cursor-pointer bg-white w-4 h-4 shrink-0"
                     />
-                    <span className="text-[11px] text-slate-800 leading-normal font-semibold">
+                    <span style={{ color: "#000000" }} className="text-xs leading-normal font-black">
                       I have verified the extracted values against the original report
                     </span>
                   </label>
@@ -1138,31 +1138,31 @@ Please write an expert, professional clinical interpretation of these results. M
                     type="button"
                     onClick={handleTriggerAiAnalysis}
                     disabled={isAiLoading || !isVerifiedCheck}
-                    className="px-5 py-2.5 rounded-xl bg-[#2d5a37] hover:bg-[#23482c] text-white text-xs font-bold transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-md shadow-[#2d5a37]/20 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="px-5 py-2.5 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-black transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    <RefreshCw size={12} className={isAiLoading ? "animate-spin" : ""} />
+                    <RefreshCw size={13} className={isAiLoading ? "animate-spin" : ""} />
                     <span>Interpret Using AI</span>
                   </button>
                 </div>
               )}
 
               {isAiLoading && (
-                <div className="h-28 flex flex-col items-center justify-center space-y-2 bg-white rounded-2xl border border-slate-200">
-                  <RefreshCw className="animate-spin text-[#2d5a37]" size={24} />
-                  <p className="text-xs text-slate-800 font-bold">Generating expert clinical interpretation with {activeProviderName}...</p>
+                <div style={{ backgroundColor: "#ffffff" }} className="h-28 flex flex-col items-center justify-center space-y-2 rounded-2xl border-2 border-slate-300">
+                  <RefreshCw className="animate-spin text-emerald-800" size={24} />
+                  <p style={{ color: "#000000" }} className="text-xs font-black">Generating expert clinical interpretation with {activeProviderName}...</p>
                 </div>
               )}
 
               {aiError && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-2xl space-y-3">
-                  <div className="text-xs text-red-800 flex flex-col gap-2 font-medium text-left">
-                    <div className="flex items-center gap-1.5 font-bold">
-                      <AlertCircle size={14} className="shrink-0 text-red-600" />
+                <div style={{ backgroundColor: "#fef2f2" }} className="p-4 border-2 border-red-300 rounded-2xl space-y-3">
+                  <div style={{ color: "#991b1b" }} className="text-xs flex flex-col gap-2 font-bold text-left">
+                    <div className="flex items-center gap-1.5 font-black">
+                      <AlertCircle size={15} className="shrink-0 text-red-600" />
                       <span>{aiError}</span>
                     </div>
                     {aiErrorStack && (
                       <details className="mt-1">
-                        <summary className="cursor-pointer text-[10px] text-red-700 font-medium hover:underline">
+                        <summary className="cursor-pointer text-xs text-red-700 font-bold hover:underline">
                           Show Error Trace
                         </summary>
                         <pre className="mt-2 p-2 bg-white border border-red-200 text-red-900 font-mono text-[10px] whitespace-pre-wrap rounded-lg overflow-auto max-h-40 text-left">
@@ -1178,9 +1178,9 @@ Please write an expert, professional clinical interpretation of these results. M
                       checked={isVerifiedCheck}
                       onChange={(e) => setIsVerifiedCheck(e.target.checked)}
                       id="cbc-verification-retry-checkbox"
-                      className="mt-0.5 rounded border-slate-300 text-[#2d5a37] focus:ring-[#2d5a37] cursor-pointer bg-white w-4 h-4 shrink-0"
+                      className="mt-0.5 rounded border-slate-300 text-emerald-800 focus:ring-emerald-600 cursor-pointer bg-white w-4 h-4 shrink-0"
                     />
-                    <span className="text-[11px] text-slate-800 leading-normal font-semibold">
+                    <span style={{ color: "#000000" }} className="text-xs leading-normal font-black">
                       I have verified the extracted values against the original report
                     </span>
                   </label>
@@ -1189,7 +1189,7 @@ Please write an expert, professional clinical interpretation of these results. M
                     type="button"
                     onClick={handleTriggerAiAnalysis}
                     disabled={isAiLoading || !isVerifiedCheck}
-                    className="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-[10px] font-bold uppercase transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="px-4 py-2 bg-red-700 hover:bg-red-800 text-white rounded-lg text-xs font-black uppercase transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     Retry AI analysis
                   </button>
@@ -1197,35 +1197,35 @@ Please write an expert, professional clinical interpretation of these results. M
               )}
 
               {aiInsight && (
-                <div className="space-y-2 p-4 bg-white border border-slate-200 rounded-2xl shadow-xs">
-                  <span className="text-[10px] uppercase font-bold tracking-widest text-[#2d5a37]">
+                <div style={{ backgroundColor: "#ffffff" }} className="space-y-2 p-4 border-2 border-slate-300 rounded-2xl shadow-xs">
+                  <span style={{ color: "#065f46" }} className="text-xs uppercase font-black tracking-widest block">
                     Clinical AI Analysis ({activeProviderName})
                   </span>
-                  <div className="text-slate-800 text-xs sm:text-sm whitespace-pre-wrap leading-relaxed text-justify pr-2 max-h-96 overflow-y-auto font-medium">
+                  <div style={{ color: "#000000" }} className="text-xs sm:text-sm whitespace-pre-wrap leading-relaxed text-justify pr-2 max-h-96 overflow-y-auto font-medium">
                     {aiInsight}
                   </div>
                 </div>
               )}
             </div>
 
-            <div className="border-t border-slate-800 pt-3 text-[10px] text-slate-500 font-medium space-y-1.5 leading-relaxed">
+            <div style={{ color: "#000000" }} className="border-t border-slate-300 pt-3 text-xs font-bold space-y-1.5 leading-relaxed">
               <p>
-                <strong>Medical Disclaimer:</strong> Decision-support only. This information should always be analyzed alongside professional clinicians.
+                <strong style={{ color: "#000000" }} className="font-black">Medical Disclaimer:</strong> Decision-support only. This information should always be analyzed alongside professional clinicians.
               </p>
-              <p className="text-slate-400 font-bold border-l-2 border-emerald-500/40 pl-2">
+              <p className="border-l-2 border-emerald-600 pl-2">
                 AI-generated interpretation. Not a medical diagnosis. Consult a qualified doctor.
               </p>
             </div>
           </div>
 
           {/* Save panel */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-4 border-t border-slate-200/50 dark:border-slate-800/40 gap-4">
-            <span className="text-xs text-slate-400 text-justify">Ensure values are verified before sharing or saving to logs.</span>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-4 border-t border-slate-300 gap-4">
+            <span style={{ color: "#000000" }} className="text-xs font-bold text-justify">Ensure values are verified before sharing or saving to logs.</span>
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"
                 onClick={handlePrintPDF}
-                className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all duration-300 flex items-center gap-1.5 shadow-md shadow-indigo-600/10 cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-black transition-all duration-300 flex items-center gap-1.5 shadow-sm cursor-pointer"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
@@ -1238,13 +1238,13 @@ Please write an expert, professional clinical interpretation of these results. M
                 <button
                   type="button"
                   onClick={handleSave}
-                  className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-900 text-xs font-bold transition-all duration-300 flex items-center gap-1.5 shadow-md shadow-emerald-500/10 cursor-pointer"
+                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black transition-all duration-300 flex items-center gap-1.5 shadow-sm cursor-pointer"
                 >
                   <Save size={14} />
                   <span>Save to History Logs</span>
                 </button>
               ) : (
-                <div className="inline-flex items-center gap-1 text-xs text-emerald-500 bg-emerald-50/10 border border-emerald-500/10 px-4 py-2 rounded-xl font-bold">
+                <div className="inline-flex items-center gap-1 text-xs text-emerald-950 bg-emerald-100 border border-emerald-400 px-4 py-2 rounded-xl font-black">
                   <Check size={14} />
                   <span>Saved successfully</span>
                 </div>
