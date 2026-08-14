@@ -129,10 +129,10 @@ export default function App() {
   const [copiedInstructions, setCopiedInstructions] = useState<boolean>(false);
 
   const handleCopyAboutMarkdown = () => {
-    const text = `# Chikitsa Sahayak™ - Clinical Suite\n\n` +
-      `© 2026 Chikitsa Sahayak | Initiative by Dr. MP Singh\n\n` +
+    const text = `# Chiktsa Sahayak™ - Clinical Suite\n\n` +
+      `© 2026 Chiktsa Sahayak | Initiative by Dr. MP Singh\n\n` +
       `## Purpose of the Application\n` +
-      `Chikitsa Sahayak is an amateur initiative aimed at providing simple solutions to simple but important healthcare-related problems. It combines practical tools, calculators, reference resources, and utilities that may help make routine educational and clinical tasks more convenient.\n\n` +
+      `Chiktsa Sahayak is an amateur initiative aimed at providing simple solutions to simple but important healthcare-related problems. It combines practical tools, calculators, reference resources, and utilities that may help make routine educational and clinical tasks more convenient.\n\n` +
       `## Key Features\n` +
       `- **Explore Numeric Patient Data**: Comprehensive exploration of quantitative biological metrics, CBC parameters, liver panel trends, and renal clearances.\n` +
       `- **Camp Screening & Logistics Details**: Optimized module supporting non-profit rural health camps and mass checkups.\n` +
@@ -156,12 +156,12 @@ export default function App() {
   };
 
   const handleCopySystemInstructions = () => {
-    const text = `# Project Instructions: Chikitsa Sahayak Integration\n\n` +
+    const text = `# Project Instructions: Chiktsa Sahayak Integration\n\n` +
       `Apply these instructions to define this application's look, feel, and features across any other platform app:\n\n` +
       `\`\`\`markdown\n` +
       `# AGENTS.md\n\n` +
       `## App Persona & Vibe\n` +
-      `- **Name**: Chikitsa Sahayak (Clinical Decision-Support Suite)\n` +
+      `- **Name**: Chiktsa Sahayak (Clinical Decision-Support Suite)\n` +
       `- **Founder/Initiative**: Dr. M. P. Singh\n` +
       `- **Theme**: Very light colored background with a gorgeous grid/mesh pattern (mint or slate checked styling).\n` +
       `- **Visual Palette**: Clean, crisp margins, card layouts with generous white space, and high contrast typography (Inter + Space Grotesk).\n\n` +
@@ -347,7 +347,7 @@ export default function App() {
           <div className="flex items-center gap-4">
             <div className="flex flex-col">
               <h1 className={`text-lg font-black tracking-wider ${schemeClasses.headerLogo} leading-none`}>
-                Chikitsa Sahayak
+                Chiktsa Sahayak
               </h1>
               <div className="flex items-center gap-1.5 mt-1.5">
                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
@@ -375,19 +375,19 @@ export default function App() {
             <button
               onClick={() => setAboutOpen(true)}
               className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 h-8 rounded-lg border bg-white/95 hover:bg-white text-slate-800 hover:text-slate-950 border-slate-200/90 shadow-xs transition-all text-xs font-bold cursor-pointer shrink-0"
-              title="About Chikitsa Sahayak Clinical Suite"
+              title="About Chiktsa Sahayak Clinical Suite"
             >
               <Info size={14} className="text-slate-700" />
             </button>
 
-            {/* Install App button */}
+            {/* Add to Home Screen button */}
             <button
               onClick={() => window.dispatchEvent(new CustomEvent("open-install-prompt"))}
               className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 h-8 rounded-lg border bg-white/95 hover:bg-emerald-50 text-emerald-950 border-emerald-400 shadow-xs transition-all text-xs font-black cursor-pointer shrink-0"
-              title="Install Chikitsa Sahayak App / Add to Home Screen"
+              title="How to Add Chiktsa Sahayak to Home Screen"
             >
-              <Download size={14} className="text-emerald-700 stroke-[2.5]" />
-              <span className="hidden xs:inline sm:inline">Install App</span>
+              <Smartphone size={14} className="text-emerald-700 stroke-[2.5]" />
+              <span className="hidden sm:inline">Add to Home Screen</span>
             </button>
 
             {/* AI Provider Config */}
@@ -717,10 +717,10 @@ export default function App() {
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="text-center md:text-left space-y-1">
             <p className="text-lg font-black text-brand-gold font-serif-brand tracking-tight">
-              Chikitsa Sahayak™
+              Chiktsa Sahayak™
             </p>
             <p className="text-[10px] text-slate-600 dark:text-slate-300 font-bold uppercase tracking-wider">
-              © 2026 Chikitsa Sahayak
+              © 2026 Chiktsa Sahayak
             </p>
           </div>
 
@@ -788,7 +788,7 @@ export default function App() {
                 <div className="w-16 h-16 mx-auto rounded-xl overflow-hidden flex items-center justify-center border-2 border-slate-300 dark:border-slate-700 bg-white p-1 relative group shadow-sm">
                   <img 
                     src={logoUrl} 
-                    alt="Chikitsa Sahayak Logo" 
+                    alt="Chiktsa Sahayak Logo" 
                     className="w-full h-full object-contain select-none pointer-events-none"
                     referrerPolicy="no-referrer"
                   />
@@ -800,11 +800,11 @@ export default function App() {
                 </div>
                 <div className="space-y-1">
                   <h3 className="text-2xl font-black text-slate-950 dark:text-white font-serif-brand tracking-tight">
-                    Chikitsa Sahayak™
+                    Chiktsa Sahayak™
                   </h3>
                   <div className="flex items-center justify-center gap-2">
                     <p className="text-xs text-slate-900 dark:text-slate-200 font-bold uppercase tracking-wider">
-                      © 2026 Chikitsa Sahayak
+                      © 2026 Chiktsa Sahayak
                     </p>
                     <span className="text-[10px] px-2 py-0.5 rounded-md font-black uppercase tracking-wider bg-emerald-100 text-emerald-950 border border-emerald-400">
                       {isPublished ? "Published" : "Draft Mode"}
@@ -816,7 +816,7 @@ export default function App() {
                     )}
                   </div>
                 </div>
-                {/* Attribution & Install App Button */}
+                {/* Attribution & Add to Home Screen Guide Button */}
                 <div className="pt-1 space-y-3">
                   <div>
                     <p className="text-xs text-slate-900 dark:text-slate-200 font-black uppercase tracking-widest leading-none">An initiative by</p>
@@ -828,10 +828,10 @@ export default function App() {
                       setAboutOpen(false);
                       window.dispatchEvent(new CustomEvent("open-install-prompt"));
                     }}
-                    className="w-full max-w-sm mx-auto flex items-center justify-center gap-2 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black shadow-md transition-all cursor-pointer"
+                    className="w-full max-w-sm mx-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black shadow-md transition-all cursor-pointer"
                   >
-                    <Download size={14} className="stroke-[2.5]" />
-                    <span>Install App on Phone (Add to Home Screen)</span>
+                    <Smartphone size={15} />
+                    <span>How to Add App to Home Screen</span>
                   </button>
                 </div>
               </div>
@@ -841,7 +841,7 @@ export default function App() {
               {/* Main Description */}
               <div className="space-y-5 text-xs text-slate-950 dark:text-slate-100 leading-relaxed text-justify font-semibold">
                 <p>
-                  Chikitsa Sahayak is an amateur initiative aimed at providing simple solutions to simple but important healthcare-related problems. It combines practical tools, calculators, reference resources, and utilities that may help make routine educational and clinical tasks more convenient.
+                  Chiktsa Sahayak is an amateur initiative aimed at providing simple solutions to simple but important healthcare-related problems. It combines practical tools, calculators, reference resources, and utilities that may help make routine educational and clinical tasks more convenient.
                 </p>
 
                 {/* Purpose Section */}
@@ -1016,7 +1016,7 @@ export default function App() {
 
                 {/* Closing */}
                 <div className="text-center pt-2 text-slate-950 dark:text-slate-100 text-xs font-black italic">
-                  Thank you for using Chikitsa Sahayak.
+                  Thank you for using Chiktsa Sahayak.
                 </div>
               </div>
 

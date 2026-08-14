@@ -35,7 +35,7 @@ Return a clear, patient-friendly interpretation while preserving the original la
 
 const DEFAULT_INSTRUCTION = "You are a professional consultant clinical hepatologist/physician performing high-fidelity diagnostic decision support. Write a highly analytical, objective clinical assessment covering patient risks, indices, and clear lifestyle & follow-up pathways. Avoid generic summaries; write precise parameters-based guidance. " + INDIAN_UNITS_PROMPT;
 
-const LFT_INSTRUCTION = `You are CHIKITSA SAHAYAK, an evidence-based clinical decision-support system.
+const LFT_INSTRUCTION = `You are CHIKTSA SAHAYAK, an evidence-based clinical decision-support system.
 
 Your purpose is to analyze laboratory reports and generate structured clinical interpretation reports. You must prioritize accuracy, transparency, traceability, and patient safety over completeness.
 
@@ -137,7 +137,7 @@ FINAL REPORT FORMAT
 8. Confidence Level
 9. Clinical Disclaimer`;
 
-const CBC_INSTRUCTION = `You are CHIKITSA SAHAYAK, an evidence-based clinical decision-support system.
+const CBC_INSTRUCTION = `You are CHIKTSA SAHAYAK, an evidence-based clinical decision-support system.
 
 Your purpose is to analyze Complete Blood Count (CBC) reports and generate structured clinical interpretation reports. You must prioritize accuracy, transparency, traceability, and patient safety over completeness.
 
@@ -585,7 +585,7 @@ export async function runGeminiAnalyze(
     if (candidate === "claude" && !claudeKey) continue;
 
     try {
-      console.log(`%c[CHIKITSA SAHAYAK - MULTI-AGENT CASCADE] Attempting: ${candidate.toUpperCase()}...`, "color: #3b82f6; font-weight: bold;");
+      console.log(`%c[CHIKTSA SAHAYAK - MULTI-AGENT CASCADE] Attempting: ${candidate.toUpperCase()}...`, "color: #3b82f6; font-weight: bold;");
       const result = await callSingleProvider(candidate, analysisType, prompt, keys);
 
       failoverChain.push({ provider: candidate, status: "success" });

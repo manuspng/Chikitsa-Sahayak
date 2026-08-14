@@ -1,228 +1,247 @@
 import React, { useState, useEffect } from "react";
-import { Smartphone, Share2, MoreVertical, Plus, X, Download } from "lucide-react";
-
-interface BeforeInstallPromptEvent extends Event {
-  readonly platforms: string[];
-  readonly userChoice: Promise<{
-    outcome: "accepted" | "dismissed";
-    platform: string;
-  }>;
-  prompt(): Promise<void>;
-}
+import { Smartphone, Share2, MoreVertical, Plus, X, Laptop, CheckCircle2 } from "lucide-react";
 
 export default function InstallPrompt() {
-  const [platform, setPlatform] = useState<"ios" | "android" | "desktop" | null>(null);
-  const [isStandalone, setIsStandalone] = useState<boolean>(true);
+  const [activeTab, setActiveTab] = useState<"ios" | "android" | "desktop">("ios");
   const [isVisible, setIsVisible] = useState<boolean>(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
-    // 1. Detect platform
+    // 1. Detect platform for default tab
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     const isAndroid = /Android/i.test(navigator.userAgent);
 
     if (isIOS) {
-      setPlatform("ios");
+      setActiveTab("ios");
     } else if (isAndroid) {
-      setPlatform("android");
+      setActiveTab("android");
     } else {
-      setPlatform("desktop");
+      setActiveTab("desktop");
     }
 
-    // 2. Check if already installed / standalone
-    const isInStandaloneMode = 
-      (window.navigator as any).standalone || 
-      window.matchMedia("(display-mode: standalone)").matches;
-
-    setIsStandalone(isInStandaloneMode);
-
-    // 3. Listen for the native beforeinstallprompt event (for Android, Chrome, Edge, Desktop)
-    const handleBeforeInstallPrompt = (e: Event) => {
-      // Prevent browser's automatic mini-infobar UI from showing
-      e.preventDefault();
-      // Store the event for triggering it later on user interaction
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-      
-      // Check if user has dismissed it within this session
-      try {
-        const dismissed = localStorage.getItem("chikitsa_pwa_dismissed");
-        if (dismissed === "true") {
-          return;
-        }
-      } catch {}
-
-      // If not in standalone mode, display the prompt
-      if (!isInStandaloneMode) {
-        setIsVisible(true);
-      }
-    };
-
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-
-    // Listen for successful app installation to auto-clean state
-    const handleAppInstalled = () => {
-      console.log("Chikitsa Sahayak was successfully installed!");
-      setDeferredPrompt(null);
-      setIsVisible(false);
-    };
-    window.addEventListener("appinstalled", handleAppInstalled);
-
-    // 4. Fallback/manual trigger for iOS devices (since iOS doesn't support beforeinstallprompt)
-    if (isIOS && !isInStandaloneMode) {
-      try {
-        const dismissed = localStorage.getItem("chikitsa_pwa_dismissed");
-        if (dismissed !== "true") {
-          const timer = setTimeout(() => {
-            setIsVisible(true);
-          }, 1500);
-          return () => {
-            clearTimeout(timer);
-            window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-            window.removeEventListener("appinstalled", handleAppInstalled);
-          };
-        }
-      } catch {}
-    }
-
-    // 5. Allow manual trigger from anywhere via custom event
+    // 2. Allow manual trigger from anywhere via custom event
     const handleOpenPrompt = () => {
       setIsVisible(true);
     };
     window.addEventListener("open-install-prompt", handleOpenPrompt);
 
     return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-      window.removeEventListener("appinstalled", handleAppInstalled);
       window.removeEventListener("open-install-prompt", handleOpenPrompt);
     };
   }, []);
 
   const handleDismiss = () => {
     setIsVisible(false);
-    try {
-      localStorage.setItem("chikitsa_pwa_dismissed", "true");
-    } catch {}
-  };
-
-  const handleNativeInstall = async () => {
-    if (!deferredPrompt) {
-      alert("To install, tap your browser's menu (⋮ or Share) and select 'Add to Home screen' or 'Install App'.");
-      return;
-    }
-    
-    // Trigger browser's native install dialog
-    await deferredPrompt.prompt();
-    
-    // Wait for the user option selection
-    deferredPrompt.userChoice.then((choiceResult) => {
-      if (choiceResult.outcome === "accepted") {
-        console.log("✓ User added application via native installer");
-      } else {
-        console.log("✗ User dismissed native installer");
-      }
-      setDeferredPrompt(null);
-      setIsVisible(false);
-    });
   };
 
   if (!isVisible) return null;
 
   return (
-    <div className="fixed bottom-6 left-4 right-4 md:left-auto md:right-6 md:max-w-md z-50 animate-in fade-in slide-in-from-bottom-5 duration-300">
-      <div className="bg-slate-900 text-slate-100 rounded-3xl p-5 border border-emerald-500/30 shadow-2xl shadow-emerald-950/40 relative overflow-hidden">
-        {/* Decorative background circle */}
-        <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full bg-emerald-500/10 blur-xl pointer-events-none" />
-        
-        {/* Header content with App Brand logo */}
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-slate-950 border border-emerald-500/30 overflow-hidden flex items-center justify-center shadow-md">
+    <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fade-in">
+      <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-3xl shadow-2xl overflow-hidden animate-zoom-in text-slate-950 dark:text-white">
+        {/* Top Decorative Line */}
+        <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-indigo-600 z-10" />
+
+        {/* Header Section */}
+        <div className="p-6 pb-4 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between">
+          <div className="flex items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-white border-2 border-emerald-500/40 p-1 shadow-md flex items-center justify-center shrink-0">
               <img 
                 src="/apple-touch-icon.png" 
-                alt="Chikitsa Sahayak Logo" 
-                className="w-full h-full object-contain p-0.5 select-none pointer-events-none" 
+                alt="Chiktsa Sahayak Logo" 
+                className="w-full h-full object-contain select-none pointer-events-none rounded-xl" 
                 referrerPolicy="no-referrer"
               />
             </div>
             <div>
-              <h4 className="text-sm font-black tracking-tight text-white flex items-center gap-1.5">
-                Chikitsa Sahayak
-              </h4>
-              <p className="text-[10px] text-emerald-400 font-bold tracking-wide uppercase">
-                {isIOS ? "Add Shortcut to Home Screen" : "Official App Hub"}
+              <h3 className="text-base font-black tracking-tight text-slate-950 dark:text-white flex items-center gap-1.5 font-serif-brand">
+                Chiktsa Sahayak™
+              </h3>
+              <p className="text-[11px] text-emerald-700 dark:text-emerald-400 font-bold uppercase tracking-wider">
+                How to Add Web App to Home Screen
               </p>
             </div>
           </div>
           <button 
             onClick={handleDismiss}
-            className="p-1.5 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition-colors cursor-pointer"
-            title="Dismiss Install Prompt"
+            className="p-1.5 rounded-xl text-slate-500 hover:text-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800 dark:hover:text-white transition-colors cursor-pointer border border-slate-200 dark:border-slate-700"
+            title="Close Guide"
           >
-            <X size={16} />
+            <X size={18} />
           </button>
         </div>
 
-        {/* Informational pitch */}
-        <p className="text-xs text-slate-300 mb-4 leading-relaxed font-normal">
-          Access Chikitsa Sahayak directly from your home screen with a full-screen experience, zero browser frame, offline capabilities, and instant loading.
-        </p>
+        {/* Informational Pitch */}
+        <div className="px-6 pt-3 pb-1">
+          <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-semibold">
+            Install <strong>Chiktsa Sahayak</strong> on your device for instant 1-tap home screen access, full-screen view, and offline diagnostic tools.
+          </p>
+        </div>
 
-        {/* Conditional rendering for iOS versus Native install path */}
-        {isIOS ? (
-          <div className="space-y-3 bg-slate-950/60 rounded-2xl p-4 border border-slate-800/40">
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-slate-800 text-slate-200 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
-                1
-              </div>
-              <p className="text-xs text-slate-300 leading-normal">
-                Tap the <strong className="text-white inline-flex items-center gap-1">Share <Share2 size={13} className="text-emerald-400 inline" /></strong> button in Safari's bottom toolbar.
-              </p>
-            </div>
-            
-            <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-slate-800 text-slate-200 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
-                2
-              </div>
-              <p className="text-xs text-slate-300 leading-normal">
-                Scroll down and select <strong className="text-white inline-flex items-center gap-1">Add to Home Screen <Plus size={13} className="text-emerald-400 inline bg-slate-800 rounded p-0.5" /></strong>.
-              </p>
-            </div>
+        {/* Platform Selector Tabs */}
+        <div className="px-6 pt-3">
+          <div className="grid grid-cols-3 gap-1.5 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-700 text-xs font-black">
+            <button
+              type="button"
+              onClick={() => setActiveTab("ios")}
+              className={`py-2 px-2 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                activeTab === "ios"
+                  ? "bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-400 shadow-sm border border-slate-300 dark:border-slate-600"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-950"
+              }`}
+            >
+              <Smartphone size={14} />
+              <span>iPhone (iOS)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("android")}
+              className={`py-2 px-2 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                activeTab === "android"
+                  ? "bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-400 shadow-sm border border-slate-300 dark:border-slate-600"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-950"
+              }`}
+            >
+              <Smartphone size={14} />
+              <span>Android</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("desktop")}
+              className={`py-2 px-2 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                activeTab === "desktop"
+                  ? "bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-400 shadow-sm border border-slate-300 dark:border-slate-600"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-950"
+              }`}
+            >
+              <Laptop size={14} />
+              <span>PC / Laptop</span>
+            </button>
           </div>
-        ) : (
-          <div className="space-y-3">
-            {deferredPrompt ? (
-              <button
-                onClick={handleNativeInstall}
-                className="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-2.5 px-4 rounded-xl shadow-lg shadow-emerald-500/20 active:scale-[0.98] transition-all cursor-pointer"
-              >
-                <Download size={16} className="stroke-[2.5]" />
-                <span>Install Official App (1-Click)</span>
-              </button>
-            ) : (
-              <div className="space-y-2.5 bg-slate-950/60 rounded-2xl p-3.5 border border-slate-800/40 text-xs text-slate-300 text-left">
-                <div className="flex items-start gap-2.5">
-                  <div className="w-5 h-5 rounded-full bg-slate-800 text-slate-200 text-[11px] font-black flex items-center justify-center shrink-0 mt-0.5">1</div>
-                  <p>Tap your browser menu (<strong className="text-white">⋮ 3-Dots</strong> in Chrome / Edge / Samsung Internet).</p>
-                </div>
-                <div className="flex items-start gap-2.5">
-                  <div className="w-5 h-5 rounded-full bg-slate-800 text-slate-200 text-[11px] font-black flex items-center justify-center shrink-0 mt-0.5">2</div>
-                  <p>Select <strong className="text-white">"Install app"</strong> or <strong className="text-white">"Add to Home screen"</strong>.</p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        </div>
 
-        {/* Footer info/controls */}
-        <div className="mt-4 pt-1 flex items-center justify-between text-[10px] text-slate-400 font-medium border-t border-slate-800/40">
-          <span>
-            {isIOS ? "Apple iOS Setup (Safari)" : `${platform === "android" ? "Android Mobile" : "Desktop Web"} Installer`}
-          </span>
-          <button 
+        {/* Step-by-Step Directions Content */}
+        <div className="p-6 pt-4 space-y-3 max-h-[50vh] overflow-y-auto scrollbar-thin">
+          {activeTab === "ios" && (
+            <div className="space-y-3 bg-emerald-50/60 dark:bg-emerald-950/20 border-2 border-emerald-300 dark:border-emerald-800/60 rounded-2xl p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-emerald-700 text-white text-xs font-black flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                  1
+                </div>
+                <div className="text-xs text-slate-800 dark:text-slate-200 leading-normal">
+                  Open this website in <strong>Apple Safari</strong> on your iPhone or iPad.
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-emerald-700 text-white text-xs font-black flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                  2
+                </div>
+                <div className="text-xs text-slate-800 dark:text-slate-200 leading-normal">
+                  Tap the <strong className="text-slate-950 dark:text-white inline-flex items-center gap-1 bg-white dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-600">Share <Share2 size={12} className="text-emerald-700 dark:text-emerald-400 inline" /></strong> icon at the bottom of the screen.
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-emerald-700 text-white text-xs font-black flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                  3
+                </div>
+                <div className="text-xs text-slate-800 dark:text-slate-200 leading-normal">
+                  Scroll down the share menu and select <strong className="text-slate-950 dark:text-white inline-flex items-center gap-1 bg-white dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-600">Add to Home Screen <Plus size={12} className="text-emerald-700 dark:text-emerald-400 inline" /></strong>.
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-emerald-700 text-white text-xs font-black flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                  4
+                </div>
+                <div className="text-xs text-slate-800 dark:text-slate-200 leading-normal">
+                  Tap <strong className="text-slate-950 dark:text-white font-black">"Add"</strong> in the top-right corner. The official Chiktsa Sahayak app icon will appear directly on your home screen!
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "android" && (
+            <div className="space-y-3 bg-indigo-50/60 dark:bg-indigo-950/20 border-2 border-indigo-300 dark:border-indigo-800/60 rounded-2xl p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-indigo-700 text-white text-xs font-black flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                  1
+                </div>
+                <div className="text-xs text-slate-800 dark:text-slate-200 leading-normal">
+                  Open this page in <strong>Google Chrome</strong>, <strong>Microsoft Edge</strong>, or <strong>Samsung Internet</strong> on your Android phone.
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-indigo-700 text-white text-xs font-black flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                  2
+                </div>
+                <div className="text-xs text-slate-800 dark:text-slate-200 leading-normal">
+                  Tap the <strong className="text-slate-950 dark:text-white inline-flex items-center gap-1 bg-white dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-600">3-Dots Menu <MoreVertical size={12} className="text-indigo-700 dark:text-indigo-400 inline" /></strong> in the top-right corner of the browser.
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-indigo-700 text-white text-xs font-black flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                  3
+                </div>
+                <div className="text-xs text-slate-800 dark:text-slate-200 leading-normal">
+                  Tap <strong className="text-slate-950 dark:text-white inline-flex items-center gap-1 bg-white dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-600">Install app</strong> or <strong className="text-slate-950 dark:text-white inline-flex items-center gap-1 bg-white dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-300 dark:border-slate-600">Add to Home screen</strong>.
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-indigo-700 text-white text-xs font-black flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                  4
+                </div>
+                <div className="text-xs text-slate-800 dark:text-slate-200 leading-normal">
+                  Confirm by tapping <strong className="text-slate-950 dark:text-white font-black">"Install"</strong>. The app icon will now appear on your phone home screen!
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "desktop" && (
+            <div className="space-y-3 bg-slate-100 dark:bg-slate-800/60 border-2 border-slate-300 dark:border-slate-700 rounded-2xl p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-slate-800 dark:bg-slate-700 text-white text-xs font-black flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                  1
+                </div>
+                <div className="text-xs text-slate-800 dark:text-slate-200 leading-normal">
+                  In <strong>Google Chrome</strong>, <strong>Microsoft Edge</strong>, or <strong>Brave</strong> on your computer:
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-slate-800 dark:bg-slate-700 text-white text-xs font-black flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                  2
+                </div>
+                <div className="text-xs text-slate-800 dark:text-slate-200 leading-normal">
+                  Click the <strong>Install icon ⊕</strong> located on the right side of the top address bar.
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-slate-800 dark:bg-slate-700 text-white text-xs font-black flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                  3
+                </div>
+                <div className="text-xs text-slate-800 dark:text-slate-200 leading-normal">
+                  Click <strong className="text-slate-950 dark:text-white font-black">"Install"</strong> to launch Chiktsa Sahayak as a standalone desktop application window.
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer Actions */}
+        <div className="p-4 bg-slate-50 dark:bg-slate-950/60 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end">
+          <button
+            type="button"
             onClick={handleDismiss}
-            className="text-emerald-400 hover:text-emerald-300 font-bold tracking-wider uppercase transition-colors cursor-pointer"
+            className="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-black shadow-sm transition-all active:scale-[0.98] cursor-pointer flex items-center gap-1.5"
           >
-            I'll install later
+            <CheckCircle2 size={15} />
+            <span>Got It, Close</span>
           </button>
         </div>
       </div>

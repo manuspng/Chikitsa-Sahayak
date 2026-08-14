@@ -66,12 +66,11 @@ export default function MetabolicAnalyzer({ onAddRecord }: MetabolicAnalyzerProp
   const activeProviderName = getProviderDisplayName(currentProvider);
   const [aiMeta, setAiMeta] = useState<{ providerUsed?: string; wasFallback?: boolean; modelUsed?: string } | null>(null);
 
-  // Multi-page image queue & input refs for Mobile & PC (Camera, Gallery, Document/PDF)
+  // Input refs for Mobile & PC (Upload Report & Camera)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-  const galleryInputRef = useRef<HTMLInputElement>(null);
-  const documentInputRef = useRef<HTMLInputElement>(null);
 
   const handlePopulateSample = () => {
     setFormData({
@@ -448,7 +447,15 @@ OFFLINE CRITERIA SYNTHESIS:
 
   return (
     <div className="space-y-6" id="metabolic-analyzer-root">
-      {/* 3 Native File Input Handlers for Mobile & PC */}
+      {/* Native File Input Handlers */}
+      <input 
+        type="file" 
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept="image/*,.pdf,application/pdf"
+        multiple
+        className="hidden" 
+      />
       <input 
         type="file" 
         ref={cameraInputRef}
@@ -457,33 +464,17 @@ OFFLINE CRITERIA SYNTHESIS:
         capture="environment"
         className="hidden" 
       />
-      <input 
-        type="file" 
-        ref={galleryInputRef}
-        onChange={handleFileChange}
-        accept="image/*"
-        multiple
-        className="hidden" 
-      />
-      <input 
-        type="file" 
-        ref={documentInputRef}
-        onChange={handleFileChange}
-        accept=".pdf,image/*,application/pdf"
-        multiple
-        className="hidden" 
-      />
 
-      {/* Upload Action Center (Take Photo, Gallery, PDF/Files, Sample, Clear) */}
+      {/* Upload Action Center */}
       <div className="p-4 bg-white dark:bg-slate-900/80 border-2 border-slate-300 dark:border-slate-700 rounded-2xl shadow-xs space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
           <div>
             <h4 style={{ color: "#000000" }} className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 dark:text-white">
               <Upload size={14} className="text-emerald-700 dark:text-emerald-400" />
-              <span>Feed / Scan Metabolic & ACR Report (Photo, Gallery or PDF)</span>
+              <span>Feed / Scan Metabolic & ACR Report (Photo or PDF)</span>
             </h4>
             <p style={{ color: "#000000" }} className="text-[11px] font-bold mt-0.5 dark:text-slate-200">
-              Select any method below to upload your report on Mobile or PC
+              Upload your metabolic or renal urine ACR panel for automated parameter recognition
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -506,33 +497,36 @@ OFFLINE CRITERIA SYNTHESIS:
           </div>
         </div>
 
-        {/* 3 Prominent Options: Take Photo, From Gallery, From PDF/File */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+        {/* Mobile View: Exactly 1 single 'Upload Report' button */}
+        <div className="block sm:hidden">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-black shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+          >
+            <Upload size={16} />
+            <span>Upload Report</span>
+          </button>
+        </div>
+
+        {/* PC / Desktop View: Exactly 2 options (Take Photo & Upload Report) */}
+        <div className="hidden sm:grid sm:grid-cols-2 gap-3">
           <button
             type="button"
             onClick={() => cameraInputRef.current?.click()}
-            className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-black shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+            className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-black shadow-xs transition-all active:scale-[0.98] cursor-pointer"
           >
             <Camera size={15} />
-            <span>📸 Take Photo</span>
+            <span>Take Photo</span>
           </button>
 
           <button
             type="button"
-            onClick={() => galleryInputRef.current?.click()}
-            className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-black shadow-xs transition-all active:scale-[0.98] cursor-pointer"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-black shadow-xs transition-all active:scale-[0.98] cursor-pointer"
           >
             <Upload size={15} />
-            <span>🖼️ From Gallery</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => documentInputRef.current?.click()}
-            className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-black shadow-xs transition-all active:scale-[0.98] cursor-pointer"
-          >
-            <FileText size={15} />
-            <span>📄 From PDF / File</span>
+            <span>Upload Report</span>
           </button>
         </div>
       </div>
@@ -604,35 +598,42 @@ OFFLINE CRITERIA SYNTHESIS:
               </>
             )}
             {selectedFiles.length < 3 && !isOcrLoading && (
-              <div className="flex items-center gap-1.5 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => cameraInputRef.current?.click()}
-                  className="py-1.5 px-2.5 rounded-lg text-[11px] font-bold border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 text-emerald-800 dark:text-emerald-300 cursor-pointer transition-colors flex items-center gap-1 shrink-0"
-                  title="Add photo with camera"
-                >
-                  <Camera size={11} />
-                  <span>+ Photo</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => galleryInputRef.current?.click()}
-                  className="py-1.5 px-2.5 rounded-lg text-[11px] font-bold border border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 text-indigo-800 dark:text-indigo-300 cursor-pointer transition-colors flex items-center gap-1 shrink-0"
-                  title="Add photo from gallery"
-                >
-                  <Upload size={11} />
-                  <span>+ Gallery</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => documentInputRef.current?.click()}
-                  className="py-1.5 px-2.5 rounded-lg text-[11px] font-bold border border-slate-300 dark:border-slate-700 dark:bg-slate-800 hover:bg-slate-100 text-slate-800 dark:text-slate-200 cursor-pointer transition-colors flex items-center gap-1 shrink-0"
-                  title="Add PDF or document"
-                >
-                  <FileText size={11} />
-                  <span>+ PDF/File</span>
-                </button>
-              </div>
+              <>
+                {/* Mobile: single + Add Page button */}
+                <div className="block sm:hidden shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="py-1.5 px-3 rounded-lg text-[11px] font-bold border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 cursor-pointer transition-colors flex items-center gap-1"
+                    title="Add another report page"
+                  >
+                    <Plus size={12} />
+                    <span>+ Add Page</span>
+                  </button>
+                </div>
+
+                {/* PC: Take Photo & Upload File */}
+                <div className="hidden sm:flex items-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => cameraInputRef.current?.click()}
+                    className="py-1.5 px-2.5 rounded-lg text-[11px] font-bold border border-indigo-300 dark:border-indigo-700 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 text-indigo-800 dark:text-indigo-300 cursor-pointer transition-colors flex items-center gap-1"
+                    title="Take photo with camera"
+                  >
+                    <Camera size={11} />
+                    <span>+ Photo</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="py-1.5 px-2.5 rounded-lg text-[11px] font-bold border border-emerald-300 dark:border-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 text-emerald-800 dark:text-emerald-300 cursor-pointer transition-colors flex items-center gap-1"
+                    title="Upload additional report file"
+                  >
+                    <Upload size={11} />
+                    <span>+ Upload File</span>
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>

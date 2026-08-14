@@ -13,10 +13,10 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
       .then(reg => {
-        console.log('Chikitsa Sahayak ServiceWorker registered successfully with scope:', reg.scope);
+        console.log('Chiktsa Sahayak ServiceWorker registered successfully with scope:', reg.scope);
       })
       .catch(err => {
-        console.error('Chikitsa Sahayak ServiceWorker registration failed:', err);
+        console.error('Chiktsa Sahayak ServiceWorker registration failed:', err);
       });
   });
 }

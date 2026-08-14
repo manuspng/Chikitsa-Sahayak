@@ -645,7 +645,7 @@ export function printClinicalReport(record: Partial<AnalysisRecord>) {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <path d="M19 12H5M12 19l-7-7 7-7"/>
               </svg>
-              <span>← Back to Chikitsa Sahayak</span>
+              <span>← Back to Chiktsa Sahayak</span>
             </button>
             <span style="font-weight:700; font-size:12px; color:#334155;">
               Clinical Report Preview
@@ -671,7 +671,7 @@ export function printClinicalReport(record: Partial<AnalysisRecord>) {
           <div>
             <div class="brand-logo">
               <img src="${finalLogoUrl}" alt="Logo" />
-              <div class="logo-text">Chikitsa Sahayak</div>
+              <div class="logo-text">Chiktsa Sahayak</div>
             </div>
             <div class="brand-tagline">Clinical Decision-Support</div>
           </div>
