@@ -8,6 +8,7 @@ import MetricCard from "./MetricCard";
 import Tesseract from "tesseract.js";
 import { preprocessImageForOcr } from "../utils/ocrPreprocessing";
 import { runGeminiAnalyze, runGeminiExtractReport, getProviderDisplayName } from "../utils/geminiClient";
+import { parseMetabolicReport } from "../utils/labReportParser";
 import WebcamCaptureModal from "./WebcamCaptureModal";
 
 function getOfflineMetabolicSummary(inputs: MetabolicInputs, results: MetabolicResults): string {

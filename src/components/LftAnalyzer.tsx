@@ -8,6 +8,7 @@ import MetricCard from "./MetricCard";
 import Tesseract from "tesseract.js";
 import { preprocessImageForOcr } from "../utils/ocrPreprocessing";
 import { runGeminiAnalyze, runGeminiExtractReport, getProviderDisplayName } from "../utils/geminiClient";
+import { parseLftReport } from "../utils/labReportParser";
 import WebcamCaptureModal from "./WebcamCaptureModal";
 
 function getOfflineLftSummary(inputs: LFTInputs, results: LFTResults): string {
@@ -124,6 +125,7 @@ export default function LftAnalyzer({ onAddRecord }: LftAnalyzerProps) {
   
   // Input refs and files queue for Mobile & PC (Upload Report & Camera)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [isWebcamOpen, setIsWebcamOpen] = useState<boolean>(false);

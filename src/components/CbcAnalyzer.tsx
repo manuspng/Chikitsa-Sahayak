@@ -8,6 +8,7 @@ import MetricCard from "./MetricCard";
 import Tesseract from "tesseract.js";
 import { preprocessImageForOcr } from "../utils/ocrPreprocessing";
 import { runGeminiAnalyze, runGeminiExtractReport, getProviderDisplayName } from "../utils/geminiClient";
+import { parseCbcReport } from "../utils/labReportParser";
 import WebcamCaptureModal from "./WebcamCaptureModal";
 
 function getOfflineCbcSummary(inputs: CBCInputs, results: CBCResults): string {
@@ -91,6 +92,7 @@ export default function CbcAnalyzer({ onAddRecord }: CbcAnalyzerProps) {
 
   // Input refs for Mobile & PC (Upload Report & Camera)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [isWebcamOpen, setIsWebcamOpen] = useState<boolean>(false);
