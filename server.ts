@@ -717,7 +717,9 @@ Convert the extracted items into a single flat JSON dictionary representing valu
 
     const modelPreference = req.body.modelPreference;
     let modelsToTry = ["gemini-2.0-pro-exp-02-05", "gemini-1.5-pro", "gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-2.0-flash"];
-    if (modelPreference === "gemini_2_pro") {
+    if (modelPreference === "gemini_35_flash") {
+      modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b"];
+    } else if (modelPreference === "gemini_2_pro") {
       modelsToTry = ["gemini-2.0-pro-exp-02-05", "gemini-2.0-pro-exp", "gemini-1.5-pro", "gemini-1.5-flash"];
     } else if (modelPreference === "gemini_15_pro") {
       modelsToTry = ["gemini-1.5-pro", "gemini-2.0-pro-exp-02-05", "gemini-1.5-flash"];

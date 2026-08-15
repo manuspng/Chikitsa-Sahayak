@@ -376,21 +376,47 @@ export interface AnalysisResponse {
 
 export function getProviderDisplayName(providerId: string): string {
   const map: Record<string, string> = {
-    auto: "Auto (Smart Multi-Agent Cascade)",
-    gemini_2_pro: "👑 Google Gemini 2.0 Pro Exp (Flagship Vision Accuracy)",
-    gemini_15_pro: "💎 Google Gemini 1.5 Pro (Deep Clinical Reasoning)",
-    gemini_2_flash: "⚡ Google Gemini 2.0 Flash (Next-Gen Fast)",
-    gemini_15_flash: "✨ Google Gemini 1.5 Flash (1500 req/day Free)",
-    gemini: "✨ Google Gemini 1.5 Flash (100% Free)",
-    groq: "⚡ Groq (Llama 3.3 70B - Free High Speed)",
-    openrouter: "🌐 OpenRouter Multi-Model",
-    local_ocr: "🔒 Local Offline OCR (Tesseract - Unlimited & Free)",
+    auto: "Auto",
+    gemini_35_flash: "Gemini 3.5 Flash",
+    gemini_2_pro: "Gemini 2.0 Pro",
+    gemini_15_pro: "Gemini 1.5 Pro",
+    gemini_2_flash: "Gemini 2.0 Flash",
+    gemini_15_flash: "Gemini 1.5 Flash",
+    gemini: "Gemini 1.5 Flash",
+    groq: "Groq Llama 3.3 70B",
+    openrouter: "OpenRouter",
+    local_ocr: "Offline OCR",
     openai: "OpenAI GPT-4o-mini",
     claude: "Claude 3.5 Haiku",
     deepseek: "DeepSeek Chat",
-    public_interest: "Public Interest Clinical Engine",
+    public_interest: "Public Interest Engine",
   };
-  return map[providerId] || providerId.toUpperCase();
+  return map[providerId] || providerId;
+}
+
+export function isProviderKeyMissing(providerId: string): boolean {
+  if (!providerId || providerId === "auto" || providerId === "local_ocr" || providerId === "public_interest") {
+    return false;
+  }
+  if (providerId.startsWith("gemini")) {
+    return !localStorage.getItem("user_gemini_api_key");
+  }
+  if (providerId === "groq") {
+    return !localStorage.getItem("user_groq_api_key");
+  }
+  if (providerId === "openrouter") {
+    return !localStorage.getItem("user_openrouter_api_key");
+  }
+  if (providerId === "openai") {
+    return !localStorage.getItem("user_openai_api_key");
+  }
+  if (providerId === "claude") {
+    return !localStorage.getItem("user_claude_api_key");
+  }
+  if (providerId === "deepseek") {
+    return !localStorage.getItem("user_deepseek_api_key");
+  }
+  return false;
 }
 
 /**
@@ -820,7 +846,9 @@ ${rawOcrText ? `\n\nOCR Pre-scanned text:\n${rawOcrText}` : ""}`;
 
   let modelsToTry = ["gemini-2.0-pro-exp-02-05", "gemini-1.5-pro", "gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-2.0-flash"];
   
-  if (providerPreference === "gemini_2_pro") {
+  if (providerPreference === "gemini_35_flash") {
+    modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-8b"];
+  } else if (providerPreference === "gemini_2_pro") {
     modelsToTry = ["gemini-2.0-pro-exp-02-05", "gemini-2.0-pro-exp", "gemini-1.5-pro", "gemini-1.5-flash"];
   } else if (providerPreference === "gemini_15_pro") {
     modelsToTry = ["gemini-1.5-pro", "gemini-2.0-pro-exp-02-05", "gemini-1.5-flash"];

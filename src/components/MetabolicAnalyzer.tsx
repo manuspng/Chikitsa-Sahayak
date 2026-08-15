@@ -7,7 +7,7 @@ import ScoreGauge from "./ScoreGauge";
 import MetricCard from "./MetricCard";
 import Tesseract from "tesseract.js";
 import { preprocessImageForOcr } from "../utils/ocrPreprocessing";
-import { runGeminiAnalyze, runGeminiExtractReport, getProviderDisplayName } from "../utils/geminiClient";
+import { runGeminiAnalyze, runGeminiExtractReport, getProviderDisplayName, isProviderKeyMissing } from "../utils/geminiClient";
 import { parseMetabolicReport } from "../utils/labReportParser";
 import WebcamCaptureModal from "./WebcamCaptureModal";
 
@@ -257,6 +257,8 @@ export default function MetabolicAnalyzer({ onAddRecord }: MetabolicAnalyzerProp
     });
     setPatientName("");
     setSelectedFiles([]);
+    setMissingExtractedKeys([]);
+    setExtractMeta(null);
     setResults(null);
     setAiInsight(null);
     setOcrError(null);
@@ -543,22 +545,10 @@ OFFLINE CRITERIA SYNTHESIS:
       <div className="p-4 bg-white dark:bg-slate-900/80 border-2 border-slate-300 dark:border-slate-700 rounded-2xl shadow-xs space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
           <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h4 style={{ color: "#000000" }} className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 dark:text-white">
-                <Upload size={14} className="text-emerald-700 dark:text-emerald-400" />
-                <span>Feed / Scan Metabolic & ACR Report (Photo or PDF)</span>
-              </h4>
-              <button
-                type="button"
-                onClick={() => window.dispatchEvent(new CustomEvent("open-ai-provider-modal"))}
-                className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 cursor-pointer flex items-center gap-1 transition-colors"
-                title="Click to change AI engine or configure API keys"
-              >
-                <Sparkles size={10} />
-                <span>Agent: {getProviderDisplayName(currentProvider)}</span>
-                <span className="text-[9px] underline ml-0.5">Switch ⚙️</span>
-              </button>
-            </div>
+            <h4 style={{ color: "#000000" }} className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 dark:text-white">
+              <Upload size={14} className="text-emerald-700 dark:text-emerald-400" />
+              <span>Feed / Scan Metabolic & ACR Report (Photo or PDF)</span>
+            </h4>
             <p style={{ color: "#000000" }} className="text-[11px] font-bold mt-0.5 dark:text-slate-200">
               Upload your metabolic or renal urine ACR panel for automated parameter recognition
             </p>
@@ -587,7 +577,7 @@ OFFLINE CRITERIA SYNTHESIS:
         <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-slate-50 dark:bg-slate-800/80 rounded-xl border-2 border-slate-200 dark:border-slate-700 text-xs">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-black text-slate-800 dark:text-slate-200 flex items-center gap-1">
-              <span>🤖 Active AI Agent:</span>
+              <span>Agent:</span>
             </span>
             <select
               value={selectedProvider}
@@ -599,73 +589,79 @@ OFFLINE CRITERIA SYNTHESIS:
               }}
               className="bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-600 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-900 dark:text-slate-100 cursor-pointer shadow-xs focus:ring-2 focus:ring-emerald-500"
             >
-              <option value="auto">⚡ Auto Smart Cascade (Recommended)</option>
-              <option value="gemini_2_pro">👑 Google Gemini 2.0 Pro Exp (Flagship Highest Accuracy - Free Trial)</option>
-              <option value="gemini_15_pro">💎 Google Gemini 1.5 Pro (Deep Clinical Reasoning - Free Trial)</option>
-              <option value="gemini_2_flash">⚡ Google Gemini 2.0 Flash (Next-Gen Fast)</option>
-              <option value="gemini_15_flash">✨ Google Gemini 1.5 Flash (100% Free - 1,500 req/day)</option>
-              <option value="groq">⚡ Groq Llama 3.3 70B (100% Free - High Speed)</option>
-              <option value="openrouter">🌐 OpenRouter Universal Engine</option>
-              <option value="local_ocr">🔒 Local Offline OCR (Tesseract - Unlimited & Free)</option>
+              <option value="auto">Auto</option>
+              <option value="gemini_35_flash">Gemini 3.5 Flash</option>
+              <option value="gemini_2_pro">Gemini 2.0 Pro</option>
+              <option value="gemini_15_pro">Gemini 1.5 Pro</option>
+              <option value="gemini_2_flash">Gemini 2.0 Flash</option>
+              <option value="gemini_15_flash">Gemini 1.5 Flash</option>
+              <option value="groq">Groq Llama 3.3 70B</option>
+              <option value="openrouter">OpenRouter</option>
+              <option value="local_ocr">Offline OCR</option>
             </select>
+            {isProviderKeyMissing(selectedProvider) && (
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent("open-ai-provider-modal"))}
+                className="px-2 py-0.5 rounded-md bg-amber-100 border border-amber-400 text-amber-900 text-[11px] font-black flex items-center gap-1 animate-pulse cursor-pointer"
+                title="API Key required for this agent"
+              >
+                <span>⚠️ Key Required</span>
+              </button>
+            )}
           </div>
           <button
             type="button"
             onClick={() => window.dispatchEvent(new CustomEvent("open-ai-provider-modal"))}
             className="text-[11px] font-bold text-indigo-700 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer"
           >
-            <span>⚙️ Configure API Keys</span>
+            <span>⚙️ Settings</span>
           </button>
         </div>
 
         {/* Extraction Engine Attribution Banner */}
         {extractMeta && (
-          <div className="flex items-center justify-between gap-2 p-2.5 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800/60 rounded-xl text-xs">
+          <div className="flex items-center justify-between gap-2 p-2 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800/60 rounded-xl text-xs">
             <div className="flex items-center gap-1.5 text-emerald-900 dark:text-emerald-200 font-bold truncate">
               <Check size={14} className="text-emerald-600 dark:text-emerald-400 shrink-0" />
               <span className="truncate">
-                Extracted via <strong>{getProviderDisplayName(extractMeta.providerUsed || "auto")}</strong> {extractMeta.modelUsed ? `(${extractMeta.modelUsed})` : ""}
+                Extracted via <strong>{getProviderDisplayName(extractMeta.providerUsed || "auto")}</strong>
               </span>
             </div>
-            <div className="flex items-center gap-1 shrink-0">
-              <button
-                type="button"
-                onClick={() => selectedFiles.length > 0 && processFilesForOcr(selectedFiles, "ai")}
-                className="px-2 py-1 bg-white dark:bg-slate-800 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300 rounded-lg text-[10px] font-black hover:bg-emerald-100 transition-colors cursor-pointer"
-                title="Re-run AI extraction"
-              >
-                🔄 Re-extract
-              </button>
-              <button
-                type="button"
-                onClick={() => window.dispatchEvent(new CustomEvent("open-ai-provider-modal"))}
-                className="px-2 py-1 bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded-lg text-[10px] font-black hover:bg-indigo-100 transition-colors cursor-pointer"
-                title="Switch to another AI Agent"
-              >
-                Switch Agent ▾
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => selectedFiles.length > 0 && processFilesForOcr(selectedFiles, "ai")}
+              className="px-2 py-1 bg-white dark:bg-slate-800 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300 rounded-lg text-[10px] font-black hover:bg-emerald-100 transition-colors cursor-pointer shrink-0"
+              title="Re-run AI extraction"
+            >
+              🔄 Re-extract
+            </button>
           </div>
         )}
 
-        {/* Glowing Red Notification for Missing / Unfed Parameters from Scan */}
+        {/* Missing Parameters Notification (Concise) */}
         {missingExtractedKeys.length > 0 && (
-          <div className="p-3.5 bg-rose-50/95 dark:bg-rose-950/30 border-2 border-rose-400 dark:border-rose-600 rounded-2xl space-y-2.5">
-            <div className="flex items-center gap-1.5 text-xs font-black glow-red-text">
-              <AlertCircle size={15} className="text-rose-600 shrink-0" />
-              <span>Information Missing or Left Unfed from Scanned Metabolic Report ({missingExtractedKeys.length} items):</span>
+          <div className="p-3 bg-rose-50/95 dark:bg-rose-950/30 border-2 border-rose-400 dark:border-rose-600 rounded-2xl space-y-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 text-xs font-black glow-red-text">
+                <AlertCircle size={14} className="text-rose-600 shrink-0" />
+                <span>Missing from report ({missingExtractedKeys.length}):</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMissingExtractedKeys([])}
+                className="text-[10px] font-bold text-rose-700 dark:text-rose-300 hover:underline cursor-pointer"
+              >
+                Dismiss
+              </button>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {missingExtractedKeys.map((k, idx) => (
-                <span key={idx} className="glow-red-badge px-2.5 py-1 rounded-xl text-xs font-black flex items-center gap-1.5">
-                  <span>●</span>
-                  <span>{k}</span>
+                <span key={idx} className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">
+                  ● {k}
                 </span>
               ))}
             </div>
-            <p className="text-xs font-bold text-rose-900 dark:text-rose-200">
-              Please fill in any unfed parameters manually below to calculate <strong className="glow-red-text">NCEP Metabolic Syndrome</strong> and <strong className="glow-red-text">Kidney ACR</strong> risk profiles.
-            </p>
           </div>
         )}
 

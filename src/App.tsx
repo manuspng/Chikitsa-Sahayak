@@ -1090,17 +1090,18 @@ export default function App() {
                     onChange={(e) => setSelectedProvider(e.target.value)}
                     className="w-full pl-4 pr-10 py-2.5 bg-slate-50 dark:bg-slate-900/40 border-2 border-slate-300 dark:border-slate-800 rounded-xl text-xs font-black text-slate-950 dark:text-slate-100 outline-none appearance-none cursor-pointer focus:border-emerald-500"
                   >
-                    <option value="auto">✨ Auto (Smart Multi-Agent Cascade - Recommended)</option>
-                    <option value="gemini_2_pro">👑 Google Gemini 2.0 Pro Exp (Flagship Vision Accuracy - Free Trial)</option>
-                    <option value="gemini_15_pro">💎 Google Gemini 1.5 Pro (Deep Clinical Reasoning - Free Trial)</option>
-                    <option value="gemini_2_flash">⚡ Google Gemini 2.0 Flash (Next-Gen Fast)</option>
-                    <option value="gemini_15_flash">✨ Google Gemini 1.5 Flash (100% Free - 1,500 req/day)</option>
-                    <option value="groq">⚡ Groq Llama 3.3 70B (100% Free - High Speed)</option>
-                    <option value="openrouter">🌐 OpenRouter (Universal Multi-Model)</option>
-                    <option value="local_ocr">🔒 Local Offline OCR (Tesseract - Unlimited & Free)</option>
-                    <option value="openai">OpenAI GPT-4o-mini (Precision Diagnostics)</option>
-                    <option value="claude">Claude 3.5 Haiku (Dense Clinical Detail)</option>
-                    <option value="deepseek">DeepSeek Chat (Clinical Reasoning)</option>
+                    <option value="auto">Auto</option>
+                    <option value="gemini_35_flash">Gemini 3.5 Flash</option>
+                    <option value="gemini_2_pro">Gemini 2.0 Pro</option>
+                    <option value="gemini_15_pro">Gemini 1.5 Pro</option>
+                    <option value="gemini_2_flash">Gemini 2.0 Flash</option>
+                    <option value="gemini_15_flash">Gemini 1.5 Flash</option>
+                    <option value="groq">Groq Llama 3.3 70B</option>
+                    <option value="openrouter">OpenRouter</option>
+                    <option value="local_ocr">Offline OCR</option>
+                    <option value="openai">OpenAI GPT-4o-mini</option>
+                    <option value="claude">Claude 3.5 Haiku</option>
+                    <option value="deepseek">DeepSeek Chat</option>
                   </select>
                   <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-700">
                     <ChevronDown size={14} />
@@ -1180,8 +1181,9 @@ export default function App() {
                   }
                 };
 
-                const activeConfig = config[selectedProvider as keyof typeof config] || config.gemini;
-                const currentKeyVal = keys[selectedProvider as keyof typeof keys] || "";
+                const keyCategory = selectedProvider.startsWith("gemini") ? "gemini" : selectedProvider;
+                const activeConfig = config[keyCategory as keyof typeof config] || config.gemini;
+                const currentKeyVal = keys[keyCategory as keyof typeof keys] || "";
 
                 return (
                   <div className="space-y-4 pt-1">
@@ -1224,7 +1226,7 @@ export default function App() {
                         <input
                           type={showKey ? "text" : "password"}
                           value={currentKeyVal}
-                          onChange={(e) => handleKeyChange(selectedProvider, e.target.value)}
+                          onChange={(e) => handleKeyChange(keyCategory, e.target.value)}
                           placeholder={activeConfig.placeholder}
                           className="w-full pl-10 pr-20 py-2.5 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-1 focus:ring-emerald-500/20 rounded-xl text-xs font-mono text-slate-800 dark:text-slate-100 placeholder-slate-400 transition-all outline-none"
                         />
@@ -1407,7 +1409,8 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => {
-                    handleKeyChange(selectedProvider, "");
+                    const keyCategory = selectedProvider.startsWith("gemini") ? "gemini" : selectedProvider;
+                    handleKeyChange(keyCategory, "");
                     const storageKeys: Record<string, string> = {
                       gemini: "user_gemini_api_key",
                       groq: "user_groq_api_key",
@@ -1416,11 +1419,11 @@ export default function App() {
                       claude: "user_claude_api_key",
                       deepseek: "user_deepseek_api_key",
                     };
-                    const keyName = storageKeys[selectedProvider];
+                    const keyName = storageKeys[keyCategory];
                     if (keyName) {
                       localStorage.removeItem(keyName);
                     }
-                    alert(`Personal settings for ${selectedProvider.toUpperCase()} cleared successfully.`);
+                    alert(`Personal settings for ${selectedProvider} cleared successfully.`);
                   }}
                   className="px-4 py-2 text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xl transition-colors cursor-pointer mr-auto"
                 >
