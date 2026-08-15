@@ -415,6 +415,10 @@ export interface ParsedLft {
   "Total Protein"?: number;
   INR?: number;
   Platelets?: number;
+  triglycerides?: number;
+  waistCircumference?: number;
+  fastingBloodGlucose?: number;
+  urineAcr?: number;
 }
 
 export function parseLftReport(text: string): ParsedLft {
@@ -444,7 +448,7 @@ export function parseLftReport(text: string): ParsedLft {
 
   result.GGT = extractLabValue(text, [
     /(?:ggt|gamma\s+glutamyl|gamma\s+gt|g-gt)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
-  ], ["ggt", "gamma glutamyl", "gamma-gt"]);
+  ], ["ggt", "gamma glutamyl", "gamma-gt", "gamma"]);
 
   result["Total Bilirubin"] = extractLabValue(text, [
     /(?:total\s+bilirubin|t\.?\s*bili|bilirubin\s+total)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
@@ -466,9 +470,41 @@ export function parseLftReport(text: string): ParsedLft {
     /(?:inr|international\s+normalized\s+ratio)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
   ], ["inr", "ratio"]);
 
-  result.Platelets = extractLabValue(text, [
-    /(?:platelet|plt|platelet\s+count|platelets)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
-  ], ["platelet", "plt", "platelets"]);
+  // Platelets with Lakhs / Thousands normalization
+  const rawPlt = extractLabValue(text, [
+    /(?:platelet\s+count|platelets|platelet|plt)[\s:.\-\t=]*([0-9]+(?:[,.][0-9]+)?)/i
+  ], ["platelet count", "platelets", "platelet", "plt"]);
+
+  if (rawPlt !== undefined) {
+    // If entered as absolute number (e.g. 150000 -> 150, or 1.5 Lakhs -> 150)
+    if (rawPlt > 1000) {
+      result.Platelets = Math.round(rawPlt / 1000);
+    } else if (rawPlt > 0 && rawPlt < 10) {
+      result.Platelets = Math.round(rawPlt * 100);
+    } else {
+      result.Platelets = Math.round(rawPlt);
+    }
+  }
+
+  // Triglycerides (for FLI)
+  result.triglycerides = extractLabValue(text, [
+    /(?:triglycerides|triglyceride|tg|trig|triacylglyceride)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
+  ], ["triglycerides", "triglyceride", "tg", "trig"]);
+
+  // Waist Circumference (for FLI)
+  result.waistCircumference = extractLabValue(text, [
+    /(?:waist\s+circumference|waist\s+size|waist\s+circ|waist)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
+  ], ["waist circumference", "waist size", "waist circ", "waist"]);
+
+  // Fasting Blood Glucose
+  result.fastingBloodGlucose = extractLabValue(text, [
+    /(?:fasting\s+blood\s+glucose|fasting\s+glucose|fbg|fasting\s+sugar|glucose\s+fasting)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
+  ], ["fasting blood glucose", "fasting glucose", "fbg", "fasting sugar", "fbs"]);
+
+  // Urine ACR
+  result.urineAcr = extractLabValue(text, [
+    /(?:urine\s+acr|urine\s+albumin\-creatinine\s+ratio|uacr|acr)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
+  ], ["urine acr", "uacr", "acr"]);
 
   return result;
 }
@@ -518,9 +554,20 @@ export function parseCbcReport(text: string): ParsedCbc {
     /(?:wbc|white\s+blood\s+cell|wbcs|leucocyte|leukocyte|leukocytes)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
   ], ["wbc", "white blood", "leukocyte", "leucocyte"]);
 
-  result.Platelets = extractLabValue(text, [
-    /(?:platelet\s+count|platelet|plt|platelets)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
-  ], ["platelet", "plt", "platelets"]);
+  // Platelets with Lakhs / Thousands normalization
+  const rawPlt = extractLabValue(text, [
+    /(?:platelet\s+count|platelets|platelet|plt)[\s:.\-\t=]*([0-9]+(?:[,.][0-9]+)?)/i
+  ], ["platelet count", "platelets", "platelet", "plt"]);
+
+  if (rawPlt !== undefined) {
+    if (rawPlt > 1000) {
+      result.Platelets = Math.round(rawPlt / 1000);
+    } else if (rawPlt > 0 && rawPlt < 10) {
+      result.Platelets = Math.round(rawPlt * 100);
+    } else {
+      result.Platelets = Math.round(rawPlt);
+    }
+  }
 
   result.MCV = extractLabValue(text, [
     /(?:mcv|mean\s+corpuscular\s+volume)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i

@@ -1160,7 +1160,27 @@ export async function runGeminiExtractReport(
         }
       }
     } catch (err) {}
-    throw new Error("Google Gemini extraction failed. Please configure your free Gemini API Key in Provider Settings.");
+
+    // Graceful auto-recovery to High-Fidelity Local Clinical Engine
+    if (rawOcrText && rawOcrText.trim().length > 5) {
+      let localParsed: any = {};
+      if (reportType === "lft") localParsed = parseLftReport(rawOcrText);
+      else if (reportType === "cbc") localParsed = parseCbcReport(rawOcrText);
+      else if (reportType === "metabolic") localParsed = parseMetabolicReport(rawOcrText);
+
+      const calibratedValues = calibrateExtractedReportValues(localParsed, rawOcrText, reportType);
+      const foundKeys = Object.keys(calibratedValues).filter(k => calibratedValues[k] !== undefined && calibratedValues[k] !== "");
+      if (foundKeys.length > 0) {
+        return {
+          values: calibratedValues,
+          providerUsed: "local_ocr",
+          modelUsed: "Tesseract OCR + Local Clinical Parser (Free)",
+          wasFallback: true
+        };
+      }
+    }
+
+    throw new Error("Google Gemini extraction failed. Please configure your free Gemini API Key in Provider Settings, or use Local Offline OCR.");
   }
 
   // 5. Cascade Priority (Auto Mode):
