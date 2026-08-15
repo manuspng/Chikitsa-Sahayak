@@ -1221,32 +1221,79 @@ Please write an expert, professional clinical interpretation of these results. M
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* NLR Card */}
-              <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 p-5 space-y-2">
-                <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block">Neutrophil-to-Lymphocyte Ratio (NLR)</span>
-                {results.nlratio !== undefined ? (
-                  <div>
-                    <div className={`score-big ${
-                      results.nlratio > 3.0 
-                        ? "text-rose-600" 
-                        : results.nlratio < 1.0 
-                          ? "text-amber-600" 
-                          : "text-emerald-600"
-                    }`}>{results.nlratio}</div>
-                    <p style={{ color: "#000000" }} className="text-xs font-bold leading-relaxed mt-1">{results.nlratioInterpretation}</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2 pt-1">
-                    <p className="text-xs font-black glow-red-text flex items-center gap-1">
-                      <AlertCircle size={13} className="text-red-600 shrink-0" />
-                      <span>NLR Incomplete. Missing required differentials:</span>
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {!formData.neutrophils && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Neutrophils %</span>}
-                      {!formData.lymphocytes && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Lymphocytes %</span>}
+              {(() => {
+                const nlrRisk = results.nlratio === undefined
+                  ? "low"
+                  : results.nlratio > 3.0
+                  ? "high"
+                  : results.nlratio < 1.0
+                  ? "moderate"
+                  : "low";
+
+                const theme = nlrRisk === "low"
+                  ? {
+                      cardBorder: "border-emerald-300 dark:border-emerald-700/80",
+                      cardBg: "bg-emerald-50/50 dark:bg-emerald-950/20",
+                      scoreColor: "text-emerald-700 dark:text-emerald-400",
+                      badgeBg: "bg-emerald-100 text-emerald-900 border border-emerald-300 dark:bg-emerald-900/60 dark:text-emerald-200 dark:border-emerald-700",
+                      infoBox: "bg-emerald-100/70 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-800 text-emerald-950 dark:text-emerald-200",
+                    }
+                  : nlrRisk === "moderate"
+                  ? {
+                      cardBorder: "border-amber-300 dark:border-amber-700/80",
+                      cardBg: "bg-amber-50/50 dark:bg-amber-950/20",
+                      scoreColor: "text-amber-700 dark:text-amber-400",
+                      badgeBg: "bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-900/60 dark:text-amber-200 dark:border-amber-700",
+                      infoBox: "bg-amber-100/70 dark:bg-amber-950/50 border-amber-300 dark:border-amber-800 text-amber-950 dark:text-amber-200",
+                    }
+                  : {
+                      cardBorder: "border-rose-300 dark:border-rose-700/80",
+                      cardBg: "bg-rose-50/50 dark:bg-rose-950/20",
+                      scoreColor: "text-rose-700 dark:text-rose-400",
+                      badgeBg: "bg-rose-100 text-rose-900 border border-rose-300 dark:bg-rose-900/60 dark:text-rose-200 dark:border-rose-700",
+                      infoBox: "bg-rose-100/70 dark:bg-rose-950/50 border-rose-300 dark:border-rose-800 text-rose-950 dark:text-rose-200",
+                    };
+
+                return (
+                  <div className={`bento-card border-2 p-5 space-y-3 transition-all ${results.nlratio !== undefined ? `${theme.cardBorder} ${theme.cardBg}` : "border-slate-300 bg-white dark:bg-slate-900/80"}`}>
+                    <div className="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+                      <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block dark:text-white">
+                        Neutrophil-to-Lymphocyte Ratio (NLR)
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-500 font-mono">
+                        Inflammatory Marker
+                      </span>
                     </div>
+                    {results.nlratio !== undefined ? (
+                      <div className="flex flex-col items-center justify-center text-center py-2 space-y-2.5">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                          Exact Calculated Reading
+                        </span>
+                        <div className={`text-5xl sm:text-6xl font-black font-mono tracking-tight ${theme.scoreColor}`}>
+                          {results.nlratio.toFixed(2)}
+                        </div>
+                        <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${theme.badgeBg}`}>
+                          {results.nlratio > 3.0 ? "High Inflammatory Risk (> 3.0)" : results.nlratio < 1.0 ? "Low Ratio (< 1.0)" : "Normal Reference (1.0–3.0)"}
+                        </span>
+                        <div className={`p-3 rounded-xl border text-xs font-bold leading-relaxed text-center w-full ${theme.infoBox}`}>
+                          {results.nlratioInterpretation}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 pt-1">
+                        <p className="text-xs font-black glow-red-text flex items-center gap-1">
+                          <AlertCircle size={13} className="text-red-600 shrink-0" />
+                          <span>NLR Incomplete. Missing required differentials:</span>
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {!formData.neutrophils && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Neutrophils %</span>}
+                          {!formData.lymphocytes && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Lymphocytes %</span>}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                );
+              })()}
 
               {/* Anemia Index Card */}
               <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 p-5 space-y-2">

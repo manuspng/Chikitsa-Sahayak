@@ -1445,174 +1445,302 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* FIB-4 Card */}
-              <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 p-5 space-y-2">
-                <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block">FIB-4 Index (Fibrosis Triage)</span>
-                {results.fib4Score !== undefined ? (
-                  <div>
-                    <div className={`score-big ${
-                      results.fib4Risk === "low" 
-                        ? "text-emerald-600" 
-                        : results.fib4Risk === "moderate" 
-                          ? "text-amber-600" 
-                          : "text-rose-600"
-                    }`}>{results.fib4Score}</div>
-                    <p style={{ color: "#000000" }} className="text-xs font-bold leading-relaxed mt-1">{results.fib4Interpretation}</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2 pt-1">
-                    <p className="text-xs font-black glow-red-text flex items-center gap-1">
-                      <AlertCircle size={13} className="text-red-600 shrink-0" />
-                      <span>FIB-4 Incomplete. Missing required parameters:</span>
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {!formData.platelets && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Platelets (×10³/µL)</span>}
-                      {!formData.age && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Patient Age</span>}
-                      {(!formData.alt || !formData.ast) && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● ALT / AST Enzymes</span>}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* APRI Card */}
-              <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 p-5 space-y-2">
-                <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block">APRI Index (Platelet Ratio)</span>
-                {results.apriScore !== undefined ? (
-                  <div>
-                    <div className={`score-big ${
-                      results.apriRisk === "low" 
-                        ? "text-emerald-600" 
-                        : results.apriRisk === "moderate" 
-                          ? "text-amber-600" 
-                          : "text-rose-600"
-                    }`}>{results.apriScore}</div>
-                    <p style={{ color: "#000000" }} className="text-xs font-bold leading-relaxed mt-1">{results.apriInterpretation}</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2 pt-1">
-                    <p className="text-xs font-black glow-red-text flex items-center gap-1">
-                      <AlertCircle size={13} className="text-red-600 shrink-0" />
-                      <span>APRI Incomplete. Missing required parameters:</span>
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {!formData.platelets && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Platelets (×10³/µL)</span>}
-                      {!formData.astUln && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● AST ULN Reference</span>}
-                      {!formData.ast && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● AST (SGOT)</span>}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* BARD Card */}
-              <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 p-5 space-y-2">
-                <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block">BARD Score (NASH Fatty-Infiltration)</span>
-                {results.bardScore !== undefined ? (
-                  <div>
-                    <div className={`score-big ${
-                      results.bardScore <= 1 
-                        ? "text-emerald-600" 
-                        : "text-rose-600"
-                    }`}>{results.bardScore} <span style={{ color: "#000000" }} className="text-xl font-black">/ 4</span></div>
-                    <p style={{ color: "#000000" }} className="text-xs font-bold leading-relaxed mt-1">{results.bardRisk}</p>
-                    <div className="flex flex-wrap gap-1.5 mt-2">
-                      {results.bardDetails?.map((d, idx) => (
-                        <span key={idx} className="text-[9px] bg-slate-200 text-slate-950 font-black font-mono px-2 py-0.5 rounded border border-slate-300">
-                          {d}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2 pt-1">
-                    <p className="text-xs font-black glow-red-text flex items-center gap-1">
-                      <AlertCircle size={13} className="text-red-600 shrink-0" />
-                      <span>BARD Incomplete. Missing parameters:</span>
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {(!formData.weight || !formData.height) && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Weight & Height (for BMI)</span>}
-                      {(!formData.ast || !formData.alt) && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● AST / ALT Ratio</span>}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Fatty Liver Index (FLI) Card */}
-              <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 p-5 space-y-3">
-                <div className="flex items-center justify-between gap-2">
-                  <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block">
-                    Fatty Liver Index (FLI)
-                  </span>
-                  <span className="text-[10px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200">
-                    Bedogni et al. (EASL)
-                  </span>
-                </div>
-
-                {results.fliScore !== undefined ? (
-                  <div className="space-y-2.5">
-                    <div className="flex items-baseline justify-between gap-2">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-black font-mono text-slate-900">
-                          {results.fliScore}
-                        </span>
-                        <span className="text-xs font-bold text-slate-500 font-mono">/ 100</span>
-                      </div>
-                      <span className={`px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider ${
-                        results.fliRisk === "low"
-                          ? "bg-emerald-100 text-emerald-900 border border-emerald-300"
-                          : results.fliRisk === "intermediate"
-                          ? "bg-amber-100 text-amber-900 border border-amber-300"
-                          : "bg-rose-100 text-rose-900 border border-rose-300"
-                      }`}>
-                        {results.fliRisk === "low" ? "Low Risk (< 30)" : results.fliRisk === "intermediate" ? "Intermediate (30-59)" : "High Risk (≥ 60)"}
+              {(() => {
+                const theme = results.fib4Risk === "low"
+                  ? {
+                      cardBorder: "border-emerald-300 dark:border-emerald-700/80",
+                      cardBg: "bg-emerald-50/50 dark:bg-emerald-950/20",
+                      scoreColor: "text-emerald-700 dark:text-emerald-400",
+                      badgeBg: "bg-emerald-100 text-emerald-900 border border-emerald-300 dark:bg-emerald-900/60 dark:text-emerald-200 dark:border-emerald-700",
+                      infoBox: "bg-emerald-100/70 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-800 text-emerald-950 dark:text-emerald-200",
+                    }
+                  : results.fib4Risk === "moderate"
+                  ? {
+                      cardBorder: "border-amber-300 dark:border-amber-700/80",
+                      cardBg: "bg-amber-50/50 dark:bg-amber-950/20",
+                      scoreColor: "text-amber-700 dark:text-amber-400",
+                      badgeBg: "bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-900/60 dark:text-amber-200 dark:border-amber-700",
+                      infoBox: "bg-amber-100/70 dark:bg-amber-950/50 border-amber-300 dark:border-amber-800 text-amber-950 dark:text-amber-200",
+                    }
+                  : {
+                      cardBorder: "border-rose-300 dark:border-rose-700/80",
+                      cardBg: "bg-rose-50/50 dark:bg-rose-950/20",
+                      scoreColor: "text-rose-700 dark:text-rose-400",
+                      badgeBg: "bg-rose-100 text-rose-900 border border-rose-300 dark:bg-rose-900/60 dark:text-rose-200 dark:border-rose-700",
+                      infoBox: "bg-rose-100/70 dark:bg-rose-950/50 border-rose-300 dark:border-rose-800 text-rose-950 dark:text-rose-200",
+                    };
+                return (
+                  <div className={`bento-card border-2 p-5 space-y-3 transition-all ${results.fib4Score !== undefined ? `${theme.cardBorder} ${theme.cardBg}` : "border-slate-300 bg-white dark:bg-slate-900/80"}`}>
+                    <div className="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+                      <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block dark:text-white">
+                        FIB-4 Index (Fibrosis Triage)
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-500 font-mono">
+                        Sterling et al.
                       </span>
                     </div>
-
-                    <p style={{ color: "#000000" }} className="text-xs font-bold leading-relaxed">
-                      {results.fliInterpretation}
-                    </p>
-
-                    {results.fliBreakdown && (
-                      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200 text-[11px]">
-                        <div className="bg-slate-50 p-1.5 rounded border border-slate-200">
-                          <span className="text-slate-500 font-medium block">BMI</span>
-                          <strong className="text-slate-900 font-mono">{results.fliBreakdown.bmi} kg/m²</strong>
+                    {results.fib4Score !== undefined ? (
+                      <div className="flex flex-col items-center justify-center text-center py-2 space-y-2.5">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                          Exact Calculated Reading
+                        </span>
+                        <div className={`text-5xl sm:text-6xl font-black font-mono tracking-tight ${theme.scoreColor}`}>
+                          {results.fib4Score.toFixed(2)}
                         </div>
-                        <div className="bg-slate-50 p-1.5 rounded border border-slate-200">
-                          <span className="text-slate-500 font-medium block">Waist Circ.</span>
-                          <strong className="text-slate-900 font-mono">{results.fliBreakdown.waistCircumference} cm</strong>
+                        <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${theme.badgeBg}`}>
+                          {results.fib4Risk === "low" ? "Low Risk (< 1.30)" : results.fib4Risk === "moderate" ? "Indeterminate Risk (1.30–2.67)" : "High Risk (> 2.67)"}
+                        </span>
+                        <div className={`p-3 rounded-xl border text-xs font-bold leading-relaxed text-center w-full ${theme.infoBox}`}>
+                          {results.fib4Interpretation}
                         </div>
-                        <div className="bg-slate-50 p-1.5 rounded border border-slate-200">
-                          <span className="text-slate-500 font-medium block">Triglycerides</span>
-                          <strong className="text-slate-900 font-mono">{results.fliBreakdown.triglycerides} mg/dL</strong>
-                        </div>
-                        <div className="bg-slate-50 p-1.5 rounded border border-slate-200">
-                          <span className="text-slate-500 font-medium block">GGT</span>
-                          <strong className="text-slate-900 font-mono">{results.fliBreakdown.ggt} U/L</strong>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 pt-1">
+                        <p className="text-xs font-black glow-red-text flex items-center gap-1">
+                          <AlertCircle size={13} className="text-red-600 shrink-0" />
+                          <span>FIB-4 Incomplete. Missing required parameters:</span>
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {!formData.platelets && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Platelets (×10³/µL)</span>}
+                          {!formData.age && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Patient Age</span>}
+                          {(!formData.alt || !formData.ast) && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● ALT / AST Enzymes</span>}
                         </div>
                       </div>
                     )}
                   </div>
-                ) : (
-                  <div className="space-y-2 pt-1">
-                    <p className="text-xs font-black glow-red-text flex items-center gap-1">
-                      <AlertCircle size={13} className="text-red-600 shrink-0" />
-                      <span>FLI Calculation Incomplete. Missing required parameters:</span>
-                    </p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {!formData.triglycerides && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Triglycerides (mg/dL)</span>}
-                      {!formData.ggt && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● GGT (U/L)</span>}
-                      {!formData.waistCircumference && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Waist Circumference (cm)</span>}
-                      {(!formData.weight || !formData.height) && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Weight & Height (BMI)</span>}
+                );
+              })()}
+
+              {/* APRI Card */}
+              {(() => {
+                const theme = results.apriRisk === "low"
+                  ? {
+                      cardBorder: "border-emerald-300 dark:border-emerald-700/80",
+                      cardBg: "bg-emerald-50/50 dark:bg-emerald-950/20",
+                      scoreColor: "text-emerald-700 dark:text-emerald-400",
+                      badgeBg: "bg-emerald-100 text-emerald-900 border border-emerald-300 dark:bg-emerald-900/60 dark:text-emerald-200 dark:border-emerald-700",
+                      infoBox: "bg-emerald-100/70 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-800 text-emerald-950 dark:text-emerald-200",
+                    }
+                  : results.apriRisk === "moderate"
+                  ? {
+                      cardBorder: "border-amber-300 dark:border-amber-700/80",
+                      cardBg: "bg-amber-50/50 dark:bg-amber-950/20",
+                      scoreColor: "text-amber-700 dark:text-amber-400",
+                      badgeBg: "bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-900/60 dark:text-amber-200 dark:border-amber-700",
+                      infoBox: "bg-amber-100/70 dark:bg-amber-950/50 border-amber-300 dark:border-amber-800 text-amber-950 dark:text-amber-200",
+                    }
+                  : {
+                      cardBorder: "border-rose-300 dark:border-rose-700/80",
+                      cardBg: "bg-rose-50/50 dark:bg-rose-950/20",
+                      scoreColor: "text-rose-700 dark:text-rose-400",
+                      badgeBg: "bg-rose-100 text-rose-900 border border-rose-300 dark:bg-rose-900/60 dark:text-rose-200 dark:border-rose-700",
+                      infoBox: "bg-rose-100/70 dark:bg-rose-950/50 border-rose-300 dark:border-rose-800 text-rose-950 dark:text-rose-200",
+                    };
+                return (
+                  <div className={`bento-card border-2 p-5 space-y-3 transition-all ${results.apriScore !== undefined ? `${theme.cardBorder} ${theme.cardBg}` : "border-slate-300 bg-white dark:bg-slate-900/80"}`}>
+                    <div className="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+                      <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block dark:text-white">
+                        APRI Index (Platelet Ratio)
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-500 font-mono">
+                        Wai et al.
+                      </span>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setMetabolicPanelOpen(true)}
-                      className="text-xs text-indigo-700 dark:text-indigo-400 font-black hover:underline cursor-pointer flex items-center gap-1 pt-1"
-                    >
-                      <span>+ Open Metabolic & Anthropometric Panel to enter inputs</span>
-                    </button>
+                    {results.apriScore !== undefined ? (
+                      <div className="flex flex-col items-center justify-center text-center py-2 space-y-2.5">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                          Exact Calculated Reading
+                        </span>
+                        <div className={`text-5xl sm:text-6xl font-black font-mono tracking-tight ${theme.scoreColor}`}>
+                          {results.apriScore.toFixed(2)}
+                        </div>
+                        <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${theme.badgeBg}`}>
+                          {results.apriRisk === "low" ? "Low Risk (< 0.50)" : results.apriRisk === "moderate" ? "Indeterminate Range (0.50–1.50)" : "High Risk (> 1.50)"}
+                        </span>
+                        <div className={`p-3 rounded-xl border text-xs font-bold leading-relaxed text-center w-full ${theme.infoBox}`}>
+                          {results.apriInterpretation}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 pt-1">
+                        <p className="text-xs font-black glow-red-text flex items-center gap-1">
+                          <AlertCircle size={13} className="text-red-600 shrink-0" />
+                          <span>APRI Incomplete. Missing required parameters:</span>
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {!formData.platelets && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Platelets (×10³/µL)</span>}
+                          {!formData.astUln && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● AST ULN Reference</span>}
+                          {!formData.ast && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● AST (SGOT)</span>}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                );
+              })()}
+
+              {/* BARD Card */}
+              {(() => {
+                const bardRiskLevel = (results.bardScore !== undefined && results.bardScore <= 1) ? "low" : "high";
+                const theme = bardRiskLevel === "low"
+                  ? {
+                      cardBorder: "border-emerald-300 dark:border-emerald-700/80",
+                      cardBg: "bg-emerald-50/50 dark:bg-emerald-950/20",
+                      scoreColor: "text-emerald-700 dark:text-emerald-400",
+                      badgeBg: "bg-emerald-100 text-emerald-900 border border-emerald-300 dark:bg-emerald-900/60 dark:text-emerald-200 dark:border-emerald-700",
+                      infoBox: "bg-emerald-100/70 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-800 text-emerald-950 dark:text-emerald-200",
+                    }
+                  : {
+                      cardBorder: "border-rose-300 dark:border-rose-700/80",
+                      cardBg: "bg-rose-50/50 dark:bg-rose-950/20",
+                      scoreColor: "text-rose-700 dark:text-rose-400",
+                      badgeBg: "bg-rose-100 text-rose-900 border border-rose-300 dark:bg-rose-900/60 dark:text-rose-200 dark:border-rose-700",
+                      infoBox: "bg-rose-100/70 dark:bg-rose-950/50 border-rose-300 dark:border-rose-800 text-rose-950 dark:text-rose-200",
+                    };
+                return (
+                  <div className={`bento-card border-2 p-5 space-y-3 transition-all ${results.bardScore !== undefined ? `${theme.cardBorder} ${theme.cardBg}` : "border-slate-300 bg-white dark:bg-slate-900/80"}`}>
+                    <div className="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+                      <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block dark:text-white">
+                        BARD Score (NASH Fibrosis)
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-500 font-mono">
+                        Harrison et al.
+                      </span>
+                    </div>
+                    {results.bardScore !== undefined ? (
+                      <div className="flex flex-col items-center justify-center text-center py-2 space-y-2.5">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                          Exact Calculated Reading
+                        </span>
+                        <div className={`text-5xl sm:text-6xl font-black font-mono tracking-tight ${theme.scoreColor}`}>
+                          {results.bardScore} <span className="text-2xl font-bold text-slate-400 font-sans">/ 4</span>
+                        </div>
+                        <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${theme.badgeBg}`}>
+                          {results.bardScore <= 1 ? "Low Risk (Score 0–1)" : "High Risk (Score 2–4)"}
+                        </span>
+                        <div className={`p-3 rounded-xl border text-xs font-bold leading-relaxed text-center w-full ${theme.infoBox}`}>
+                          {results.bardRisk}
+                        </div>
+                        <div className="flex flex-wrap justify-center gap-1.5 pt-1">
+                          {results.bardDetails?.map((d, idx) => (
+                            <span key={idx} className="text-[10px] bg-white/90 dark:bg-slate-800 text-slate-950 dark:text-slate-100 font-bold font-mono px-2 py-0.5 rounded-md border border-slate-300 dark:border-slate-700">
+                              {d}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 pt-1">
+                        <p className="text-xs font-black glow-red-text flex items-center gap-1">
+                          <AlertCircle size={13} className="text-red-600 shrink-0" />
+                          <span>BARD Incomplete. Missing parameters:</span>
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {(!formData.weight || !formData.height) && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Weight & Height (for BMI)</span>}
+                          {(!formData.ast || !formData.alt) && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● AST / ALT Ratio</span>}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* Fatty Liver Index (FLI) Card */}
+              {(() => {
+                const theme = results.fliRisk === "low"
+                  ? {
+                      cardBorder: "border-emerald-300 dark:border-emerald-700/80",
+                      cardBg: "bg-emerald-50/50 dark:bg-emerald-950/20",
+                      scoreColor: "text-emerald-700 dark:text-emerald-400",
+                      badgeBg: "bg-emerald-100 text-emerald-900 border border-emerald-300 dark:bg-emerald-900/60 dark:text-emerald-200 dark:border-emerald-700",
+                      infoBox: "bg-emerald-100/70 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-800 text-emerald-950 dark:text-emerald-200",
+                    }
+                  : results.fliRisk === "intermediate"
+                  ? {
+                      cardBorder: "border-amber-300 dark:border-amber-700/80",
+                      cardBg: "bg-amber-50/50 dark:bg-amber-950/20",
+                      scoreColor: "text-amber-700 dark:text-amber-400",
+                      badgeBg: "bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-900/60 dark:text-amber-200 dark:border-amber-700",
+                      infoBox: "bg-amber-100/70 dark:bg-amber-950/50 border-amber-300 dark:border-amber-800 text-amber-950 dark:text-amber-200",
+                    }
+                  : {
+                      cardBorder: "border-rose-300 dark:border-rose-700/80",
+                      cardBg: "bg-rose-50/50 dark:bg-rose-950/20",
+                      scoreColor: "text-rose-700 dark:text-rose-400",
+                      badgeBg: "bg-rose-100 text-rose-900 border border-rose-300 dark:bg-rose-900/60 dark:text-rose-200 dark:border-rose-700",
+                      infoBox: "bg-rose-100/70 dark:bg-rose-950/50 border-rose-300 dark:border-rose-800 text-rose-950 dark:text-rose-200",
+                    };
+                return (
+                  <div className={`bento-card border-2 p-5 space-y-3 transition-all ${results.fliScore !== undefined ? `${theme.cardBorder} ${theme.cardBg}` : "border-slate-300 bg-white dark:bg-slate-900/80"}`}>
+                    <div className="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+                      <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block dark:text-white">
+                        Fatty Liver Index (FLI)
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-500 font-mono">
+                        Bedogni et al. (EASL)
+                      </span>
+                    </div>
+
+                    {results.fliScore !== undefined ? (
+                      <div className="flex flex-col items-center justify-center text-center py-2 space-y-2.5">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                          Exact Calculated Reading
+                        </span>
+                        <div className={`text-5xl sm:text-6xl font-black font-mono tracking-tight ${theme.scoreColor}`}>
+                          {results.fliScore.toFixed(1)} <span className="text-2xl font-bold text-slate-400 font-sans">/ 100</span>
+                        </div>
+                        <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${theme.badgeBg}`}>
+                          {results.fliRisk === "low" ? "Low Steatosis Risk (< 30)" : results.fliRisk === "intermediate" ? "Intermediate Risk (30–59)" : "High Steatosis Risk (≥ 60)"}
+                        </span>
+
+                        <div className={`p-3 rounded-xl border text-xs font-bold leading-relaxed text-center w-full ${theme.infoBox}`}>
+                          {results.fliInterpretation}
+                        </div>
+
+                        {results.fliBreakdown && (
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full pt-2 border-t border-slate-200 dark:border-slate-700 text-[11px]">
+                            <div className="bg-white/80 dark:bg-slate-800 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
+                              <span className="text-slate-500 font-medium block text-[10px]">BMI</span>
+                              <strong className="text-slate-900 dark:text-slate-100 font-mono text-xs">{results.fliBreakdown.bmi} kg/m²</strong>
+                            </div>
+                            <div className="bg-white/80 dark:bg-slate-800 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
+                              <span className="text-slate-500 font-medium block text-[10px]">Waist Circ.</span>
+                              <strong className="text-slate-900 dark:text-slate-100 font-mono text-xs">{results.fliBreakdown.waistCircumference} cm</strong>
+                            </div>
+                            <div className="bg-white/80 dark:bg-slate-800 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
+                              <span className="text-slate-500 font-medium block text-[10px]">Triglycerides</span>
+                              <strong className="text-slate-900 dark:text-slate-100 font-mono text-xs">{results.fliBreakdown.triglycerides} mg/dL</strong>
+                            </div>
+                            <div className="bg-white/80 dark:bg-slate-800 p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-center">
+                              <span className="text-slate-500 font-medium block text-[10px]">GGT</span>
+                              <strong className="text-slate-900 dark:text-slate-100 font-mono text-xs">{results.fliBreakdown.ggt} U/L</strong>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-2 pt-1">
+                        <p className="text-xs font-black glow-red-text flex items-center gap-1">
+                          <AlertCircle size={13} className="text-red-600 shrink-0" />
+                          <span>FLI Calculation Incomplete. Missing required parameters:</span>
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {!formData.triglycerides && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Triglycerides (mg/dL)</span>}
+                          {!formData.ggt && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● GGT (U/L)</span>}
+                          {!formData.waistCircumference && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Waist Circumference (cm)</span>}
+                          {(!formData.weight || !formData.height) && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Weight & Height (BMI)</span>}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setMetabolicPanelOpen(true)}
+                          className="text-xs text-indigo-700 dark:text-indigo-400 font-black hover:underline cursor-pointer flex items-center gap-1 pt-1"
+                        >
+                          <span>+ Open Metabolic & Anthropometric Panel to enter inputs</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Metabolic Syndrome Card */}
               <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 p-5 space-y-3">

@@ -36,11 +36,11 @@
   }
 
   .score-big {
-    @apply text-slate-950 dark:text-white font-serif;
-    font-size: 56px;
-    font-weight: 700;
+    font-size: 52px;
+    font-weight: 900;
     line-height: 1;
     margin: 8px 0;
+    font-family: var(--font-mono, monospace);
   }
 
   .status-badge {
