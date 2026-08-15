@@ -598,6 +598,9 @@ OFFLINE CRITERIA SYNTHESIS:
               <option value="groq">Groq Llama 3.3 70B</option>
               <option value="openrouter">OpenRouter</option>
               <option value="local_ocr">Offline OCR</option>
+              <option value="openai">OpenAI GPT-4o-mini</option>
+              <option value="claude">Claude 3.5 Haiku</option>
+              <option value="deepseek">DeepSeek Chat</option>
             </select>
             {isProviderKeyMissing(selectedProvider) && (
               <button

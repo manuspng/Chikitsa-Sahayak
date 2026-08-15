@@ -1056,6 +1056,193 @@ async function callDirectOpenRouterExtract(
 }
 
 /**
+ * Direct DeepSeek LLM Extraction (uses DeepSeek Chat V3 on OCR text)
+ */
+async function callDirectDeepSeekExtract(
+  rawOcrText: string,
+  reportType: "lft" | "cbc" | "metabolic",
+  apiKey: string
+): Promise<any> {
+  const url = "https://api.deepseek.com/chat/completions";
+  const currentYear = new Date().getFullYear();
+  
+  let instructions = "";
+  if (reportType === "lft") {
+    instructions = `You are a medical laboratory data extraction engine. Extract patientName (strictly from words immediately adjacent to Patient Name, ignoring distant words or other columns), patientAge (number in years, calculate from Date of Birth with year ${currentYear} if DOB is given), patientGender ("male"|"female"), and exact numeric values for: ALT, AST, ALP, GGT, Total Bilirubin, Direct Bilirubin, Albumin, Total Protein, INR, Platelets from the OCR text. Return valid JSON only with these exact keys. If a value is missing, omit it.`;
+  } else if (reportType === "metabolic") {
+    instructions = `You are a medical laboratory data extraction engine. Extract patientName (strictly adjacent words), patientAge (calculate from DOB with year ${currentYear} if DOB is given), patientGender, and exact numeric values for: fastingBloodGlucose, triglycerides, hdlCholesterol, systolicBp, diastolicBp, urineAcr, urineAlbumin, urineCreatinine, waistCircumference from the OCR text. Return valid JSON only with these exact keys.`;
+  } else {
+    instructions = `You are a medical laboratory data extraction engine. Extract patientName (strictly adjacent words), patientAge (calculate from DOB with year ${currentYear} if DOB is given), patientGender, and exact numeric values for: Hemoglobin, Hematocrit, RBC, WBC, Platelets, MCV, MCH, MCHC, Neutrophils, Lymphocytes from the OCR text. Return valid JSON only with these exact keys.`;
+  }
+
+  const payload = {
+    model: "deepseek-chat",
+    messages: [
+      { role: "system", content: `${instructions}\nRespond with JSON only. No explanations.` },
+      { role: "user", content: `OCR Text:\n${rawOcrText}` }
+    ],
+    response_format: { type: "json_object" },
+    temperature: 0.1,
+    max_tokens: 800
+  };
+
+  logGeminiRequest("Direct DeepSeek Extract", url, "deepseek-chat", !!apiKey, payload);
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`DeepSeek extraction error (${res.status}): ${err.slice(0, 140)}`);
+  }
+
+  const data = await res.json();
+  const content = data.choices?.[0]?.message?.content || "{}";
+  const parsed = JSON.parse(content);
+  if (parsed.patientName) {
+    parsed.patientName = sanitizePatientName(parsed.patientName);
+  }
+  return parsed;
+}
+
+/**
+ * Direct OpenAI Extraction (uses GPT-4o-mini on images/OCR text)
+ */
+async function callDirectOpenAIExtract(
+  images: { base64: string, mimeType: string }[],
+  rawOcrText: string,
+  reportType: "lft" | "cbc" | "metabolic",
+  apiKey: string
+): Promise<any> {
+  const url = "https://api.openai.com/v1/chat/completions";
+  const currentYear = new Date().getFullYear();
+  
+  let instructions = "";
+  if (reportType === "lft") {
+    instructions = `You are a medical laboratory data extraction engine. Extract patientName (strictly adjacent words), patientAge (calculate from DOB with year ${currentYear} if DOB is given), patientGender, and exact numeric values for: ALT, AST, ALP, GGT, Total Bilirubin, Direct Bilirubin, Albumin, Total Protein, INR, Platelets. Return valid JSON only with these exact keys.`;
+  } else if (reportType === "metabolic") {
+    instructions = `You are a medical laboratory data extraction engine. Extract patientName, patientAge (calculate from DOB with year ${currentYear} if DOB is given), patientGender, and exact numeric values for: fastingBloodGlucose, triglycerides, hdlCholesterol, systolicBp, diastolicBp, urineAcr, urineAlbumin, urineCreatinine, waistCircumference. Return valid JSON only with these exact keys.`;
+  } else {
+    instructions = `You are a medical laboratory data extraction engine. Extract patientName, patientAge (calculate from DOB with year ${currentYear} if DOB is given), patientGender, and exact numeric values for: Hemoglobin, Hematocrit, RBC, WBC, Platelets, MCV, MCH, MCHC, Neutrophils, Lymphocytes. Return valid JSON only with these exact keys.`;
+  }
+
+  const userContent: any[] = [];
+  if (rawOcrText) {
+    userContent.push({ type: "text", text: `OCR Text:\n${rawOcrText}` });
+  }
+  for (const img of images) {
+    userContent.push({
+      type: "image_url",
+      image_url: { url: `data:${img.mimeType};base64,${img.base64}` }
+    });
+  }
+  if (userContent.length === 0) {
+    userContent.push({ type: "text", text: "No input provided" });
+  }
+
+  const payload = {
+    model: "gpt-4o-mini",
+    messages: [
+      { role: "system", content: `${instructions}\nRespond with strict JSON only. No explanations.` },
+      { role: "user", content: userContent }
+    ],
+    response_format: { type: "json_object" },
+    temperature: 0.1,
+    max_tokens: 800
+  };
+
+  logGeminiRequest("Direct OpenAI Extract", url, "gpt-4o-mini", !!apiKey, payload);
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`OpenAI extraction error (${res.status}): ${err.slice(0, 140)}`);
+  }
+
+  const data = await res.json();
+  const content = data.choices?.[0]?.message?.content || "{}";
+  const parsed = JSON.parse(content);
+  if (parsed.patientName) {
+    parsed.patientName = sanitizePatientName(parsed.patientName);
+  }
+  return parsed;
+}
+
+/**
+ * Direct Claude Extraction (uses Claude 3.5 Haiku)
+ */
+async function callDirectClaudeExtract(
+  rawOcrText: string,
+  reportType: "lft" | "cbc" | "metabolic",
+  apiKey: string
+): Promise<any> {
+  const url = "https://api.anthropic.com/v1/messages";
+  const currentYear = new Date().getFullYear();
+  
+  let instructions = "";
+  if (reportType === "lft") {
+    instructions = `You are a medical laboratory data extraction engine. Extract patientName (strictly adjacent words), patientAge (calculate from DOB with year ${currentYear} if DOB is given), patientGender, and exact numeric values for: ALT, AST, ALP, GGT, Total Bilirubin, Direct Bilirubin, Albumin, Total Protein, INR, Platelets. Return valid JSON only with these exact keys. No conversational text.`;
+  } else if (reportType === "metabolic") {
+    instructions = `You are a medical laboratory data extraction engine. Extract patientName, patientAge (calculate from DOB with year ${currentYear} if DOB is given), patientGender, and exact numeric values for: fastingBloodGlucose, triglycerides, hdlCholesterol, systolicBp, diastolicBp, urineAcr, urineAlbumin, urineCreatinine, waistCircumference. Return valid JSON only with these exact keys. No conversational text.`;
+  } else {
+    instructions = `You are a medical laboratory data extraction engine. Extract patientName, patientAge (calculate from DOB with year ${currentYear} if DOB is given), patientGender, and exact numeric values for: Hemoglobin, Hematocrit, RBC, WBC, Platelets, MCV, MCH, MCHC, Neutrophils, Lymphocytes. Return valid JSON only with these exact keys. No conversational text.`;
+  }
+
+  const payload = {
+    model: "claude-3-5-haiku-20241022",
+    system: instructions,
+    messages: [
+      { role: "user", content: `Extract laboratory parameters from this OCR text into JSON:\n\n${rawOcrText}` }
+    ],
+    max_tokens: 800
+  };
+
+  logGeminiRequest("Direct Claude Extract", url, "claude-3-5-haiku-20241022", !!apiKey, payload);
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Claude extraction error (${res.status}): ${err.slice(0, 140)}`);
+  }
+
+  const data = await res.json();
+  let content = data.content?.[0]?.text || "{}";
+  if (content.includes("```")) {
+    const match = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (match) content = match[1];
+  }
+  const parsed = JSON.parse(content);
+  if (parsed.patientName) {
+    parsed.patientName = sanitizePatientName(parsed.patientName);
+  }
+  return parsed;
+}
+
+/**
  * Post-processes and calibrates extracted AI results against high-confidence local OCR anchors.
  * Calibrates:
  * 1. Patient Name: If AI hallucinated a doctor name or clinical term, replace with OCR anchor name.
@@ -1125,7 +1312,7 @@ export function calibrateExtractedReportValues(
 
 /**
  * Robust Multi-Agent Report Extractor
- * Supports Gemini Multimodal Vision, Groq Llama 3.3, OpenRouter, and Local OCR Fallback.
+ * Supports Gemini Multimodal Vision, Groq Llama 3.3, OpenRouter, DeepSeek Chat, OpenAI, Claude, and Local OCR Fallback.
  * Guaranteed never to return mock or hardcoded fake dummy numbers!
  */
 export async function runGeminiExtractReport(
@@ -1137,6 +1324,9 @@ export async function runGeminiExtractReport(
   const geminiKey = localStorage.getItem("user_gemini_api_key") || "";
   const groqKey = localStorage.getItem("user_groq_api_key") || "";
   const openrouterKey = localStorage.getItem("user_openrouter_api_key") || "";
+  const openaiKey = localStorage.getItem("user_openai_api_key") || "";
+  const claudeKey = localStorage.getItem("user_claude_api_key") || "";
+  const deepseekKey = localStorage.getItem("user_deepseek_api_key") || "";
 
   // 1. Direct Local Offline Engine (if chosen explicitly)
   if (selectedProvider === "local_ocr" && rawOcrText) {
@@ -1156,7 +1346,8 @@ export async function runGeminiExtractReport(
   // 2. Direct Groq AI Agent (if chosen explicitly)
   if (selectedProvider === "groq") {
     if (!groqKey) {
-      throw new Error("Groq AI Agent selected, but no Groq API Key is configured. Please click 'Switch ⚙️' and paste your free Groq API Key (from console.groq.com).");
+      window.dispatchEvent(new CustomEvent("open-ai-provider-modal"));
+      throw new Error("Groq AI Agent selected, but no Groq API Key is configured. Please enter your free Groq API Key in the settings popup.");
     }
     if (!rawOcrText || rawOcrText.trim().length < 5) {
       throw new Error("Groq text extraction requires readable text from report images. Please ensure image is well-lit.");
@@ -1166,15 +1357,66 @@ export async function runGeminiExtractReport(
       const calibratedValues = calibrateExtractedReportValues(rawValues, rawOcrText, reportType);
       return { values: calibratedValues, providerUsed: "groq", modelUsed: "llama-3.3-70b-versatile", wasFallback: false };
     } catch (err: any) {
-      console.warn("Direct Groq extraction failed:", err.message);
       throw new Error(`Groq AI Agent extraction failed: ${err.message}`);
     }
   }
 
-  // 3. Direct OpenRouter Agent (if chosen explicitly)
+  // 3. Direct DeepSeek Agent (if chosen explicitly)
+  if (selectedProvider === "deepseek") {
+    if (!deepseekKey) {
+      window.dispatchEvent(new CustomEvent("open-ai-provider-modal"));
+      throw new Error("DeepSeek Chat selected, but no DeepSeek API Key is configured. Please enter your DeepSeek API Key in the settings popup.");
+    }
+    if (!rawOcrText || rawOcrText.trim().length < 5) {
+      throw new Error("DeepSeek text extraction requires readable text from report images. Please ensure image is well-lit.");
+    }
+    try {
+      const rawValues = await callDirectDeepSeekExtract(rawOcrText, reportType, deepseekKey);
+      const calibratedValues = calibrateExtractedReportValues(rawValues, rawOcrText, reportType);
+      return { values: calibratedValues, providerUsed: "deepseek", modelUsed: "deepseek-chat", wasFallback: false };
+    } catch (err: any) {
+      throw new Error(`DeepSeek Chat extraction failed: ${err.message}`);
+    }
+  }
+
+  // 4. Direct OpenAI Agent (if chosen explicitly)
+  if (selectedProvider === "openai") {
+    if (!openaiKey) {
+      window.dispatchEvent(new CustomEvent("open-ai-provider-modal"));
+      throw new Error("OpenAI GPT-4o-mini selected, but no OpenAI API Key is configured. Please enter your OpenAI API Key in the settings popup.");
+    }
+    try {
+      const rawValues = await callDirectOpenAIExtract(imagesBase64, rawOcrText || "", reportType, openaiKey);
+      const calibratedValues = calibrateExtractedReportValues(rawValues, rawOcrText, reportType);
+      return { values: calibratedValues, providerUsed: "openai", modelUsed: "gpt-4o-mini", wasFallback: false };
+    } catch (err: any) {
+      throw new Error(`OpenAI extraction failed: ${err.message}`);
+    }
+  }
+
+  // 5. Direct Claude Agent (if chosen explicitly)
+  if (selectedProvider === "claude") {
+    if (!claudeKey) {
+      window.dispatchEvent(new CustomEvent("open-ai-provider-modal"));
+      throw new Error("Claude 3.5 Haiku selected, but no Claude API Key is configured. Please enter your Anthropic Claude API Key in the settings popup.");
+    }
+    if (!rawOcrText || rawOcrText.trim().length < 5) {
+      throw new Error("Claude extraction requires readable text from report images. Please ensure image is well-lit.");
+    }
+    try {
+      const rawValues = await callDirectClaudeExtract(rawOcrText, reportType, claudeKey);
+      const calibratedValues = calibrateExtractedReportValues(rawValues, rawOcrText, reportType);
+      return { values: calibratedValues, providerUsed: "claude", modelUsed: "claude-3-5-haiku-20241022", wasFallback: false };
+    } catch (err: any) {
+      throw new Error(`Claude extraction failed: ${err.message}`);
+    }
+  }
+
+  // 6. Direct OpenRouter Agent (if chosen explicitly)
   if (selectedProvider === "openrouter") {
     if (!openrouterKey) {
-      throw new Error("OpenRouter Agent selected, but no OpenRouter API Key is configured. Please click 'Switch ⚙️' and configure your key.");
+      window.dispatchEvent(new CustomEvent("open-ai-provider-modal"));
+      throw new Error("OpenRouter Agent selected, but no OpenRouter API Key is configured. Please enter your key in the settings popup.");
     }
     try {
       const rawValues = await callDirectOpenRouterExtract(imagesBase64, rawOcrText || "", reportType, openrouterKey);
@@ -1185,7 +1427,7 @@ export async function runGeminiExtractReport(
     }
   }
 
-  // 4. Direct Gemini Agent (if chosen explicitly, e.g. Gemini 2.0 Pro, 1.5 Pro, 2.0 Flash, 1.5 Flash)
+  // 7. Direct Gemini Agent (if chosen explicitly, e.g. Gemini 3.5 Flash, 2.0 Pro, 1.5 Pro, 2.0 Flash, 1.5 Flash)
   if (selectedProvider.startsWith("gemini")) {
     if (geminiKey) {
       try {

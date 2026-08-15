@@ -215,11 +215,28 @@ export default function App() {
 
   useEffect(() => {
     const handleOpenProviderModal = () => {
+      setSelectedProvider(localStorage.getItem("selected_ai_provider") || "auto");
+      setKeys({
+        gemini: localStorage.getItem("user_gemini_api_key") || "",
+        groq: localStorage.getItem("user_groq_api_key") || "",
+        openrouter: localStorage.getItem("user_openrouter_api_key") || "",
+        openai: localStorage.getItem("user_openai_api_key") || "",
+        claude: localStorage.getItem("user_claude_api_key") || "",
+        deepseek: localStorage.getItem("user_deepseek_api_key") || "",
+      });
       setSettingsOpen(true);
     };
+    const handleProviderChanged = (e: any) => {
+      const p = e.detail || localStorage.getItem("selected_ai_provider") || "auto";
+      setSelectedProvider(p);
+    };
     window.addEventListener("open-ai-provider-modal", handleOpenProviderModal);
+    window.addEventListener("ai-provider-changed", handleProviderChanged);
+    window.addEventListener("storage", handleOpenProviderModal);
     return () => {
       window.removeEventListener("open-ai-provider-modal", handleOpenProviderModal);
+      window.removeEventListener("ai-provider-changed", handleProviderChanged);
+      window.removeEventListener("storage", handleOpenProviderModal);
     };
   }, []);
   const [colorScheme, setColorScheme] = useState<"standard" | "obsidian">(() => {
@@ -1087,7 +1104,12 @@ export default function App() {
                 <div className="relative">
                   <select
                     value={selectedProvider}
-                    onChange={(e) => setSelectedProvider(e.target.value)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSelectedProvider(val);
+                      localStorage.setItem("selected_ai_provider", val);
+                      window.dispatchEvent(new CustomEvent("ai-provider-changed", { detail: val }));
+                    }}
                     className="w-full pl-4 pr-10 py-2.5 bg-slate-50 dark:bg-slate-900/40 border-2 border-slate-300 dark:border-slate-800 rounded-xl text-xs font-black text-slate-950 dark:text-slate-100 outline-none appearance-none cursor-pointer focus:border-emerald-500"
                   >
                     <option value="auto">Auto</option>
@@ -1440,6 +1462,7 @@ export default function App() {
                   type="button"
                   onClick={() => {
                     localStorage.setItem("selected_ai_provider", selectedProvider);
+                    window.dispatchEvent(new CustomEvent("ai-provider-changed", { detail: selectedProvider }));
                     
                     const storageKeys: Record<string, string> = {
                       gemini: "user_gemini_api_key",
@@ -1462,6 +1485,7 @@ export default function App() {
                       }
                     });
 
+                    window.dispatchEvent(new CustomEvent("ai-provider-changed", { detail: selectedProvider }));
                     setSettingsOpen(false);
                     alert("AI engine credentials and provider configurations saved successfully!");
                   }}
