@@ -146,58 +146,24 @@ export default function LftAnalyzer({ onAddRecord }: LftAnalyzerProps) {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [isWebcamOpen, setIsWebcamOpen] = useState<boolean>(false);
 
-  const isFieldMissing = (fieldKey: string): boolean => {
-    if (missingExtractedKeys.length === 0) return false;
-    switch (fieldKey) {
-      case "patientName":
-        return !patientName.trim();
-      case "age":
-        return !formData.age;
-      case "alt":
-        return !formData.alt;
-      case "ast":
-        return !formData.ast;
-      case "totalBilirubin":
-        return !formData.totalBilirubin;
-      case "albumin":
-        return !formData.albumin;
-      case "alp":
-        return !formData.alp;
-      case "ggt":
-        return !formData.ggt;
-      case "directBilirubin":
-        return !formData.directBilirubin;
-      case "totalProtein":
-        return !formData.totalProtein;
-      case "platelets":
-        return !formData.platelets;
-      case "weight":
-        return !formData.weight;
-      case "height":
-        return !formData.height;
-      case "waistCircumference":
-        return !formData.waistCircumference;
-      case "fastingBloodGlucose":
-        return !formData.fastingBloodGlucose;
-      case "triglycerides":
-        return !formData.triglycerides;
-      case "hdlCholesterol":
-        return !formData.hdlCholesterol;
-      case "systolicBp":
-        return !formData.systolicBp;
-      case "diastolicBp":
-        return !formData.diastolicBp;
-      case "urineAcr":
-        return !formData.urineAcr;
-      default:
-        return false;
-    }
-  };
-
   const handleWebcamCapture = (file: File) => {
     const newFiles = [...selectedFiles, file].slice(0, 3);
     setSelectedFiles(newFiles);
     runOcrExtract(newFiles, "offline");
+  };
+
+  const isFieldMissing = (val: any) => (extractMeta !== null || missingExtractedKeys.length > 0) && (val === undefined || val === null || val === "");
+  const getInputClass = (val: any, extraPadding = "pr-12") => {
+    if (isFieldMissing(val)) {
+      return `w-full bg-red-50/40 dark:bg-red-950/20 border-2 border-red-500 dark:border-red-500 rounded-xl px-3 py-2 text-sm text-slate-950 dark:text-slate-100 font-black ${extraPadding} font-mono focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all`;
+    }
+    return `w-full bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-950 dark:text-slate-100 font-black ${extraPadding} font-mono focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all`;
+  };
+  const getNameClass = (val: any) => {
+    if (isFieldMissing(val)) {
+      return "w-full bg-red-50/40 dark:bg-red-950/20 border-2 border-red-500 dark:border-red-500 rounded-xl px-3 py-2 text-sm text-slate-950 dark:text-slate-100 font-bold placeholder-red-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all h-[42px]";
+    }
+    return "w-full bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-950 dark:text-slate-100 font-bold placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all h-[42px]";
   };
 
   const handleInputChange = (key: string, value: string | boolean) => {
@@ -1003,12 +969,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
         {/* Patient Demographics Registration Profile */}
         <div className="p-4 bg-slate-50 rounded-2xl border-2 border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Full Name</label>
-              {isFieldMissing("patientName") && (
-                <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-              )}
-            </div>
+            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Full Name</label>
             <input 
               type="text" 
               placeholder="e.g. Robert Chen"
@@ -1017,11 +978,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 setPatientName(e.target.value);
                 setCurrentRecordId(null);
               }}
-              className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-bold placeholder-slate-400 h-[42px] transition-all ${
-                isFieldMissing("patientName")
-                  ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                  : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500"
-              }`}
+              className={getNameClass(patientName)} 
             />
           </div>
 
@@ -1038,23 +995,14 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
           </div>
 
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Age</label>
-              {isFieldMissing("age") && (
-                <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-              )}
-            </div>
+            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Age</label>
             <div className="relative">
               <input 
                 type="number" 
                 placeholder="45"
                 value={formData.age}
                 onChange={e => handleInputChange("age", e.target.value)}
-                className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-12 font-mono h-[42px] transition-all ${
-                  isFieldMissing("age")
-                    ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                    : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500"
-                }`}
+                className={getInputClass(formData.age, "pr-12")} 
               />
               <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">Years</span>
             </div>
@@ -1067,12 +1015,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">ALT / SGPT <span className="text-red-500">*</span></label>
-              {isFieldMissing("alt") && (
-                <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-              )}
-            </div>
+            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">ALT / SGPT <span className="text-red-500">*</span></label>
             <div className="relative">
               <input 
                 type="number" 
@@ -1081,23 +1024,14 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 placeholder="7-56"
                 value={formData.alt}
                 onChange={e => handleInputChange("alt", e.target.value)}
-                className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-12 font-mono transition-all ${
-                  isFieldMissing("alt")
-                    ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                    : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:outline-emerald-500"
-                }`}
+                className={getInputClass(formData.alt, "pr-12")} 
               />
               <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">U/L</span>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">AST / SGOT <span className="text-red-500">*</span></label>
-              {isFieldMissing("ast") && (
-                <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-              )}
-            </div>
+            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">AST / SGOT <span className="text-red-500">*</span></label>
             <div className="relative">
               <input 
                 type="number" 
@@ -1106,23 +1040,14 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 placeholder="10-40"
                 value={formData.ast}
                 onChange={e => handleInputChange("ast", e.target.value)}
-                className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-12 font-mono transition-all ${
-                  isFieldMissing("ast")
-                    ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                    : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:outline-emerald-500"
-                }`}
+                className={getInputClass(formData.ast, "pr-12")} 
               />
               <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">U/L</span>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Total Bilirubin <span className="text-red-500">*</span></label>
-              {isFieldMissing("totalBilirubin") && (
-                <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-              )}
-            </div>
+            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Total Bilirubin <span className="text-red-500">*</span></label>
             <div className="relative">
               <input 
                 type="number" 
@@ -1131,23 +1056,14 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 placeholder="0.1-1.2"
                 value={formData.totalBilirubin}
                 onChange={e => handleInputChange("totalBilirubin", e.target.value)}
-                className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-14 font-mono transition-all ${
-                  isFieldMissing("totalBilirubin")
-                    ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                    : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:outline-emerald-500"
-                }`}
+                className={getInputClass(formData.totalBilirubin, "pr-14")} 
               />
               <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Albumin <span className="text-red-500">*</span></label>
-              {isFieldMissing("albumin") && (
-                <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-              )}
-            </div>
+            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Albumin <span className="text-red-500">*</span></label>
             <div className="relative">
               <input 
                 type="number" 
@@ -1156,11 +1072,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 placeholder="3.5-5.0"
                 value={formData.albumin}
                 onChange={e => handleInputChange("albumin", e.target.value)}
-                className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-12 font-mono transition-all ${
-                  isFieldMissing("albumin")
-                    ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                    : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:outline-emerald-500"
-                }`}
+                className={getInputClass(formData.albumin, "pr-12")} 
               />
               <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">g/dL</span>
             </div>
@@ -1172,12 +1084,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
           
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">ALP (Alk. Phosphatase)</label>
-                {isFieldMissing("alp") && (
-                  <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-                )}
-              </div>
+              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">ALP (Alk. Phosphatase)</label>
               <div className="relative">
                 <input 
                   type="number" 
@@ -1185,23 +1092,14 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                   placeholder="44-147"
                   value={formData.alp}
                   onChange={e => handleInputChange("alp", e.target.value)}
-                  className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-12 font-mono transition-all ${
-                    isFieldMissing("alp")
-                      ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                      : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:outline-emerald-500"
-                  }`}
+                  className={getInputClass(formData.alp, "pr-12")} 
                 />
                 <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">U/L</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">GGT (Gamma-Glutamyl)</label>
-                {isFieldMissing("ggt") && (
-                  <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-                )}
-              </div>
+              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">GGT (Gamma-Glutamyl)</label>
               <div className="relative">
                 <input 
                   type="number" 
@@ -1209,23 +1107,14 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                   placeholder="8-61"
                   value={formData.ggt}
                   onChange={e => handleInputChange("ggt", e.target.value)}
-                  className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-12 font-mono transition-all ${
-                    isFieldMissing("ggt")
-                      ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                      : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:outline-emerald-500"
-                  }`}
+                  className={getInputClass(formData.ggt, "pr-12")} 
                 />
                 <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">U/L</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Direct Bilirubin</label>
-                {isFieldMissing("directBilirubin") && (
-                  <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-                )}
-              </div>
+              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Direct Bilirubin</label>
               <div className="relative">
                 <input 
                   type="number" 
@@ -1233,23 +1122,14 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                   placeholder="0.0-0.3"
                   value={formData.directBilirubin}
                   onChange={e => handleInputChange("directBilirubin", e.target.value)}
-                  className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-14 font-mono transition-all ${
-                    isFieldMissing("directBilirubin")
-                      ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                      : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:outline-emerald-500"
-                  }`}
+                  className={getInputClass(formData.directBilirubin, "pr-14")} 
                 />
                 <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Total Protein</label>
-                {isFieldMissing("totalProtein") && (
-                  <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-                )}
-              </div>
+              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Total Protein</label>
               <div className="relative">
                 <input 
                   type="number" 
@@ -1257,11 +1137,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                   placeholder="6.0-8.3"
                   value={formData.totalProtein}
                   onChange={e => handleInputChange("totalProtein", e.target.value)}
-                  className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-12 font-mono transition-all ${
-                    isFieldMissing("totalProtein")
-                      ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                      : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:outline-emerald-500"
-                  }`}
+                  className={getInputClass(formData.totalProtein, "pr-12")} 
                 />
                 <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">g/dL</span>
               </div>
@@ -1274,46 +1150,28 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
           
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Age</label>
-                {isFieldMissing("age") && (
-                  <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-                )}
-              </div>
+              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Age</label>
               <div className="relative">
                 <input 
                   type="number" 
                   placeholder="45"
                   value={formData.age}
                   onChange={e => handleInputChange("age", e.target.value)}
-                  className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-10 font-mono transition-all ${
-                    isFieldMissing("age")
-                      ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                      : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:outline-emerald-500"
-                  }`}
+                  className={getInputClass(formData.age, "pr-10")} 
                 />
                 <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">yrs</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Platelets</label>
-                {isFieldMissing("platelets") && (
-                  <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-                )}
-              </div>
+              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Platelets</label>
               <div className="relative">
                 <input 
                   type="number" 
                   placeholder="150-400"
                   value={formData.platelets}
                   onChange={e => handleInputChange("platelets", e.target.value)}
-                  className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-14 font-mono transition-all ${
-                    isFieldMissing("platelets")
-                      ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                      : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:outline-emerald-500"
-                  }`}
+                  className={getInputClass(formData.platelets, "pr-14")} 
                 />
                 <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-[9px] font-black leading-tight">10^9/L</span>
               </div>
@@ -1325,46 +1183,28 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
             </div>
 
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Weight (for BMI)</label>
-                {isFieldMissing("weight") && (
-                  <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-                )}
-              </div>
+              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Weight (for BMI)</label>
               <div className="relative">
                 <input 
                   type="number" 
                   placeholder="kg"
                   value={formData.weight}
                   onChange={e => handleInputChange("weight", e.target.value)}
-                  className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-10 font-mono transition-all ${
-                    isFieldMissing("weight")
-                      ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                      : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:outline-emerald-500"
-                  }`}
+                  className={getInputClass(formData.weight, "pr-10")} 
                 />
                 <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">kg</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Height (for BMI)</label>
-                {isFieldMissing("height") && (
-                  <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-                )}
-              </div>
+              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Height (for BMI)</label>
               <div className="relative">
                 <input 
                   type="number" 
                   placeholder="cm"
                   value={formData.height}
                   onChange={e => handleInputChange("height", e.target.value)}
-                  className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-10 font-mono transition-all ${
-                    isFieldMissing("height")
-                      ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                      : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:outline-emerald-500"
-                  }`}
+                  className={getInputClass(formData.height, "pr-10")} 
                 />
                 <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">cm</span>
               </div>
@@ -1378,7 +1218,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 type="number" 
                 value={formData.astUln}
                 onChange={e => handleInputChange("astUln", e.target.value)}
-                className="w-24 bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black font-mono focus:outline-emerald-500" 
+                className={getInputClass(formData.astUln, "w-24")} 
               />
             </div>
 
@@ -1427,161 +1267,98 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
           {metabolicPanelOpen && (
             <div className="pt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-left border-t border-slate-200">
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Waist Circumference</label>
-                  {isFieldMissing("waistCircumference") && (
-                    <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-                  )}
-                </div>
+                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Waist Circumference</label>
                 <div className="relative">
                   <input
                     type="number"
                     placeholder="e.g., 94"
                     value={formData.waistCircumference}
                     onChange={e => handleInputChange("waistCircumference", e.target.value)}
-                    className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-10 font-mono transition-all ${
-                      isFieldMissing("waistCircumference")
-                        ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                        : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:outline-emerald-500"
-                    }`}
+                    className={getInputClass(formData.waistCircumference, "pr-10")}
                   />
                   <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">cm</span>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Fasting Blood Glucose</label>
-                  {isFieldMissing("fastingBloodGlucose") && (
-                    <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-                  )}
-                </div>
+                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Fasting Blood Glucose</label>
                 <div className="relative">
                   <input
                     type="number"
                     placeholder="e.g., 98"
                     value={formData.fastingBloodGlucose}
                     onChange={e => handleInputChange("fastingBloodGlucose", e.target.value)}
-                    className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-14 font-mono transition-all ${
-                      isFieldMissing("fastingBloodGlucose")
-                        ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                        : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:outline-emerald-500"
-                    }`}
+                    className={getInputClass(formData.fastingBloodGlucose, "pr-14")}
                   />
                   <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Triglycerides</label>
-                  {isFieldMissing("triglycerides") && (
-                    <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-                  )}
-                </div>
+                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Triglycerides</label>
                 <div className="relative">
                   <input
                     type="number"
                     placeholder="e.g., 145"
                     value={formData.triglycerides}
                     onChange={e => handleInputChange("triglycerides", e.target.value)}
-                    className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-14 font-mono transition-all ${
-                      isFieldMissing("triglycerides")
-                        ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                        : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:outline-emerald-500"
-                    }`}
+                    className={getInputClass(formData.triglycerides, "pr-14")}
                   />
                   <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">HDL Cholesterol</label>
-                  {isFieldMissing("hdlCholesterol") && (
-                    <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-                  )}
-                </div>
+                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">HDL Cholesterol</label>
                 <div className="relative">
                   <input
                     type="number"
                     placeholder="e.g., 45"
                     value={formData.hdlCholesterol}
                     onChange={e => handleInputChange("hdlCholesterol", e.target.value)}
-                    className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-14 font-mono transition-all ${
-                      isFieldMissing("hdlCholesterol")
-                        ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                        : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:outline-emerald-500"
-                    }`}
+                    className={getInputClass(formData.hdlCholesterol, "pr-14")}
                   />
                   <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Systolic BP</label>
-                  {isFieldMissing("systolicBp") && (
-                    <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-                  )}
-                </div>
+                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Systolic BP</label>
                 <div className="relative">
                   <input
                     type="number"
                     placeholder="e.g., 120"
                     value={formData.systolicBp}
                     onChange={e => handleInputChange("systolicBp", e.target.value)}
-                    className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-14 font-mono transition-all ${
-                      isFieldMissing("systolicBp")
-                        ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                        : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:outline-emerald-500"
-                    }`}
+                    className={getInputClass(formData.systolicBp, "pr-14")}
                   />
                   <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mmHg</span>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Diastolic BP</label>
-                  {isFieldMissing("diastolicBp") && (
-                    <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-                  )}
-                </div>
+                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Diastolic BP</label>
                 <div className="relative">
                   <input
                     type="number"
                     placeholder="e.g., 80"
                     value={formData.diastolicBp}
                     onChange={e => handleInputChange("diastolicBp", e.target.value)}
-                    className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-14 font-mono transition-all ${
-                      isFieldMissing("diastolicBp")
-                        ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                        : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:outline-emerald-500"
-                    }`}
+                    className={getInputClass(formData.diastolicBp, "pr-14")}
                   />
                   <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mmHg</span>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Urine ACR (Microalbuminuria)</label>
-                  {isFieldMissing("urineAcr") && (
-                    <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-                  )}
-                </div>
+                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Urine ACR (Microalbuminuria)</label>
                 <div className="relative">
                   <input
                     type="number"
                     placeholder="e.g., 24"
                     value={formData.urineAcr}
                     onChange={e => handleInputChange("urineAcr", e.target.value)}
-                    className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-14 font-mono transition-all ${
-                      isFieldMissing("urineAcr")
-                        ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                        : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:outline-emerald-500"
-                    }`}
+                    className={getInputClass(formData.urineAcr, "pr-14")}
                   />
                   <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/g</span>
                 </div>

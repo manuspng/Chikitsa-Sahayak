@@ -92,34 +92,18 @@ export default function MetabolicAnalyzer({ onAddRecord }: MetabolicAnalyzerProp
 
   const [extractMeta, setExtractMeta] = useState<{ providerUsed?: string; modelUsed?: string; wasFallback?: boolean } | null>(null);
 
-  const isFieldMissing = (fieldKey: string): boolean => {
-    if (missingExtractedKeys.length === 0) return false;
-    switch (fieldKey) {
-      case "patientName":
-        return !patientName.trim();
-      case "age":
-        return !formData.age;
-      case "waistCircumference":
-        return !formData.waistCircumference;
-      case "fastingBloodGlucose":
-        return !formData.fastingBloodGlucose;
-      case "triglycerides":
-        return !formData.triglycerides;
-      case "hdlCholesterol":
-        return !formData.hdlCholesterol;
-      case "systolicBp":
-        return !formData.systolicBp;
-      case "diastolicBp":
-        return !formData.diastolicBp;
-      case "urineAcr":
-        return !formData.urineAcr && !formData.urineAlbumin;
-      case "urineAlbumin":
-        return !formData.urineAlbumin;
-      case "urineCreatinine":
-        return !formData.urineCreatinine;
-      default:
-        return false;
+  const isFieldMissing = (val: any) => (extractMeta !== null || missingExtractedKeys.length > 0) && (val === undefined || val === null || val === "");
+  const getInputClass = (val: any, extraPadding = "pr-12") => {
+    if (isFieldMissing(val)) {
+      return `w-full bg-red-50/40 dark:bg-red-950/20 border-2 border-red-500 dark:border-red-500 rounded-xl px-3 py-2 text-sm text-slate-950 dark:text-slate-100 font-black ${extraPadding} font-mono focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all`;
     }
+    return `w-full bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-950 dark:text-slate-100 font-black ${extraPadding} font-mono focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all`;
+  };
+  const getNameClass = (val: any) => {
+    if (isFieldMissing(val)) {
+      return "w-full bg-red-50/40 dark:bg-red-950/20 border-2 border-red-500 dark:border-red-500 rounded-xl px-3 py-2 text-sm text-slate-950 dark:text-slate-100 font-bold placeholder-red-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all h-[42px]";
+    }
+    return "w-full bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-950 dark:text-slate-100 font-bold placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all h-[42px]";
   };
 
   const handleWebcamCapture = (file: File) => {
@@ -880,12 +864,7 @@ OFFLINE CRITERIA SYNTHESIS:
         {/* Name, Gender, Age Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Name</label>
-              {isFieldMissing("patientName") && (
-                <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-              )}
-            </div>
+            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Name</label>
             <input 
               type="text" 
               placeholder="e.g. Suresh Kumar"
@@ -894,11 +873,7 @@ OFFLINE CRITERIA SYNTHESIS:
                 setPatientName(e.target.value);
                 setCurrentRecordId(null);
               }}
-              className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-bold placeholder-slate-400 h-[42px] transition-all ${
-                isFieldMissing("patientName")
-                  ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                  : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500"
-              }`}
+              className={getNameClass(patientName)} 
             />
           </div>
 
@@ -915,23 +890,14 @@ OFFLINE CRITERIA SYNTHESIS:
           </div>
 
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Biological Age</label>
-              {isFieldMissing("age") && (
-                <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-              )}
-            </div>
+            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Biological Age</label>
             <div className="relative">
               <input 
                 type="number" 
                 placeholder="45"
                 value={formData.age}
                 onChange={e => handleInputChange("age", e.target.value)}
-                className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-12 font-mono h-[42px] transition-all ${
-                  isFieldMissing("age")
-                    ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                    : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500"
-                }`}
+                className={getInputClass(formData.age, "pr-12")} 
               />
               <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">Years</span>
             </div>
@@ -953,12 +919,7 @@ OFFLINE CRITERIA SYNTHESIS:
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
-                <div className="flex items-center gap-1">
-                  <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide">Waist Circumference</label>
-                  {isFieldMissing("waistCircumference") && (
-                    <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-                  )}
-                </div>
+                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide">Waist Circumference</label>
                 <span className="text-[10px] text-indigo-700 font-black uppercase">{formData.gender === "female" ? "≤ 88 cm target" : "≤ 102 cm target"}</span>
               </div>
               <div className="relative">
@@ -968,11 +929,7 @@ OFFLINE CRITERIA SYNTHESIS:
                   placeholder={formData.gender === "female" ? "e.g. 85" : "e.g. 95"}
                   value={formData.waistCircumference}
                   onChange={e => handleInputChange("waistCircumference", e.target.value)}
-                  className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-12 font-mono transition-all ${
-                    isFieldMissing("waistCircumference")
-                      ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                      : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500"
-                  }`}
+                  className={getInputClass(formData.waistCircumference, "pr-12")} 
                 />
                 <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">cm</span>
               </div>
@@ -980,12 +937,7 @@ OFFLINE CRITERIA SYNTHESIS:
 
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
-                <div className="flex items-center gap-1">
-                  <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide">Fasting Blood Glucose</label>
-                  {isFieldMissing("fastingBloodGlucose") && (
-                    <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-                  )}
-                </div>
+                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide">Fasting Blood Glucose</label>
                 <span className="text-[10px] text-indigo-700 font-black uppercase">{"< 100 mg/dL target"}</span>
               </div>
               <div className="relative">
@@ -995,11 +947,7 @@ OFFLINE CRITERIA SYNTHESIS:
                   placeholder="e.g. 95"
                   value={formData.fastingBloodGlucose}
                   onChange={e => handleInputChange("fastingBloodGlucose", e.target.value)}
-                  className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-14 font-mono transition-all ${
-                    isFieldMissing("fastingBloodGlucose")
-                      ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                      : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500"
-                  }`}
+                  className={getInputClass(formData.fastingBloodGlucose, "pr-14")} 
                 />
                 <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
               </div>
@@ -1007,12 +955,7 @@ OFFLINE CRITERIA SYNTHESIS:
 
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
-                <div className="flex items-center gap-1">
-                  <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide">Serum Triglycerides</label>
-                  {isFieldMissing("triglycerides") && (
-                    <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-                  )}
-                </div>
+                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide">Serum Triglycerides</label>
                 <span className="text-[10px] text-indigo-700 font-black uppercase">{"< 150 mg/dL target"}</span>
               </div>
               <div className="relative">
@@ -1022,11 +965,7 @@ OFFLINE CRITERIA SYNTHESIS:
                   placeholder="e.g. 140"
                   value={formData.triglycerides}
                   onChange={e => handleInputChange("triglycerides", e.target.value)}
-                  className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-14 font-mono transition-all ${
-                    isFieldMissing("triglycerides")
-                      ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                      : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500"
-                  }`}
+                  className={getInputClass(formData.triglycerides, "pr-14")} 
                 />
                 <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
               </div>
@@ -1034,12 +973,7 @@ OFFLINE CRITERIA SYNTHESIS:
 
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
-                <div className="flex items-center gap-1">
-                  <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide">HDL Cholesterol</label>
-                  {isFieldMissing("hdlCholesterol") && (
-                    <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-                  )}
-                </div>
+                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide">HDL Cholesterol</label>
                 <span className="text-[10px] text-indigo-700 font-black uppercase">{formData.gender === "female" ? "≥ 50 mg/dL target" : "≥ 40 mg/dL target"}</span>
               </div>
               <div className="relative">
@@ -1049,11 +983,7 @@ OFFLINE CRITERIA SYNTHESIS:
                   placeholder="e.g. 45"
                   value={formData.hdlCholesterol}
                   onChange={e => handleInputChange("hdlCholesterol", e.target.value)}
-                  className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-14 font-mono transition-all ${
-                    isFieldMissing("hdlCholesterol")
-                      ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                      : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500"
-                  }`}
+                  className={getInputClass(formData.hdlCholesterol, "pr-14")} 
                 />
                 <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
               </div>
@@ -1061,12 +991,7 @@ OFFLINE CRITERIA SYNTHESIS:
 
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
-                <div className="flex items-center gap-1">
-                  <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide">Systolic Blood Pressure</label>
-                  {isFieldMissing("systolicBp") && (
-                    <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-                  )}
-                </div>
+                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide">Systolic Blood Pressure</label>
                 <span className="text-[10px] text-indigo-700 font-black uppercase">{"< 130 mmHg target"}</span>
               </div>
               <div className="relative">
@@ -1076,11 +1001,7 @@ OFFLINE CRITERIA SYNTHESIS:
                   placeholder="e.g. 120"
                   value={formData.systolicBp}
                   onChange={e => handleInputChange("systolicBp", e.target.value)}
-                  className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-14 font-mono transition-all ${
-                    isFieldMissing("systolicBp")
-                      ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                      : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500"
-                  }`}
+                  className={getInputClass(formData.systolicBp, "pr-14")} 
                 />
                 <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mmHg</span>
               </div>
@@ -1088,12 +1009,7 @@ OFFLINE CRITERIA SYNTHESIS:
 
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
-                <div className="flex items-center gap-1">
-                  <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide">Diastolic Blood Pressure</label>
-                  {isFieldMissing("diastolicBp") && (
-                    <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-                  )}
-                </div>
+                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide">Diastolic Blood Pressure</label>
                 <span className="text-[10px] text-indigo-700 font-black uppercase">{"< 85 mmHg target"}</span>
               </div>
               <div className="relative">
@@ -1103,11 +1019,7 @@ OFFLINE CRITERIA SYNTHESIS:
                   placeholder="e.g. 80"
                   value={formData.diastolicBp}
                   onChange={e => handleInputChange("diastolicBp", e.target.value)}
-                  className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-14 font-mono transition-all ${
-                    isFieldMissing("diastolicBp")
-                      ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                      : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500"
-                  }`}
+                  className={getInputClass(formData.diastolicBp, "pr-14")} 
                 />
                 <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mmHg</span>
               </div>
@@ -1187,12 +1099,7 @@ OFFLINE CRITERIA SYNTHESIS:
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-1">
-                      <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide">Urine Albumin</label>
-                      {isFieldMissing("urineAlbumin") && (
-                        <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-                      )}
-                    </div>
+                    <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide">Urine Albumin</label>
                     <span className="text-[10px] text-indigo-700 font-black uppercase">mg/L</span>
                   </div>
                   <div className="relative">
@@ -1202,11 +1109,7 @@ OFFLINE CRITERIA SYNTHESIS:
                       placeholder="e.g. 30"
                       value={formData.urineAlbumin}
                       onChange={e => handleInputChange("urineAlbumin", e.target.value)}
-                      className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-14 font-mono transition-all ${
-                        isFieldMissing("urineAlbumin")
-                          ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                          : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500"
-                      }`}
+                      className={getInputClass(formData.urineAlbumin, "pr-14")} 
                     />
                     <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/L</span>
                   </div>
@@ -1214,12 +1117,7 @@ OFFLINE CRITERIA SYNTHESIS:
 
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-1">
-                      <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide">Urine Creatinine</label>
-                      {isFieldMissing("urineCreatinine") && (
-                        <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-                      )}
-                    </div>
+                    <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide">Urine Creatinine</label>
                     <span className="text-[10px] text-indigo-700 font-black uppercase">mg/dL</span>
                   </div>
                   <div className="relative">
@@ -1229,11 +1127,7 @@ OFFLINE CRITERIA SYNTHESIS:
                       placeholder="e.g. 100"
                       value={formData.urineCreatinine}
                       onChange={e => handleInputChange("urineCreatinine", e.target.value)}
-                      className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-14 font-mono transition-all ${
-                        isFieldMissing("urineCreatinine")
-                          ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                          : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500"
-                      }`}
+                      className={getInputClass(formData.urineCreatinine, "pr-14")} 
                     />
                     <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
                   </div>
@@ -1287,12 +1181,7 @@ OFFLINE CRITERIA SYNTHESIS:
           ) : (
             <div className="max-w-md space-y-1.5">
               <div className="flex justify-between items-center">
-                <div className="flex items-center gap-1">
-                  <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Urine ACR</label>
-                  {isFieldMissing("urineAcr") && (
-                    <span className="text-[10px] font-black text-rose-600 dark:text-rose-400">● Missing</span>
-                  )}
-                </div>
+                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Urine ACR</label>
                 <span className="text-[10px] text-indigo-700 font-black uppercase font-mono">{"< 30 mg/g normal excretion target"}</span>
               </div>
               <div className="relative">
@@ -1302,11 +1191,7 @@ OFFLINE CRITERIA SYNTHESIS:
                   placeholder="e.g. 25"
                   value={formData.urineAcr}
                   onChange={e => handleInputChange("urineAcr", e.target.value)}
-                  className={`w-full border-2 rounded-xl px-3 py-2 text-sm font-black pr-14 font-mono transition-all ${
-                    isFieldMissing("urineAcr")
-                      ? "bg-rose-50 dark:bg-rose-950/30 border-rose-500 dark:border-rose-600 text-rose-950 dark:text-rose-100 ring-2 ring-rose-400/40 shadow-xs"
-                      : "bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-950 dark:text-slate-100 focus:ring-2 focus:ring-emerald-500"
-                  }`}
+                  className={getInputClass(formData.urineAcr, "pr-14")} 
                 />
                 <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/g</span>
               </div>
