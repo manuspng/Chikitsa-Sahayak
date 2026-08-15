@@ -496,7 +496,16 @@ Please write an expert, professional clinical interpretation of this patient's m
                   </p>
                 </div>
               ) : (
-                <p style={{ color: "#000000" }} className="text-xs font-bold pt-1">Lock: Enter waist and hip values to track active abdominal lipid metrics.</p>
+                <div className="space-y-2 pt-1">
+                  <p className="text-xs font-black glow-red-text flex items-center gap-1">
+                    <AlertCircle size={13} className="text-red-600 shrink-0" />
+                    <span>WHR Incomplete. Missing required parameters:</span>
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {!formData.waist && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Waist Circumference</span>}
+                    {!formData.hip && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Hip Circumference</span>}
+                  </div>
+                </div>
               )}
             </div>
           </div>

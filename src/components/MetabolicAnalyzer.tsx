@@ -81,6 +81,7 @@ export default function MetabolicAnalyzer({ onAddRecord }: MetabolicAnalyzerProp
   const activeProviderName = getProviderDisplayName(selectedProvider);
   const currentProvider = selectedProvider;
   const [aiMeta, setAiMeta] = useState<{ providerUsed?: string; wasFallback?: boolean; modelUsed?: string } | null>(null);
+  const [missingExtractedKeys, setMissingExtractedKeys] = useState<string[]>([]);
 
   // Input refs for Mobile & PC (Upload Report & Camera)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -129,6 +130,16 @@ export default function MetabolicAnalyzer({ onAddRecord }: MetabolicAnalyzerProp
     if (parsedData.urineCreatinine !== undefined) {
       handleInputChange("urineCreatinine", String(parsedData.urineCreatinine));
     }
+
+    const missing: string[] = [];
+    if (parsedData.fastingBloodGlucose === undefined && !formData.fastingBloodGlucose) missing.push("Fasting Blood Glucose");
+    if (parsedData.triglycerides === undefined && !formData.triglycerides) missing.push("Triglycerides");
+    if (parsedData.hdlCholesterol === undefined && !formData.hdlCholesterol) missing.push("HDL Cholesterol");
+    if (parsedData.systolicBp === undefined && !formData.systolicBp) missing.push("Systolic / Diastolic BP");
+    if (parsedData.waistCircumference === undefined && !formData.waistCircumference) missing.push("Waist Circumference");
+    if (parsedData.urineAcr === undefined && !formData.urineAcr && parsedData.urineAlbumin === undefined) missing.push("Urine ACR");
+    if (!parsedData.patientName && !patientName) missing.push("Patient Name");
+    setMissingExtractedKeys(missing);
   };
 
   const processFilesForOcr = async (filesToProcess: File[], mode: "offline" | "ai" = "ai") => {
@@ -631,6 +642,27 @@ OFFLINE CRITERIA SYNTHESIS:
                 Switch Agent ▾
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Glowing Red Notification for Missing / Unfed Parameters from Scan */}
+        {missingExtractedKeys.length > 0 && (
+          <div className="p-3.5 bg-rose-50/95 dark:bg-rose-950/30 border-2 border-rose-400 dark:border-rose-600 rounded-2xl space-y-2.5">
+            <div className="flex items-center gap-1.5 text-xs font-black glow-red-text">
+              <AlertCircle size={15} className="text-rose-600 shrink-0" />
+              <span>Information Missing or Left Unfed from Scanned Metabolic Report ({missingExtractedKeys.length} items):</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {missingExtractedKeys.map((k, idx) => (
+                <span key={idx} className="glow-red-badge px-2.5 py-1 rounded-xl text-xs font-black flex items-center gap-1.5">
+                  <span>●</span>
+                  <span>{k}</span>
+                </span>
+              ))}
+            </div>
+            <p className="text-xs font-bold text-rose-900 dark:text-rose-200">
+              Please fill in any unfed parameters manually below to calculate <strong className="glow-red-text">NCEP Metabolic Syndrome</strong> and <strong className="glow-red-text">Kidney ACR</strong> risk profiles.
+            </p>
           </div>
         )}
 
@@ -1273,8 +1305,19 @@ OFFLINE CRITERIA SYNTHESIS:
                   </div>
                 </div>
               ) : (
-                <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 p-5 flex items-center justify-center text-center text-slate-950 font-bold text-xs">
-                  No Metabolic Syndrome Parameters Provided.
+                <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 p-5 space-y-2">
+                  <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block">Metabolic Syndrome (NCEP ATP III)</span>
+                  <p className="text-xs font-black glow-red-text flex items-center gap-1">
+                    <AlertCircle size={13} className="text-red-600 shrink-0" />
+                    <span>Incomplete. Missing required metabolic inputs:</span>
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {!formData.fastingBloodGlucose && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Fasting Glucose</span>}
+                    {!formData.triglycerides && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Triglycerides</span>}
+                    {!formData.hdlCholesterol && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● HDL Cholesterol</span>}
+                    {!formData.systolicBp && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Blood Pressure</span>}
+                    {!formData.waistCircumference && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Waist Circumference</span>}
+                  </div>
                 </div>
               )}
 
@@ -1308,8 +1351,15 @@ OFFLINE CRITERIA SYNTHESIS:
                   </div>
                 </div>
               ) : (
-                <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 p-5 flex items-center justify-center text-center text-slate-950 font-bold text-xs">
-                  No Urine ACR Parameter Provided.
+                <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 p-5 space-y-2">
+                  <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block">Kidney Risk Assessment (Urine ACR)</span>
+                  <p className="text-xs font-black glow-red-text flex items-center gap-1">
+                    <AlertCircle size={13} className="text-red-600 shrink-0" />
+                    <span>Incomplete. Urine ACR parameter not supplied:</span>
+                  </p>
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Urine ACR (mg/g) / Albumin & Creatinine</span>
+                  </div>
                 </div>
               )}
             </div>

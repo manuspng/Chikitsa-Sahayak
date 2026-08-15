@@ -136,6 +136,7 @@ export default function LftAnalyzer({ onAddRecord }: LftAnalyzerProps) {
   const activeProviderName = getProviderDisplayName(selectedProvider);
   const currentProvider = selectedProvider;
   const [aiMeta, setAiMeta] = useState<{ providerUsed?: string; wasFallback?: boolean; modelUsed?: string } | null>(null);
+  const [missingExtractedKeys, setMissingExtractedKeys] = useState<string[]>([]);
   
   // Input refs and files queue for Mobile & PC (Upload Report & Camera)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -368,20 +369,42 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
     if (vals.patientGender) {
       setPatientGender(vals.patientGender);
     }
-    setFormData(prev => ({
-      ...prev,
-      alt: vals["ALT"] !== undefined ? String(vals["ALT"]) : prev.alt,
-      ast: vals["AST"] !== undefined ? String(vals["AST"]) : prev.ast,
-      alp: vals["ALP"] !== undefined ? String(vals["ALP"]) : prev.alp,
-      ggt: vals["GGT"] !== undefined ? String(vals["GGT"]) : prev.ggt,
-      totalBilirubin: vals["Total Bilirubin"] !== undefined ? String(vals["Total Bilirubin"]) : prev.totalBilirubin,
-      directBilirubin: vals["Direct Bilirubin"] !== undefined ? String(vals["Direct Bilirubin"]) : prev.directBilirubin,
-      albumin: vals["Albumin"] !== undefined ? String(vals["Albumin"]) : prev.albumin,
-      totalProtein: vals["Total Protein"] !== undefined ? String(vals["Total Protein"]) : prev.totalProtein,
-      inr: vals["INR"] !== undefined ? String(vals["INR"]) : prev.inr,
-      platelets: vals["Platelets"] !== undefined ? String(vals["Platelets"]) : prev.platelets,
-      age: vals.patientAge !== undefined ? String(vals.patientAge) : prev.age,
-    }));
+    setFormData(prev => {
+      const next = {
+        ...prev,
+        alt: vals["ALT"] !== undefined ? String(vals["ALT"]) : prev.alt,
+        ast: vals["AST"] !== undefined ? String(vals["AST"]) : prev.ast,
+        alp: vals["ALP"] !== undefined ? String(vals["ALP"]) : prev.alp,
+        ggt: vals["GGT"] !== undefined ? String(vals["GGT"]) : prev.ggt,
+        totalBilirubin: vals["Total Bilirubin"] !== undefined ? String(vals["Total Bilirubin"]) : prev.totalBilirubin,
+        directBilirubin: vals["Direct Bilirubin"] !== undefined ? String(vals["Direct Bilirubin"]) : prev.directBilirubin,
+        albumin: vals["Albumin"] !== undefined ? String(vals["Albumin"]) : prev.albumin,
+        totalProtein: vals["Total Protein"] !== undefined ? String(vals["Total Protein"]) : prev.totalProtein,
+        inr: vals["INR"] !== undefined ? String(vals["INR"]) : prev.inr,
+        platelets: vals["Platelets"] !== undefined ? String(vals["Platelets"]) : prev.platelets,
+        age: vals.patientAge !== undefined ? String(vals.patientAge) : prev.age,
+        triglycerides: vals["triglycerides"] !== undefined ? String(vals["triglycerides"]) : prev.triglycerides,
+        waistCircumference: vals["waistCircumference"] !== undefined ? String(vals["waistCircumference"]) : prev.waistCircumference,
+      };
+
+      // Compute which parameters were not available in the document or left blank
+      const missing: string[] = [];
+      if (!next.alt) missing.push("ALT (SGPT)");
+      if (!next.ast) missing.push("AST (SGOT)");
+      if (!next.platelets) missing.push("Platelets Count");
+      if (!next.totalBilirubin) missing.push("Total Bilirubin");
+      if (!next.albumin) missing.push("Albumin");
+      if (!next.ggt) missing.push("GGT (Gamma-GT)");
+      if (!next.alp) missing.push("ALP (Alkaline Phosphatase)");
+      if (!next.triglycerides) missing.push("Triglycerides (for FLI)");
+      if (!next.waistCircumference) missing.push("Waist Circumference (for FLI)");
+      if (!next.weight || !next.height) missing.push("Weight & Height (for BMI)");
+      if (!vals.patientName && !patientName) missing.push("Patient Name");
+      if (!vals.patientAge && !next.age) missing.push("Patient Age");
+      setMissingExtractedKeys(missing);
+
+      return next;
+    });
     setIsSaved(false);
     setResults(null);
     setIsVerifiedCheck(false);
@@ -722,6 +745,27 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 Switch Agent ▾
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Glowing Red Notification for Missing / Unfed Parameters from Scan */}
+        {missingExtractedKeys.length > 0 && (
+          <div className="p-3.5 bg-rose-50/95 dark:bg-rose-950/30 border-2 border-rose-400 dark:border-rose-600 rounded-2xl space-y-2.5">
+            <div className="flex items-center gap-1.5 text-xs font-black glow-red-text">
+              <AlertCircle size={15} className="text-rose-600 shrink-0" />
+              <span>Information Missing or Left Unfed from Scanned Report ({missingExtractedKeys.length} items):</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {missingExtractedKeys.map((k, idx) => (
+                <span key={idx} className="glow-red-badge px-2.5 py-1 rounded-xl text-xs font-black flex items-center gap-1.5">
+                  <span>●</span>
+                  <span>{k}</span>
+                </span>
+              ))}
+            </div>
+            <p className="text-xs font-bold text-rose-900 dark:text-rose-200">
+              Please enter these unfed parameters manually below to unlock all clinical scores (<strong className="glow-red-text">FLI</strong>, <strong className="glow-red-text">FIB-4</strong>, <strong className="glow-red-text">APRI</strong>, <strong className="glow-red-text">BARD</strong>, and <strong className="glow-red-text">Metabolic Syndrome</strong>).
+            </p>
           </div>
         )}
 
@@ -1415,7 +1459,17 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                     <p style={{ color: "#000000" }} className="text-xs font-bold leading-relaxed mt-1">{results.fib4Interpretation}</p>
                   </div>
                 ) : (
-                  <p style={{ color: "#000000" }} className="text-xs font-bold">Lock: Platelets and Age needed to trigger FIB-4 calculation.</p>
+                  <div className="space-y-2 pt-1">
+                    <p className="text-xs font-black glow-red-text flex items-center gap-1">
+                      <AlertCircle size={13} className="text-red-600 shrink-0" />
+                      <span>FIB-4 Incomplete. Missing required parameters:</span>
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {!formData.platelets && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Platelets (×10³/µL)</span>}
+                      {!formData.age && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Patient Age</span>}
+                      {(!formData.alt || !formData.ast) && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● ALT / AST Enzymes</span>}
+                    </div>
+                  </div>
                 )}
               </div>
 
@@ -1434,7 +1488,17 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                     <p style={{ color: "#000000" }} className="text-xs font-bold leading-relaxed mt-1">{results.apriInterpretation}</p>
                   </div>
                 ) : (
-                  <p style={{ color: "#000000" }} className="text-xs font-bold">Lock: Platelets and AST ULN limit needed for calculation.</p>
+                  <div className="space-y-2 pt-1">
+                    <p className="text-xs font-black glow-red-text flex items-center gap-1">
+                      <AlertCircle size={13} className="text-red-600 shrink-0" />
+                      <span>APRI Incomplete. Missing required parameters:</span>
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {!formData.platelets && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Platelets (×10³/µL)</span>}
+                      {!formData.astUln && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● AST ULN Reference</span>}
+                      {!formData.ast && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● AST (SGOT)</span>}
+                    </div>
+                  </div>
                 )}
               </div>
 
@@ -1458,7 +1522,16 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                     </div>
                   </div>
                 ) : (
-                  <p style={{ color: "#000000" }} className="text-xs font-bold">Lock: Patient Weight and Height needed for BARD BMI analysis.</p>
+                  <div className="space-y-2 pt-1">
+                    <p className="text-xs font-black glow-red-text flex items-center gap-1">
+                      <AlertCircle size={13} className="text-red-600 shrink-0" />
+                      <span>BARD Incomplete. Missing parameters:</span>
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(!formData.weight || !formData.height) && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Weight & Height (for BMI)</span>}
+                      {(!formData.ast || !formData.alt) && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● AST / ALT Ratio</span>}
+                    </div>
+                  </div>
                 )}
               </div>
 
@@ -1519,14 +1592,21 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                     )}
                   </div>
                 ) : (
-                  <div className="space-y-1.5">
-                    <p style={{ color: "#000000" }} className="text-xs font-bold">
-                      Lock: Requires Triglycerides, GGT, Waist Circumference, and Weight/Height (BMI) to compute Fatty Liver Index.
+                  <div className="space-y-2 pt-1">
+                    <p className="text-xs font-black glow-red-text flex items-center gap-1">
+                      <AlertCircle size={13} className="text-red-600 shrink-0" />
+                      <span>FLI Calculation Incomplete. Missing required parameters:</span>
                     </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {!formData.triglycerides && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Triglycerides (mg/dL)</span>}
+                      {!formData.ggt && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● GGT (U/L)</span>}
+                      {!formData.waistCircumference && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Waist Circumference (cm)</span>}
+                      {(!formData.weight || !formData.height) && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Weight & Height (BMI)</span>}
+                    </div>
                     <button
                       type="button"
                       onClick={() => setMetabolicPanelOpen(true)}
-                      className="text-xs text-indigo-700 font-black hover:underline cursor-pointer flex items-center gap-1"
+                      className="text-xs text-indigo-700 dark:text-indigo-400 font-black hover:underline cursor-pointer flex items-center gap-1 pt-1"
                     >
                       <span>+ Open Metabolic & Anthropometric Panel to enter inputs</span>
                     </button>
@@ -1576,7 +1656,19 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                     </div>
                   </div>
                 ) : (
-                  <p style={{ color: "#000000" }} className="text-xs font-bold">Lock: Fasting Glucose, Lipids, BP, or Waist Circumference needed to compute Metabolic Syndrome criteria.</p>
+                  <div className="space-y-2 pt-1">
+                    <p className="text-xs font-black glow-red-text flex items-center gap-1">
+                      <AlertCircle size={13} className="text-red-600 shrink-0" />
+                      <span>Metabolic Criteria Incomplete. Missing parameters:</span>
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {!formData.fastingBloodGlucose && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Fasting Glucose</span>}
+                      {!formData.triglycerides && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Triglycerides</span>}
+                      {!formData.hdlCholesterol && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● HDL Cholesterol</span>}
+                      {!formData.systolicBp && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Blood Pressure</span>}
+                      {!formData.waistCircumference && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Waist Circumference</span>}
+                    </div>
+                  </div>
                 )}
               </div>
 
@@ -1612,7 +1704,15 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                     </div>
                   </div>
                 ) : (
-                  <p style={{ color: "#000000" }} className="text-xs font-bold">Lock: Urine ACR (Albumin-Creatinine Ratio) measurement required to evaluate kidney disease risk.</p>
+                  <div className="space-y-2 pt-1">
+                    <p className="text-xs font-black glow-red-text flex items-center gap-1">
+                      <AlertCircle size={13} className="text-red-600 shrink-0" />
+                      <span>Kidney Risk Incomplete:</span>
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Urine ACR (mg/g) Not Fed</span>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>

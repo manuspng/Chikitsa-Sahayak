@@ -103,6 +103,7 @@ export default function CbcAnalyzer({ onAddRecord }: CbcAnalyzerProps) {
   const activeProviderName = getProviderDisplayName(selectedProvider);
   const currentProvider = selectedProvider;
   const [aiMeta, setAiMeta] = useState<{ providerUsed?: string; wasFallback?: boolean; modelUsed?: string } | null>(null);
+  const [missingExtractedKeys, setMissingExtractedKeys] = useState<string[]>([]);
 
   // Input refs for Mobile & PC (Upload Report & Camera)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -350,19 +351,36 @@ Please write an expert, professional clinical interpretation of these results. M
     if (vals.patientAge) {
       setPatientAge(vals.patientAge);
     }
-    setFormData(prev => ({
-      ...prev,
-      hemoglobin: vals["Hemoglobin"] !== undefined ? String(vals["Hemoglobin"]) : prev.hemoglobin,
-      hematocrit: vals["Hematocrit"] !== undefined ? String(vals["Hematocrit"]) : prev.hematocrit,
-      rbc: vals["RBC"] !== undefined ? String(vals["RBC"]) : prev.rbc,
-      wbc: vals["WBC"] !== undefined ? String(vals["WBC"]) : prev.wbc,
-      platelets: vals["Platelets"] !== undefined ? String(vals["Platelets"]) : prev.platelets,
-      mcv: vals["MCV"] !== undefined ? String(vals["MCV"]) : prev.mcv,
-      mch: vals["MCH"] !== undefined ? String(vals["MCH"]) : prev.mch,
-      mchc: vals["MCHC"] !== undefined ? String(vals["MCHC"]) : prev.mchc,
-      neutrophils: vals["Neutrophils"] !== undefined ? String(vals["Neutrophils"]) : prev.neutrophils,
-      lymphocytes: vals["Lymphocytes"] !== undefined ? String(vals["Lymphocytes"]) : prev.lymphocytes,
-    }));
+    setFormData(prev => {
+      const next = {
+        ...prev,
+        hemoglobin: vals["Hemoglobin"] !== undefined ? String(vals["Hemoglobin"]) : prev.hemoglobin,
+        hematocrit: vals["Hematocrit"] !== undefined ? String(vals["Hematocrit"]) : prev.hematocrit,
+        rbc: vals["RBC"] !== undefined ? String(vals["RBC"]) : prev.rbc,
+        wbc: vals["WBC"] !== undefined ? String(vals["WBC"]) : prev.wbc,
+        platelets: vals["Platelets"] !== undefined ? String(vals["Platelets"]) : prev.platelets,
+        mcv: vals["MCV"] !== undefined ? String(vals["MCV"]) : prev.mcv,
+        mch: vals["MCH"] !== undefined ? String(vals["MCH"]) : prev.mch,
+        mchc: vals["MCHC"] !== undefined ? String(vals["MCHC"]) : prev.mchc,
+        neutrophils: vals["Neutrophils"] !== undefined ? String(vals["Neutrophils"]) : prev.neutrophils,
+        lymphocytes: vals["Lymphocytes"] !== undefined ? String(vals["Lymphocytes"]) : prev.lymphocytes,
+      };
+
+      const missing: string[] = [];
+      if (!next.hemoglobin) missing.push("Hemoglobin");
+      if (!next.rbc) missing.push("RBC Count");
+      if (!next.wbc) missing.push("WBC Count");
+      if (!next.platelets) missing.push("Platelets");
+      if (!next.mcv) missing.push("MCV (Cell Size)");
+      if (!next.mch) missing.push("MCH");
+      if (!next.mchc) missing.push("MCHC");
+      if (!next.neutrophils) missing.push("Neutrophils % (for NLR)");
+      if (!next.lymphocytes) missing.push("Lymphocytes % (for NLR)");
+      if (!vals.patientName && !patientName) missing.push("Patient Name");
+      setMissingExtractedKeys(missing);
+
+      return next;
+    });
     setIsSaved(false);
     setResults(null);
     setIsVerifiedCheck(false);
@@ -691,6 +709,27 @@ Please write an expert, professional clinical interpretation of these results. M
                 Switch Agent ▾
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Glowing Red Notification for Missing / Unfed Parameters from Scan */}
+        {missingExtractedKeys.length > 0 && (
+          <div className="p-3.5 bg-rose-50/95 dark:bg-rose-950/30 border-2 border-rose-400 dark:border-rose-600 rounded-2xl space-y-2.5">
+            <div className="flex items-center gap-1.5 text-xs font-black glow-red-text">
+              <AlertCircle size={15} className="text-rose-600 shrink-0" />
+              <span>Information Missing or Left Unfed from Scanned CBC Report ({missingExtractedKeys.length} items):</span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {missingExtractedKeys.map((k, idx) => (
+                <span key={idx} className="glow-red-badge px-2.5 py-1 rounded-xl text-xs font-black flex items-center gap-1.5">
+                  <span>●</span>
+                  <span>{k}</span>
+                </span>
+              ))}
+            </div>
+            <p className="text-xs font-bold text-rose-900 dark:text-rose-200">
+              Please enter any remaining CBC metrics manually below to complete full hematological staging and <strong className="glow-red-text">NLR evaluation</strong>.
+            </p>
           </div>
         )}
 
@@ -1196,7 +1235,16 @@ Please write an expert, professional clinical interpretation of these results. M
                     <p style={{ color: "#000000" }} className="text-xs font-bold leading-relaxed mt-1">{results.nlratioInterpretation}</p>
                   </div>
                 ) : (
-                  <p style={{ color: "#000000" }} className="text-xs font-bold">Lock: Neutrophil and Lymphocyte differentials required to calculate NLR.</p>
+                  <div className="space-y-2 pt-1">
+                    <p className="text-xs font-black glow-red-text flex items-center gap-1">
+                      <AlertCircle size={13} className="text-red-600 shrink-0" />
+                      <span>NLR Incomplete. Missing required differentials:</span>
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {!formData.neutrophils && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Neutrophils %</span>}
+                      {!formData.lymphocytes && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Lymphocytes %</span>}
+                    </div>
+                  </div>
                 )}
               </div>
 
