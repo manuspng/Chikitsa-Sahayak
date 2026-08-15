@@ -268,31 +268,47 @@ async function callDirectGeminiAnalyze(prompt: string, apiKey: string, analysisT
   if (analysisType === "lft") systemInstruction = LFT_INSTRUCTION;
   if (analysisType === "cbc") systemInstruction = CBC_INSTRUCTION;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-  const requestPayload = {
-    contents: [{ parts: [{ text: prompt }] }],
-    systemInstruction: { parts: [{ text: systemInstruction }] },
-  };
+  // Free Tier Google Gemini Models in order of stability and quota availability:
+  // 1. gemini-1.5-flash: 1,500 requests/day, 15 RPM (100% Free, most stable)
+  // 2. gemini-1.5-flash-8b: 1,500 requests/day, 15 RPM (100% Free, ultra-fast)
+  // 3. gemini-2.0-flash: 1,500 requests/day, 15 RPM
+  const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-2.0-flash"];
+  let lastError: any = null;
 
-  logGeminiRequest("Direct Gemini Analyze fallback", "https://generativelanguage.googleapis.com/.../generateContent", "gemini-2.5-flash", !!apiKey, requestPayload);
+  for (const model of modelsToTry) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const requestPayload = {
+        contents: [{ parts: [{ text: prompt }] }],
+        systemInstruction: { parts: [{ text: systemInstruction }] },
+      };
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(requestPayload),
-  });
+      logGeminiRequest(`Direct Gemini Analyze (${model})`, `https://generativelanguage.googleapis.com/.../${model}`, model, !!apiKey, requestPayload);
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Gemini direct call error (Status ${response.status}): ${errorText.slice(0, 160)}`);
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestPayload),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Gemini ${model} error (Status ${response.status}): ${errorText.slice(0, 160)}`);
+      }
+
+      const result = await response.json();
+      const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) {
+        throw new Error(`Received empty content from ${model}.`);
+      }
+      return text;
+    } catch (err: any) {
+      lastError = err;
+      console.warn(`[GEMINI ANALYZE] Model ${model} failed, trying fallback:`, err.message);
+    }
   }
 
-  const result = await response.json();
-  const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) {
-    throw new Error("Received empty content from direct Gemini generator.");
-  }
-  return text;
+  throw lastError || new Error("Gemini direct analysis call failed on all available model endpoints.");
 }
 
 function generatePublicInterestClinicalReport(analysisType: string, prompt: string): string {
@@ -357,9 +373,10 @@ export interface AnalysisResponse {
 export function getProviderDisplayName(providerId: string): string {
   const map: Record<string, string> = {
     auto: "Auto (Smart Multi-Agent Cascade)",
-    gemini: "Gemini 2.5 Flash",
-    groq: "Groq (Llama 3.3 70B)",
+    gemini: "Gemini 1.5 Flash (100% Free - 1500 req/day)",
+    groq: "Groq (Llama 3.3 70B - Free High Speed)",
     openrouter: "OpenRouter Multi-Model",
+    local_ocr: "Local Offline OCR (Tesseract - Unlimited & Free)",
     openai: "OpenAI GPT-4o-mini",
     claude: "Claude 3.5 Haiku",
     deepseek: "DeepSeek Chat",
@@ -792,13 +809,20 @@ ${rawOcrText ? `\n\nOCR Pre-scanned text:\n${rawOcrText}` : ""}`;
     };
   }
 
-  const modelsToTry = ["gemini-2.0-flash", "gemini-1.5-flash"];
+  // Google Gemini Free Tier Models:
+  // gemini-1.5-flash: 1,500 requests/day, 15 RPM, 1M context (100% Free, most reliable for multimodal OCR)
+  // gemini-1.5-flash-8b: 1,500 requests/day, 15 RPM, ultra-fast
+  // gemini-2.0-flash: 1,500 requests/day, 15 RPM
+  // gemini-1.5-pro: 50 requests/day
+  const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-2.0-flash", "gemini-1.5-pro"];
   let lastError: any = null;
 
   for (const model of modelsToTry) {
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-      const requestBody = {
+      
+      // Try with structured schema first
+      let requestBody: any = {
         contents: [{
           parts: [
             ...imageParts,
@@ -813,11 +837,32 @@ ${rawOcrText ? `\n\nOCR Pre-scanned text:\n${rawOcrText}` : ""}`;
 
       logGeminiRequest(`Direct Gemini Extract OCR (${model})`, `https://generativelanguage.googleapis.com/.../${model}`, model, !!apiKey, requestBody);
 
-      const response = await fetch(url, {
+      let response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
       });
+
+      // If schema causes a 400 rejection on older endpoints, retry with standard JSON instruction
+      if (!response.ok && response.status === 400) {
+        console.warn(`[GEMINI EXTRACT] Schema rejected on ${model}, retrying in standard JSON mode...`);
+        requestBody = {
+          contents: [{
+            parts: [
+              ...imageParts,
+              { text: `${textPrompt}\n\nIMPORTANT: Respond ONLY with a valid JSON object matching the requested schema. Do not enclose in markdown code blocks.` }
+            ]
+          }],
+          generationConfig: {
+            responseMimeType: "application/json",
+          }
+        };
+        response = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(requestBody),
+        });
+      }
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -841,7 +886,7 @@ ${rawOcrText ? `\n\nOCR Pre-scanned text:\n${rawOcrText}` : ""}`;
       return parsed;
     } catch (err: any) {
       lastError = err;
-      console.warn(`[GEMINI EXTRACT] Model ${model} failed, trying fallback:`, err.message);
+      console.warn(`[GEMINI EXTRACT] Model ${model} failed, trying next fallback:`, err.message);
     }
   }
 
@@ -1092,7 +1137,7 @@ export async function runGeminiExtractReport(
       try {
         const rawValues = await callDirectGeminiExtractocr(imagesBase64, reportType, rawOcrText, geminiKey);
         const calibratedValues = calibrateExtractedReportValues(rawValues, rawOcrText, reportType);
-        return { values: calibratedValues, providerUsed: "gemini", modelUsed: "gemini-2.0-flash", wasFallback: false };
+        return { values: calibratedValues, providerUsed: "gemini", modelUsed: "gemini-1.5-flash", wasFallback: false };
       } catch (err: any) {
         console.warn("Direct Gemini extraction with user key failed:", err.message);
       }
@@ -1111,7 +1156,7 @@ export async function runGeminiExtractReport(
         const data = await response.json();
         if (data && data.values) {
           const calibratedValues = calibrateExtractedReportValues(data.values, rawOcrText, reportType);
-          return { values: calibratedValues, providerUsed: "gemini", modelUsed: "gemini-2.0-flash", wasFallback: false };
+          return { values: calibratedValues, providerUsed: "gemini", modelUsed: "gemini-1.5-flash", wasFallback: false };
         }
       }
     } catch (err) {}
@@ -1119,12 +1164,12 @@ export async function runGeminiExtractReport(
   }
 
   // 5. Cascade Priority (Auto Mode):
-  // Step A: User Gemini Key with Gemini 2.0 Flash
+  // Step A: User Gemini Key with Gemini 1.5 Flash (100% Free - 1,500 req/day)
   if (geminiKey) {
     try {
       const rawValues = await callDirectGeminiExtractocr(imagesBase64, reportType, rawOcrText, geminiKey);
       const calibratedValues = calibrateExtractedReportValues(rawValues, rawOcrText, reportType);
-      return { values: calibratedValues, providerUsed: "gemini", modelUsed: "gemini-2.0-flash", wasFallback: false };
+      return { values: calibratedValues, providerUsed: "gemini", modelUsed: "gemini-1.5-flash", wasFallback: false };
     } catch (err: any) {
       console.warn("[CASCADE] Gemini direct failed, attempting next available agent:", err.message);
     }

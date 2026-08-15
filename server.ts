@@ -712,21 +712,37 @@ Convert the extracted items into a single flat JSON dictionary representing valu
       };
     }
 
-    const response = await activeAi.models.generateContent({
-      model: "gemini-2.0-flash",
-      contents: {
-        parts: [
-          ...imageParts,
-          { text: textPrompt }
-        ]
-      },
-      config: {
-        responseMimeType: "application/json",
-        responseSchema,
-      },
-    });
+    const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-2.0-flash"];
+    let lastError: any = null;
+    let textStr = "{}";
 
-    let textStr = response.text || "{}";
+    for (const model of modelsToTry) {
+      try {
+        const response = await activeAi.models.generateContent({
+          model,
+          contents: {
+            parts: [
+              ...imageParts,
+              { text: textPrompt }
+            ]
+          },
+          config: {
+            responseMimeType: "application/json",
+            responseSchema,
+          },
+        });
+        textStr = response.text || "{}";
+        break;
+      } catch (err: any) {
+        lastError = err;
+        console.warn(`[SERVER OCR] ${model} failed, trying next fallback:`, err.message);
+      }
+    }
+
+    if (textStr === "{}" && lastError) {
+      throw lastError;
+    }
+
     if (textStr.includes("```")) {
       const match = textStr.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
       if (match) {

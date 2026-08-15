@@ -1091,9 +1091,10 @@ export default function App() {
                     className="w-full pl-4 pr-10 py-2.5 bg-slate-50 dark:bg-slate-900/40 border-2 border-slate-300 dark:border-slate-800 rounded-xl text-xs font-black text-slate-950 dark:text-slate-100 outline-none appearance-none cursor-pointer focus:border-emerald-500"
                   >
                     <option value="auto">✨ Auto (Smart Multi-Agent Cascade - Recommended)</option>
-                    <option value="gemini">Gemini Flash (Built-in Support / Zero-Cost)</option>
-                    <option value="groq">Groq Llama 3.3 70B (High-Speed Cloud)</option>
-                    <option value="openrouter">OpenRouter (Unified Multi-Model)</option>
+                    <option value="gemini">✨ Google Gemini 1.5 Flash (100% Free - 1,500 req/day)</option>
+                    <option value="groq">⚡ Groq Llama 3.3 70B (100% Free - High Speed)</option>
+                    <option value="openrouter">🌐 OpenRouter (Universal Multi-Model)</option>
+                    <option value="local_ocr">🔒 Local Offline OCR (Tesseract - Unlimited & Free)</option>
                     <option value="openai">OpenAI GPT-4o-mini (Precision Diagnostics)</option>
                     <option value="claude">Claude 3.5 Haiku (Dense Clinical Detail)</option>
                     <option value="deepseek">DeepSeek Chat (Clinical Reasoning)</option>
@@ -1118,7 +1119,7 @@ export default function App() {
                     <div className="pt-2 border-t border-emerald-200 space-y-1 text-[11px] font-mono font-bold">
                       <div className="text-emerald-900 font-black uppercase text-[10px]">Failover Pipeline Priority:</div>
                       <div className="flex items-center gap-1.5 flex-wrap text-slate-800">
-                        <span className="px-2 py-0.5 rounded bg-white border border-emerald-300 font-bold">1. Gemini Flash</span>
+                        <span className="px-2 py-0.5 rounded bg-white border border-emerald-300 font-bold">1. Gemini 1.5 Flash</span>
                         <span>→</span>
                         <span className={`px-2 py-0.5 rounded border font-bold ${keys.groq ? "bg-emerald-100 text-emerald-950 border-emerald-400 font-black" : "bg-white text-slate-600 border-slate-300"}`}>2. Groq Llama {keys.groq ? "✓" : ""}</span>
                         <span>→</span>
@@ -1139,9 +1140,9 @@ export default function App() {
               ) : (() => {
                 const config: Record<string, { desc: string; url: string; label: string; placeholder: string }> = {
                   gemini: {
-                    desc: "Official Gemini 2.5/3.5 Flash engine for medical report analysis.",
+                    desc: "Google Gemini 1.5 Flash & 1.5 Flash-8B: 100% Free with 1,500 requests/day and 15 RPM from Google AI Studio. No credit card or billing required.",
                     url: "https://aistudio.google.com/apikey",
-                    label: "Gemini AI Studio Portal",
+                    label: "Get Free Gemini API Key (Google AI Studio)",
                     placeholder: "Paste Gemini API Key here (AIzaSy...)"
                   },
                   groq: {
