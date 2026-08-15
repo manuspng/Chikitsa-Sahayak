@@ -33,9 +33,15 @@ export interface LFTResults {
   nafldDescription: string;
   astAltRatio: number;
   astAltInterpretation: string;
-  childPughScore?: number;
-  childPughClass?: string;
-  meldScore?: number;
+  fliScore?: number;
+  fliRisk?: "low" | "intermediate" | "high";
+  fliInterpretation?: string;
+  fliBreakdown?: {
+    bmi: number;
+    waistCircumference: number;
+    triglycerides: number;
+    ggt: number;
+  };
   fib4Score?: number;
   fib4Interpretation?: string;
   fib4Risk?: "low" | "moderate" | "high";

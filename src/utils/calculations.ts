@@ -144,36 +144,51 @@ export function calculateLFT(inputs: LFTInputs): LFTResults {
       : `Score ${bardScore} – Low risk of advanced fibrosis`;
   }
 
-  // 6. Child-Pugh Score
-  let childPughScore: number | undefined;
-  let childPughClass: string | undefined;
-  if (inr !== undefined) {
-    let score = 0;
-    // Total Bilirubin score
-    score += totalBilirubin < 2.0 ? 1 : totalBilirubin <= 3.0 ? 2 : 3;
-    // Albumin score
-    score += albumin > 3.5 ? 1 : albumin >= 2.8 ? 2 : 3;
-    // INR score
-    score += inr < 1.7 ? 1 : inr <= 2.2 ? 2 : 3;
-    // Encephalopathy and Ascites default to None (1 + 1)
-    score += 1; // Ascites: None (+1)
-    score += 1; // Encephalopathy: None (+1)
+  // 6. Fatty Liver Index (FLI) - Bedogni et al., 2006 (EASL/AASLD/INASL Validated)
+  // Required Parameters: Triglycerides (mg/dL), GGT (U/L), Waist Circumference (cm), and BMI (kg/m²)
+  let fliScore: number | undefined;
+  let fliRisk: "low" | "intermediate" | "high" | undefined;
+  let fliInterpretation: string | undefined;
+  let fliBreakdown: { bmi: number; waistCircumference: number; triglycerides: number; ggt: number } | undefined;
 
-    childPughScore = score;
-    childPughClass = score <= 6 ? "Class A (Well compensated, 100% 1yr survival)" : score <= 9 ? "Class B (Significant functional compromise)" : "Class C (Decompensated liver disease)";
-  }
+  const bmiVal = (weight !== undefined && height !== undefined && height > 0)
+    ? weight / ((height / 100) ** 2)
+    : undefined;
 
-  // 7. MELD Score (Model for End-Stage Liver Disease)
-  let meldScore: number | undefined;
-  if (inr !== undefined) {
-    const biliVal = Math.max(totalBilirubin, 1);
-    const inrVal = Math.max(inr, 1);
-    // Creatinine is assumed 1.0 mg/dL if not supplied to keep it within safe assumptions.
-    const creatinineVal = 1.0;
-    // MELD Formula: 3.78 * ln(Bili) + 11.2 * ln(INR) + 9.57 * ln(Creatinine) + 6.43
-    // Standard UNOS MELD score calculation rounded to integer:
-    meldScore = Math.round(3.78 * Math.log(biliVal) + 11.2 * Math.log(inrVal) + 9.57 * Math.log(creatinineVal) + 6.43);
-    meldScore = Math.max(6, Math.min(40, meldScore));
+  if (
+    bmiVal !== undefined &&
+    triglycerides !== undefined &&
+    ggt !== undefined &&
+    waistCircumference !== undefined &&
+    triglycerides > 0 &&
+    ggt > 0 &&
+    waistCircumference > 0 &&
+    bmiVal > 0
+  ) {
+    const lnTG = Math.log(triglycerides);
+    const lnGGT = Math.log(ggt);
+    const y = 0.953 * lnTG + 0.139 * bmiVal + 0.718 * lnGGT + 0.053 * waistCircumference - 15.745;
+    const expY = Math.exp(y);
+    const rawFli = (expY / (1 + expY)) * 100;
+    fliScore = parseFloat(rawFli.toFixed(1));
+
+    if (fliScore < 30) {
+      fliRisk = "low";
+      fliInterpretation = "Low Risk of Hepatic Steatosis (Rule-out fatty liver, NPV ~91%)";
+    } else if (fliScore < 60) {
+      fliRisk = "intermediate";
+      fliInterpretation = "Intermediate / Indeterminate Risk of Hepatic Steatosis (Clinical monitoring advised)";
+    } else {
+      fliRisk = "high";
+      fliInterpretation = "High Risk of Hepatic Steatosis (Rule-in fatty liver, PPV ~84%)";
+    }
+
+    fliBreakdown = {
+      bmi: parseFloat(bmiVal.toFixed(1)),
+      waistCircumference,
+      triglycerides,
+      ggt
+    };
   }
 
   // Fibrosis legacy scores kept for UI compatibility
@@ -190,9 +205,11 @@ export function calculateLFT(inputs: LFTInputs): LFTResults {
   // Construct patient summary string
   const fibPart = fib4Score !== undefined ? `FIB-4: ${fib4Score}` : "";
   const apriPart = apriScore !== undefined ? `APRI: ${apriScore}` : "";
+  const fliPart = fliScore !== undefined ? `FLI: ${fliScore} (${fliRisk?.toUpperCase()})` : "";
   const summary = [
     `NAFLD Risk: ${nafldRisk.toUpperCase()}`,
     `AST/ALT Ratio: ${astAltRatio.toFixed(2)}`,
+    fliPart,
     fibPart,
     apriPart
   ].filter(Boolean).join(" | ");
@@ -327,9 +344,10 @@ export function calculateLFT(inputs: LFTInputs): LFTResults {
     nafldDescription,
     astAltRatio: parseFloat(astAltRatio.toFixed(2)),
     astAltInterpretation,
-    childPughScore,
-    childPughClass,
-    meldScore,
+    fliScore,
+    fliRisk,
+    fliInterpretation,
+    fliBreakdown,
     fib4Score,
     fib4Interpretation,
     fib4Risk,

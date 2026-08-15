@@ -100,41 +100,64 @@ function cleanCandidateName(candidate: string): string | undefined {
   return undefined;
 }
 
-// Extract patient name from text with proximity & gap filtering
+/**
+ * Sanitizes and cleans a patient name string
+ */
+export function sanitizePatientName(name: string): string {
+  if (!name) return "";
+  let cleaned = name.trim();
+
+  // If the extracted name is actually a doctor, hospital, or department label, reject it completely
+  if (/\b(?:dr|doctor|pathologist|pathology|hospital|clinic|center|centre|laboratory|lab|consultant|biochemistry|department|dept|incharge|reported|verified)\b/i.test(cleaned)) {
+    return "";
+  }
+
+  // 1. Separate at large gaps (2+ spaces, tabs, pipes, semicolons)
+  const chunks = cleaned.split(/\s{2,}|\t+|[|;\\/]+/);
+  cleaned = (chunks[0] || "").trim();
+
+  // 2. Normalize letter spacing
+  cleaned = normalizeLetterSpacing(cleaned);
+
+  // 3. Remove metadata suffixes
+  cleaned = cleaned.replace(/\s+(?:male|female|m|f|yr|yrs|years|year|old|adult|pediatric|opd|ipd|uhid|reg|dob|bed|ward)[\w\s:.\-\/]*$/i, "");
+  cleaned = cleaned.replace(/[^A-Za-z.\-\s]/g, " ").replace(/\s+/g, " ").trim();
+
+  if (cleaned.length >= 3 && cleaned.length <= 45) {
+    return cleaned;
+  }
+  return "";
+}
+
+// Extract patient name from text strictly from adjacent tokens without crossing columns or lines
 export function extractPatientName(text: string): string | undefined {
   if (!text) return undefined;
 
-  // 1. Line-by-line targeted search (preserves line layout and wide tab/space gaps)
-  const lines = text.split(/\r?\n/);
-  for (const line of lines) {
-    // Check for "Patient Name:", "Patient:", "Pt Name:", "Name:"
-    const nameLineMatch = line.match(/(?:patient\s+name|patient's\s+name|pt\.?\s*name|patient\s*:|name\s*:)[\s:._]*([^\n\r]+)/i);
-    if (nameLineMatch && nameLineMatch[1]) {
-      const cleaned = cleanCandidateName(nameLineMatch[1]);
-      if (cleaned) return cleaned;
-    }
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
 
-    // Check for Honorifics at line start: "Mr. Rajesh Kumar"
-    const honorificMatch = line.match(/\b(mr\.|ms\.|mrs\.|dr\.|master|miss|shri|smt\.)\s+([A-Za-z]+(?:\s+[A-Za-z]+){1,3})/i);
-    if (honorificMatch) {
-      const cleaned = cleanCandidateName(honorificMatch[0]);
+  // 1. Line-by-line targeted anchor search (highest precision)
+  for (const line of lines) {
+    // Check for "Patient Name:", "Patient's Name:", "Pt Name:", "Patient:", "Name:"
+    // Consume trailing delimiters (:, -, =, ., _) so cleanCandidateName receives only the value
+    const nameLabelMatch = line.match(/(?:patient\s+name|patient's\s+name|pt\.?\s*name|patient|name)[\s:._\-=]+([^\n\r]+)/i);
+    if (nameLabelMatch && nameLabelMatch[1]) {
+      const candidate = nameLabelMatch[1].trim();
+      const cleaned = cleanCandidateName(candidate);
       if (cleaned) return cleaned;
     }
   }
 
-  // 2. Normalized full-text regexes
-  const normalized = normalizeOcrText(text);
-  const nameRegexes = [
-    /(?:patient\s+name|patient\s*:\s*|name\s*:\s*|patient's\s+name|pt\.?\s*name)[\s:._]*([A-Za-z]+(?:\s+[A-Za-z]+){1,3})/i,
-    /(?:mr\.|ms\.|mrs\.|dr\.|shri|smt\.)\s*([A-Za-z]+(?:\s+[A-Za-z]+){1,2})/i,
-    /name\s+([\w\s]+?)(?=\s+(?:age|sex|gender|dob|date|ref|id|uhid|reg))/i
-  ];
-
-  for (const regex of nameRegexes) {
-    const match = normalized.match(regex);
-    if (match && match[1]) {
-      const cleaned = cleanCandidateName(match[1]);
-      if (cleaned) return cleaned;
+  // 2. Honorific search on header lines (first 12 lines only)
+  const headerLines = lines.slice(0, 12);
+  for (const line of headerLines) {
+    // Look for lines starting with or containing "Mr.", "Mrs.", "Ms.", "Miss", "Master", "Shri", "Smt."
+    const honorificMatch = line.match(/\b(mr\.|ms\.|mrs\.|dr\.|master|miss|shri|smt\.)\s+([A-Za-z]+(?:\s+[A-Za-z]+){1,2})/i);
+    if (honorificMatch) {
+      // Ensure this line isn't a doctor reference line
+      if (!/ref(?:erred)?\s*(?:by)?|consultant|pathologist|doctor\s*name|dr\s*incharge/i.test(line)) {
+        const cleaned = cleanCandidateName(honorificMatch[0]);
+        if (cleaned) return cleaned;
+      }
     }
   }
 

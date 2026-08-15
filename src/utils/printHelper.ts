@@ -202,12 +202,11 @@ export function printClinicalReport(record: Partial<AnalysisRecord>) {
       const r = results as any;
       const indices = [
         { name: "NAFLD Score", val: `${r.nafldScore?.toFixed(1) || 0} / 9`, rsk: r.nafldRisk, note: r.nafldDescription || "Hepatic Fat Accumulation Index" },
+        { name: "Fatty Liver Index (FLI)", val: r.fliScore !== undefined ? `${r.fliScore} / 100` : "N/A", rsk: r.fliRisk || "low", note: r.fliInterpretation || "Bedogni et al. EASL Validated Steatosis Probability" },
         { name: "De Ritis Ratio (AST/ALT)", val: r.astAltRatio?.toFixed(2) || "N/A", rsk: "low", note: r.astAltInterpretation || "Liver cell injury differentiation" },
         { name: "FIB-4 Index", val: r.fib4Score?.toFixed(2) || "N/A", rsk: r.fib4Risk || "low", note: r.fib4Interpretation || "Hepatic Fibrosis triage score" },
         { name: "APRI Index (Platelet Ratio)", val: r.apriScore?.toFixed(2) || "N/A", rsk: r.apriRisk || "low", note: r.apriInterpretation || "Aspartate-to-Platelet Index" },
         { name: "BARD Score Index", val: `${r.bardScore || 0} / 4`, rsk: "low", note: r.bardRisk || "Non-alcoholic fatty liver fibrosis probability" },
-        { name: "MELD Staging Index", val: r.meldScore !== undefined ? String(r.meldScore) : "N/A", rsk: "low", note: "Model for End-Stage Liver Disease" },
-        { name: "Child-Pugh Classification", val: r.childPughClass || "N/A", rsk: "low", note: `Vascular congestion staging Class. Core Score: ${r.childPughScore || "N/A"}` },
         { name: "Metabolic Syndrome (NCEP ATP III)", val: r.ncepMetabolicSyndrome ? `${r.ncepMetabolicSyndrome.count}/5` : "N/A", rsk: "low", note: r.ncepMetabolicSyndrome ? r.ncepMetabolicSyndrome.conclusion : "Insufficient parameters provided" },
         { name: "Kidney risk (Urine ACR)", val: r.acrAssessment ? `${r.acrAssessment.value} mg/g` : "N/A", rsk: "low", note: r.acrAssessment ? `${r.acrAssessment.category}: ${r.acrAssessment.clinicalSignificance}` : "No ACR input provided" }
       ];

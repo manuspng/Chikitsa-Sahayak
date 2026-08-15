@@ -47,7 +47,7 @@ export default function ClinicalMonitor({ records, onSetTab }: ClinicalMonitorPr
           </h2>
           <p style={{ color: "#000000" }} className="text-sm leading-relaxed text-justify font-sans max-w-4xl font-bold mt-2">
             Diagnose patient diagnostic data using validated clinical indexes—including 
-            FIB-4, APRI, BARD, MELD, and Child-Pugh class. Ingest reports via 
+            FIB-4, Fatty Liver Index (FLI), APRI, BARD, and NAFLD Fibrosis Score. Ingest reports via 
             Multimodal OCR or Live Camera capture, evaluate abnormalities instantly, and review clear evidence-based clinical guidance.
           </p>
         </div>

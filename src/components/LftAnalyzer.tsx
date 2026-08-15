@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Upload, HelpCircle, Save, FileText, Check, AlertCircle, RefreshCw, Layers, X, Plus, Trash2, Sparkles, Cpu, Camera } from "lucide-react";
 import { LFTInputs, LFTResults, RiskLevel, AnalysisRecord } from "../types";
 import { calculateLFT } from "../utils/calculations";
@@ -118,9 +118,23 @@ export default function LftAnalyzer({ onAddRecord }: LftAnalyzerProps) {
   const [isVerifiedCheck, setIsVerifiedCheck] = useState(false);
   const [metabolicPanelOpen, setMetabolicPanelOpen] = useState(false);
 
-  // Mapped dynamic AI provider translations
-  const currentProvider = localStorage.getItem("selected_ai_provider") || "auto";
-  const activeProviderName = getProviderDisplayName(currentProvider);
+  // Mapped dynamic AI provider translations with reactive event sync
+  const [selectedProvider, setSelectedProvider] = useState<string>(() => localStorage.getItem("selected_ai_provider") || "auto");
+
+  useEffect(() => {
+    const handleProviderUpdate = () => {
+      setSelectedProvider(localStorage.getItem("selected_ai_provider") || "auto");
+    };
+    window.addEventListener("ai-provider-changed", handleProviderUpdate);
+    window.addEventListener("storage", handleProviderUpdate);
+    return () => {
+      window.removeEventListener("ai-provider-changed", handleProviderUpdate);
+      window.removeEventListener("storage", handleProviderUpdate);
+    };
+  }, []);
+
+  const activeProviderName = getProviderDisplayName(selectedProvider);
+  const currentProvider = selectedProvider;
   const [aiMeta, setAiMeta] = useState<{ providerUsed?: string; wasFallback?: boolean; modelUsed?: string } | null>(null);
   
   // Input refs and files queue for Mobile & PC (Upload Report & Camera)
@@ -257,11 +271,10 @@ Patient Urine ACR (Urine Albumin-Creatinine Ratio):
 Calculated Medical Indexes:
 - NAFLD Activity Score: ${calculated.nafldScore}/9 (Risk level: ${calculated.nafldRisk})
 - AST/ALT Ratio (De Ritis): ${calculated.astAltRatio}
+- Fatty Liver Index (FLI): ${calculated.fliScore !== undefined ? `${calculated.fliScore}/100 (${calculated.fliRisk?.toUpperCase()})` : "N/A"} (${calculated.fliInterpretation ?? "N/A"})
 - FIB-4 Score: ${calculated.fib4Score ?? "N/A"} (${calculated.fib4Interpretation ?? "N/A"})
 - APRI Score: ${calculated.apriScore ?? "N/A"} (${calculated.apriInterpretation ?? "N/A"})
 - BARD Risk: ${calculated.bardRisk ?? "N/A"}
-- MELD Score: ${calculated.meldScore ?? "N/A"}
-- Child-Pugh Class: ${calculated.childPughClass ?? "N/A"}
 
 Offline Metabolic & Kidney Assessments:
 - NCEP ATP III Metabolic Syndrome Assessment: ${calculated.ncepMetabolicSyndrome ? calculated.ncepMetabolicSyndrome.conclusion : "Insufficient Data"}
@@ -648,6 +661,38 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
               <span>Clear</span>
             </button>
           </div>
+        </div>
+
+        {/* Live Active AI Agent Selector Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-slate-50 dark:bg-slate-800/80 rounded-xl border-2 border-slate-200 dark:border-slate-700 text-xs">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-black text-slate-800 dark:text-slate-200 flex items-center gap-1">
+              <span>🤖 Active AI Agent:</span>
+            </span>
+            <select
+              value={selectedProvider}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSelectedProvider(val);
+                localStorage.setItem("selected_ai_provider", val);
+                window.dispatchEvent(new CustomEvent("ai-provider-changed", { detail: val }));
+              }}
+              className="bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-600 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-900 dark:text-slate-100 cursor-pointer shadow-xs focus:ring-2 focus:ring-emerald-500"
+            >
+              <option value="auto">⚡ Auto Smart Cascade (Recommended)</option>
+              <option value="gemini">✨ Google Gemini 2.0 Flash</option>
+              <option value="groq">⚡ Groq Llama 3.3 70B (High Speed)</option>
+              <option value="openrouter">🌐 OpenRouter Universal Engine</option>
+              <option value="local_ocr">🔒 Local Offline OCR (Tesseract)</option>
+            </select>
+          </div>
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent("open-ai-provider-modal"))}
+            className="text-[11px] font-bold text-indigo-700 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer"
+          >
+            <span>⚙️ Configure API Keys</span>
+          </button>
         </div>
 
         {/* Extraction Engine Attribution Banner */}
@@ -1417,26 +1462,75 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 )}
               </div>
 
-              {/* Child-Pugh Card */}
-              <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 p-5 space-y-2">
-                <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block">Child-Pugh Staging & MELD</span>
-                {results.childPughScore !== undefined ? (
-                  <div className="space-y-2">
-                    <div>
-                      <div style={{ color: "#000000" }} className="text-base font-black">Child-Pugh Grade: <span className="text-indigo-700 font-mono">{results.childPughClass}</span></div>
-                      <p style={{ color: "#000000" }} className="text-xs font-black font-mono mt-0.5">Calculated Score: {results.childPughScore}/15</p>
+              {/* Fatty Liver Index (FLI) Card */}
+              <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 p-5 space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block">
+                    Fatty Liver Index (FLI)
+                  </span>
+                  <span className="text-[10px] font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200">
+                    Bedogni et al. (EASL)
+                  </span>
+                </div>
+
+                {results.fliScore !== undefined ? (
+                  <div className="space-y-2.5">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-2xl font-black font-mono text-slate-900">
+                          {results.fliScore}
+                        </span>
+                        <span className="text-xs font-bold text-slate-500 font-mono">/ 100</span>
+                      </div>
+                      <span className={`px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wider ${
+                        results.fliRisk === "low"
+                          ? "bg-emerald-100 text-emerald-900 border border-emerald-300"
+                          : results.fliRisk === "intermediate"
+                          ? "bg-amber-100 text-amber-900 border border-amber-300"
+                          : "bg-rose-100 text-rose-900 border border-rose-300"
+                      }`}>
+                        {results.fliRisk === "low" ? "Low Risk (< 30)" : results.fliRisk === "intermediate" ? "Intermediate (30-59)" : "High Risk (≥ 60)"}
+                      </span>
                     </div>
-                    {results.meldScore !== undefined && (
-                      <div className="pt-2 border-t border-slate-200">
-                        <div style={{ color: "#000000" }} className="text-sm font-black">
-                          MELD Staging: <span className="text-red-600 font-mono font-black">{results.meldScore}</span>
+
+                    <p style={{ color: "#000000" }} className="text-xs font-bold leading-relaxed">
+                      {results.fliInterpretation}
+                    </p>
+
+                    {results.fliBreakdown && (
+                      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200 text-[11px]">
+                        <div className="bg-slate-50 p-1.5 rounded border border-slate-200">
+                          <span className="text-slate-500 font-medium block">BMI</span>
+                          <strong className="text-slate-900 font-mono">{results.fliBreakdown.bmi} kg/m²</strong>
                         </div>
-                        <p style={{ color: "#000000" }} className="text-xs font-bold">Predicted clinical 90-day mortality risk stratification.</p>
+                        <div className="bg-slate-50 p-1.5 rounded border border-slate-200">
+                          <span className="text-slate-500 font-medium block">Waist Circ.</span>
+                          <strong className="text-slate-900 font-mono">{results.fliBreakdown.waistCircumference} cm</strong>
+                        </div>
+                        <div className="bg-slate-50 p-1.5 rounded border border-slate-200">
+                          <span className="text-slate-500 font-medium block">Triglycerides</span>
+                          <strong className="text-slate-900 font-mono">{results.fliBreakdown.triglycerides} mg/dL</strong>
+                        </div>
+                        <div className="bg-slate-50 p-1.5 rounded border border-slate-200">
+                          <span className="text-slate-500 font-medium block">GGT</span>
+                          <strong className="text-slate-900 font-mono">{results.fliBreakdown.ggt} U/L</strong>
+                        </div>
                       </div>
                     )}
                   </div>
                 ) : (
-                  <p style={{ color: "#000000" }} className="text-xs font-bold">Lock: INR input required to compute Child-Pugh and MELD scales.</p>
+                  <div className="space-y-1.5">
+                    <p style={{ color: "#000000" }} className="text-xs font-bold">
+                      Lock: Requires Triglycerides, GGT, Waist Circumference, and Weight/Height (BMI) to compute Fatty Liver Index.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setMetabolicPanelOpen(true)}
+                      className="text-xs text-indigo-700 font-black hover:underline cursor-pointer flex items-center gap-1"
+                    >
+                      <span>+ Open Metabolic & Anthropometric Panel to enter inputs</span>
+                    </button>
+                  </div>
                 )}
               </div>
 

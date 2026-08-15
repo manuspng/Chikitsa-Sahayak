@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Upload, Save, Check, AlertCircle, RefreshCw, Layers, FileText, X, Plus, Trash2, Sparkles, Cpu, ShieldCheck, Camera } from "lucide-react";
 import { MetabolicInputs, MetabolicResults, AnalysisRecord } from "../types";
 import { calculateMetabolic } from "../utils/calculations";
@@ -63,9 +63,23 @@ export default function MetabolicAnalyzer({ onAddRecord }: MetabolicAnalyzerProp
   const [currentRecordId, setCurrentRecordId] = useState<string | null>(null);
   const [isVerifiedCheck, setIsVerifiedCheck] = useState(false);
 
-  // Mapped dynamic AI provider translations
-  const currentProvider = localStorage.getItem("selected_ai_provider") || "auto";
-  const activeProviderName = getProviderDisplayName(currentProvider);
+  // Mapped dynamic AI provider translations with reactive event sync
+  const [selectedProvider, setSelectedProvider] = useState<string>(() => localStorage.getItem("selected_ai_provider") || "auto");
+
+  useEffect(() => {
+    const handleProviderUpdate = () => {
+      setSelectedProvider(localStorage.getItem("selected_ai_provider") || "auto");
+    };
+    window.addEventListener("ai-provider-changed", handleProviderUpdate);
+    window.addEventListener("storage", handleProviderUpdate);
+    return () => {
+      window.removeEventListener("ai-provider-changed", handleProviderUpdate);
+      window.removeEventListener("storage", handleProviderUpdate);
+    };
+  }, []);
+
+  const activeProviderName = getProviderDisplayName(selectedProvider);
+  const currentProvider = selectedProvider;
   const [aiMeta, setAiMeta] = useState<{ providerUsed?: string; wasFallback?: boolean; modelUsed?: string } | null>(null);
 
   // Input refs for Mobile & PC (Upload Report & Camera)
@@ -556,6 +570,38 @@ OFFLINE CRITERIA SYNTHESIS:
               <span>Clear</span>
             </button>
           </div>
+        </div>
+
+        {/* Live Active AI Agent Selector Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-slate-50 dark:bg-slate-800/80 rounded-xl border-2 border-slate-200 dark:border-slate-700 text-xs">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-black text-slate-800 dark:text-slate-200 flex items-center gap-1">
+              <span>🤖 Active AI Agent:</span>
+            </span>
+            <select
+              value={selectedProvider}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSelectedProvider(val);
+                localStorage.setItem("selected_ai_provider", val);
+                window.dispatchEvent(new CustomEvent("ai-provider-changed", { detail: val }));
+              }}
+              className="bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-600 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-900 dark:text-slate-100 cursor-pointer shadow-xs focus:ring-2 focus:ring-emerald-500"
+            >
+              <option value="auto">⚡ Auto Smart Cascade (Recommended)</option>
+              <option value="gemini">✨ Google Gemini 2.0 Flash</option>
+              <option value="groq">⚡ Groq Llama 3.3 70B (High Speed)</option>
+              <option value="openrouter">🌐 OpenRouter Universal Engine</option>
+              <option value="local_ocr">🔒 Local Offline OCR (Tesseract)</option>
+            </select>
+          </div>
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent("open-ai-provider-modal"))}
+            className="text-[11px] font-bold text-indigo-700 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer"
+          >
+            <span>⚙️ Configure API Keys</span>
+          </button>
         </div>
 
         {/* Extraction Engine Attribution Banner */}

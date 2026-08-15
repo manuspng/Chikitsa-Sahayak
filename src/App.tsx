@@ -13,9 +13,8 @@ import logoImg from "./assets/images/regenerated_image_1779900749774.jpg";
 // Clinical terminology & diagnostic helper references for search
 const MEDICAL_DICTIONARY = [
   { id: "fib4", term: "FIB-4 Index (Fibrosis-4)", category: "Clinical Index", definition: "A non-invasive index used to estimate liver scarring (fibrosis) in patients with NAFLD, HCV, or HBV. Calculated using Age, AST, ALT, and Platelet count, with a high negative predictive value to rule out advanced fibrosis." },
+  { id: "fli", term: "FLI (Fatty Liver Index)", category: "Clinical Index", definition: "A validated, non-invasive algorithm (Bedogni et al., 2006; EASL-EASD-EASO recommended) for predicting hepatic steatosis in adult patients. Calculated using Triglycerides, GGT, Waist Circumference, and BMI (<30 rule-out steatosis, ≥60 rule-in steatosis)." },
   { id: "apri", term: "APRI (AST-to-Platelet Ratio Index)", category: "Clinical Index", definition: "A simple, cost-effective score to evaluate advanced fibrosis and cirrhosis in chronic hepatitis. Calculated as [AST / AST Upper Limit of Normal] / [Platelet Count] * 100." },
-  { id: "meld", term: "MELD Score (Model for End-Stage Liver Disease)", category: "Prognostic Index", definition: "A scoring system from 6 to 40 used to assess the severity of chronic liver disease and prioritize organ allocation for transplantation. Calculated using Serum Creatinine, Bilirubin, INR, and Sodium." },
-  { id: "child_pugh", term: "Child-Pugh Classification", category: "Prognostic Index", definition: "A system to assess the prognosis of chronic liver disease, primarily cirrhosis. Scores are grouped into Classes A, B, and C based on 5 clinical and biochemical measures: Bilirubin, Albumin, INR, Ascites, and Hepatic Encephalopathy." },
   { id: "bard", term: "BARD Score", category: "NAFLD Staging", definition: "A non-invasive clinical prediction score for advanced fibrosis in Non-Alcoholic Fatty Liver Disease (NAFLD). Assigns weighted points to BMI (>= 28 is +1), AST/ALT Ratio (>=0.8 is +2), and Type 2 Diabetes (+1)." },
   { id: "ast", term: "AST (Aspartate Aminotransferase)", category: "Biomarker", definition: "An enzyme found mainly in liver and heart cells. Used to screen, diagnose, and monitor liver damage in collaboration with ALT and other biomarkers." },
   { id: "alt", term: "ALT (Alanine Aminotransferase)", category: "Biomarker", definition: "An enzyme found primarily in the liver. It is a highly specific marker of hepatocyte injury; elevated ALT levels indicate active liver cell damage." },
@@ -137,10 +136,9 @@ export default function App() {
       `- **Explore Numeric Patient Data**: Comprehensive exploration of quantitative biological metrics, CBC parameters, liver panel trends, and renal clearances.\n` +
       `- **Camp Screening & Logistics Details**: Optimized module supporting non-profit rural health camps and mass checkups.\n` +
       `- **FIB-4 Index**: Derived from age, AST, ALT, and platelet count to help screen for liver fibrosis.\n` +
+      `- **Fatty Liver Index (FLI)**: Validated algorithm (Bedogni et al., 2006) predicting hepatic steatosis risk using BMI, Waist, GGT, and Triglycerides.\n` +
       `- **APRI Score**: AST-to-Platelet Ratio Index, providing a basic, clear calculation tool for hepatic scarring assessments.\n` +
       `- **BARD Score**: A prediction score weighting BMI, AST/ALT ratio, and type 2 diabetes status to assess fibrotic risks.\n` +
-      `- **MELD Score**: Used to evaluate chronic liver disease severity based on objective lab indicators.\n` +
-      `- **Child-Pugh Classification**: Prognosis grading grid evaluating bilirubin, albumin, INR, ascites, and encephalopathy.\n` +
       `- **Metabolic Syndrome Risk Assessment**: Quick reference tracking cardiometabolic and fatty liver disease risk factors.\n` +
       `- **BMI Calculator**: A standard mass tracker matching physiological indicators.\n` +
       `- **CBC Interpretation Support**: Assist the translation of blood parameters and platelet thresholds.\n` +
@@ -168,7 +166,7 @@ export default function App() {
       `## Core Features to Carry Over\n` +
       `1. **Explore Patient Data**: Unified grids of blood panels, renal clearings, CBC differentials, and liver profiles.\n` +
       `2. **Camp Screening Suite**: Rural health camp trackers and aggregated statistics.\n` +
-      `3. **Calculator Reference**: FIB-4, APRI, BARD, MELD, Child-Pugh, BMI, ACR, and Metabolic risk models.\n` +
+      `3. **Calculator Reference**: FIB-4, FLI (Fatty Liver Index), APRI, BARD, BMI, ACR, and Metabolic risk models.\n` +
       `4. **Secure Customization**: Super Admin role validation via passcode "admin123" for lockable customization parameters (e.g. logo, publication toggles).\n` +
       `5. **AI Report Copilot**: Direct Gemini Integration for supportive reports, with fallback selectors for custom API engines (Groq, OpenRouter).\n` +
       `\`\`\``;
@@ -439,7 +437,7 @@ export default function App() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search index criteria, laboratory biomarkers (AST, ALT, Bilirubin, MELD) or client files..."
+                placeholder="Search index criteria, laboratory biomarkers (AST, ALT, Bilirubin, FLI, FIB-4) or client files..."
                 className="w-full bg-slate-50 border border-slate-300 focus:border-emerald-600 rounded-xl px-4 py-2.5 text-xs text-slate-900 placeholder-slate-500 outline-none transition-all font-medium"
                 autoFocus
               />
@@ -560,10 +558,10 @@ export default function App() {
                 <p className="text-xs text-slate-700 font-semibold pb-1.5">Begin typing above to perform unified clinical dictionary and diagnostic history search.</p>
                 <div className="flex flex-wrap items-center justify-center gap-1.5">
                   <span className="text-[10px] bg-slate-200 border border-slate-300 px-2 py-0.5 rounded text-slate-800 font-bold">FIB-4</span>
-                  <span className="text-[10px] bg-slate-200 border border-slate-300 px-2 py-0.5 rounded text-slate-800 font-bold">MELD</span>
+                  <span className="text-[10px] bg-slate-200 border border-slate-300 px-2 py-0.5 rounded text-slate-800 font-bold">FLI (Fatty Liver)</span>
                   <span className="text-[10px] bg-slate-200 border border-slate-300 px-2 py-0.5 rounded text-slate-800 font-bold">ALT</span>
                   <span className="text-[10px] bg-slate-200 border border-slate-300 px-2 py-0.5 rounded text-slate-800 font-bold">Platelets</span>
-                  <span className="text-[10px] bg-slate-200 border border-slate-300 px-2 py-0.5 rounded text-slate-800 font-bold">Child-Pugh</span>
+                  <span className="text-[10px] bg-slate-200 border border-slate-300 px-2 py-0.5 rounded text-slate-800 font-bold">NAFLD Score</span>
                 </div>
               </div>
             )}
@@ -914,16 +912,9 @@ export default function App() {
                     </div>
 
                     <div className="bg-slate-100 dark:bg-slate-800 p-3.5 rounded-xl border-2 border-slate-300 dark:border-slate-600 shadow-xs">
-                      <span className="text-xs font-black text-slate-950 dark:text-white block">MELD Score</span>
+                      <span className="text-xs font-black text-slate-950 dark:text-white block">Fatty Liver Index (FLI)</span>
                       <span className="text-xs text-slate-900 dark:text-slate-100 block mt-1 leading-normal font-bold">
-                        A score system used to evaluate the severity of chronic liver disease based on objective laboratory indicators.
-                      </span>
-                    </div>
-
-                    <div className="bg-slate-100 dark:bg-slate-800 p-3.5 rounded-xl border-2 border-slate-300 dark:border-slate-600 shadow-xs">
-                      <span className="text-xs font-black text-slate-950 dark:text-white block">Child-Pugh Classification</span>
-                      <span className="text-xs text-slate-900 dark:text-slate-100 block mt-1 leading-normal font-bold">
-                        A prognosis grading grid evaluating bilirubin, albumin, INR, ascites, and hepatic encephalopathy severity.
+                        A validated non-invasive scoring model (Bedogni et al., 2006) predicting hepatic steatosis in adults with NAFLD/MASLD from BMI, waist, GGT, and triglycerides.
                       </span>
                     </div>
 

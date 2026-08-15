@@ -49,6 +49,11 @@ function sanitizePatientName(name: any): string | undefined {
   if (typeof name !== "string" || !name) return undefined;
   let clean = name.trim();
   
+  // If the extracted name is actually a doctor, hospital, or department label, reject it completely
+  if (/\b(?:dr|doctor|pathologist|pathology|hospital|clinic|center|centre|laboratory|lab|consultant|biochemistry|department|dept|incharge|reported|verified)\b/i.test(clean)) {
+    return undefined;
+  }
+
   // 1. Separate at large gaps (2+ spaces, tabs, pipes, semicolons) - ignore distant column words
   const chunks = clean.split(/\s{2,}|\t+|[|;\\/]+/);
   if (chunks.length > 0 && chunks[0].trim().length >= 2) {
@@ -284,33 +289,29 @@ Otherwise output:
 
 “Insufficient Data for NAFLD Fibrosis Score”
 
-MELD SCORE
+FATTY LIVER INDEX (FLI)
 
 Calculate ONLY if:
 
-* Bilirubin available
-* INR available
-* Creatinine available
+* Triglycerides (mg/dL) available
+* GGT (U/L) available
+* Waist Circumference (cm) available
+* BMI (kg/m²) or Weight (kg) & Height (cm) available
+
+Formula (Bedogni et al., 2006):
+FLI = (e^y / (1 + e^y)) * 100
+where y = 0.953*ln(TG) + 0.139*BMI + 0.718*ln(GGT) + 0.053*WC - 15.745
+
+Interpret as:
+- < 30: Rule out steatosis (Low risk, NPV 91%)
+- 30 to 59: Intermediate risk
+- >= 60: Rule in steatosis (High risk, PPV 84%)
 
 Otherwise output:
 
-“Insufficient Data for MELD Calculation”
+“Insufficient Data for Fatty Liver Index (FLI) Calculation”
 
 Never estimate missing values.
-
-CHILD-PUGH CLASSIFICATION
-
-Calculate ONLY if:
-
-* Bilirubin available
-* Albumin available
-* INR/PT available
-* Ascites status available
-* Encephalopathy status available
-
-Otherwise output:
-
-“Insufficient Data for Child-Pugh Classification”
 
 PROHIBITED BEHAVIOR
 
@@ -318,12 +319,10 @@ Never:
 
 * Invent INR
 * Invent platelet count
-* Invent creatinine
+* Invent triglycerides or GGT
 * Invent diabetes status
 * Invent fibrosis stage
-* Invent cirrhosis stage
-* Invent MELD score
-* Invent Child-Pugh class
+* Invent FLI score
 * Invent APRI
 * Invent FIB-4
 
@@ -662,6 +661,8 @@ Convert the extracted items into a single flat JSON dictionary representing valu
           "Total Protein": { type: Type.NUMBER, description: "Total Protein in g/dL" },
           INR: { type: Type.NUMBER, description: "International Normalized Ratio (INR)" },
           Platelets: { type: Type.NUMBER, description: "Platelet count inside 10^3/uL or 10^9/L" },
+          triglycerides: { type: Type.NUMBER, description: "Triglycerides in mg/dL (if present)" },
+          waistCircumference: { type: Type.NUMBER, description: "Waist Circumference in cm (if present)" },
         },
       };
     } else if (reportType === "metabolic") {

@@ -3,7 +3,7 @@
  * Detects if the backend is unavailable/unresponsive (standard on static hosts like Vercel)
  * and falls back to browser-direct API calls using user-configured API keys.
  */
-import { parseLftReport, parseCbcReport, parseMetabolicReport } from "./labReportParser";
+import { parseLftReport, parseCbcReport, parseMetabolicReport, extractPatientName, extractPatientAge, extractPatientGender } from "./labReportParser";
 
 // Indian unit rules and guidelines
 const INDIAN_UNITS_PROMPT = `You are interpreting laboratory reports for users in India.
@@ -36,7 +36,7 @@ Return a clear, patient-friendly interpretation while preserving the original la
 
 const DEFAULT_INSTRUCTION = "You are a professional consultant clinical hepatologist/physician performing high-fidelity diagnostic decision support. Write a highly analytical, objective clinical assessment covering patient risks, indices, and clear lifestyle & follow-up pathways. Avoid generic summaries; write precise parameters-based guidance. " + INDIAN_UNITS_PROMPT;
 
-const LFT_INSTRUCTION = `You are CHIKTSA SAHAYAK, an evidence-based clinical decision-support system.
+const LFT_INSTRUCTION = `You are CHIKTSA SAHAYAK, an evidence-based clinical decision-support system specialized in adult outpatient hepatology and NAFLD/MASLD risk stratification.
 
 Your purpose is to analyze laboratory reports and generate structured clinical interpretation reports. You must prioritize accuracy, transparency, traceability, and patient safety over completeness.
 
@@ -112,11 +112,14 @@ DE RITIS RATIO
 Formula: AST ÷ ALT
 R FACTOR
 Formula: (ALT / ALT_ULN) ÷ (ALP / ALP_ULN)
+FATTY LIVER INDEX (FLI)
+Formula (Bedogni et al., 2006): Derived from Triglycerides, GGT, Waist Circumference, and BMI.
+Cutoffs: <30 (Rule-out steatosis, NPV 91%), 30-59 (Intermediate risk), ≥60 (Rule-in steatosis, PPV 84%).
 FIB-4 INDEX
+Formula: (Age × AST) ÷ (Platelets × √ALT)
 APRI INDEX
+Formula: ((AST / AST_ULN) × 100) ÷ Platelets
 NAFLD FIBROSIS SCORE
-MELD SCORE
-CHILD-PUGH CLASSIFICATION
 
 LIVER INJURY PATTERN ANALYSIS
 Classify as: Hepatocellular, Cholestatic, or Mixed.
@@ -131,7 +134,7 @@ FINAL REPORT FORMAT
 1. OCR Safety Notice
 2. Extracted Laboratory Values
 3. Source Consistency Check
-4. Calculated Scores
+4. Calculated Scores (De Ritis, FLI, FIB-4, APRI, NAFLD Fibrosis Score)
 5. Liver Injury Pattern Analysis
 6. Clinical Correlations
 7. Missing Data Assessment
@@ -168,6 +171,11 @@ This report is intended solely for clinical decision-support and educational pur
 export function sanitizePatientName(name: any): string | undefined {
   if (typeof name !== "string" || !name) return undefined;
   let clean = name.trim();
+
+  // If the extracted name is actually a doctor, hospital, or department label, reject it completely
+  if (/\b(?:dr|doctor|pathologist|pathology|hospital|clinic|center|centre|laboratory|lab|consultant|biochemistry|department|dept|incharge|reported|verified)\b/i.test(clean)) {
+    return undefined;
+  }
 
   // 1. Separate at large gaps (2+ spaces, tabs, pipes, semicolons) - ignore distant column words
   const chunks = clean.split(/\s{2,}|\t+|[|;\\/]+/);
@@ -704,6 +712,8 @@ ${rawOcrText ? `\n\nOCR Pre-scanned text for verification:\n${rawOcrText}` : ""}
         "Total Protein": { type: "NUMBER" },
         INR: { type: "NUMBER" },
         Platelets: { type: "NUMBER" },
+        triglycerides: { type: "NUMBER", description: "Serum Triglycerides in mg/dL (if present)" },
+        waistCircumference: { type: "NUMBER", description: "Waist Circumference in cm (if present)" },
       },
     };
   } else if (reportType === "metabolic") {
@@ -947,6 +957,74 @@ async function callDirectOpenRouterExtract(
 }
 
 /**
+ * Post-processes and calibrates extracted AI results against high-confidence local OCR anchors.
+ * Calibrates:
+ * 1. Patient Name: If AI hallucinated a doctor name or clinical term, replace with OCR anchor name.
+ * 2. Patient Age / DOB: If AI produced a 4-digit birth year (e.g. 1982) as age, calculate 2026 - 1982 = 44.
+ * 3. Range Disambiguation: Ensure reasonable biological ranges.
+ */
+export function calibrateExtractedReportValues(
+  aiValues: any,
+  rawOcrText?: string,
+  reportType?: "lft" | "cbc" | "metabolic"
+): any {
+  if (!aiValues) return aiValues;
+  const calibrated = { ...aiValues };
+  const currentYear = new Date().getFullYear();
+
+  // 1. Age & DOB Calibration
+  if (calibrated.patientAge !== undefined && calibrated.patientAge !== null) {
+    const rawAge = Number(calibrated.patientAge);
+    if (!isNaN(rawAge)) {
+      if (rawAge >= 1900 && rawAge <= currentYear) {
+        // Model returned birth year instead of calculated age
+        calibrated.patientAge = currentYear - rawAge;
+      } else if (rawAge < 0 || rawAge > 120) {
+        delete calibrated.patientAge;
+      } else {
+        calibrated.patientAge = Math.round(rawAge);
+      }
+    } else {
+      delete calibrated.patientAge;
+    }
+  }
+
+  // If age is missing or was invalid, attempt calculation from DOB in raw OCR text:
+  if (calibrated.patientAge === undefined && rawOcrText) {
+    const ocrAge = extractPatientAge(rawOcrText);
+    if (ocrAge) {
+      calibrated.patientAge = parseInt(ocrAge);
+    }
+  }
+
+  // 2. Patient Name Calibration
+  if (calibrated.patientName) {
+    calibrated.patientName = sanitizePatientName(calibrated.patientName);
+  }
+
+  // If AI name is missing or empty, use high-precision local OCR anchor name:
+  if (!calibrated.patientName && rawOcrText) {
+    const ocrName = extractPatientName(rawOcrText);
+    if (ocrName) {
+      calibrated.patientName = ocrName;
+    }
+  }
+
+  // 3. Gender Calibration
+  if (calibrated.patientGender) {
+    const g = String(calibrated.patientGender).toLowerCase().trim();
+    if (g === "m" || g === "male") calibrated.patientGender = "male";
+    else if (g === "f" || g === "female") calibrated.patientGender = "female";
+    else delete calibrated.patientGender;
+  }
+  if (!calibrated.patientGender && rawOcrText) {
+    calibrated.patientGender = extractPatientGender(rawOcrText);
+  }
+
+  return calibrated;
+}
+
+/**
  * Robust Multi-Agent Report Extractor
  * Supports Gemini Multimodal Vision, Groq Llama 3.3, OpenRouter, and Local OCR Fallback.
  * Guaranteed never to return mock or hardcoded fake dummy numbers!
@@ -960,48 +1038,99 @@ export async function runGeminiExtractReport(
   const geminiKey = localStorage.getItem("user_gemini_api_key") || "";
   const groqKey = localStorage.getItem("user_groq_api_key") || "";
   const openrouterKey = localStorage.getItem("user_openrouter_api_key") || "";
-  const openaiKey = localStorage.getItem("user_openai_api_key") || "";
 
-  // 1. If explicit provider is chosen (not auto), attempt that provider directly
-  if (selectedProvider === "gemini" && geminiKey) {
-    try {
-      const values = await callDirectGeminiExtractocr(imagesBase64, reportType, rawOcrText, geminiKey);
-      return { values, providerUsed: "gemini", modelUsed: "gemini-2.0-flash", wasFallback: false };
-    } catch (err: any) {
-      console.warn("Direct Gemini extraction failed:", err.message);
-    }
+  // 1. Direct Local Offline Engine (if chosen explicitly)
+  if (selectedProvider === "local_ocr" && rawOcrText) {
+    let localParsed: any = {};
+    if (reportType === "lft") localParsed = parseLftReport(rawOcrText);
+    else if (reportType === "cbc") localParsed = parseCbcReport(rawOcrText);
+    else if (reportType === "metabolic") localParsed = parseMetabolicReport(rawOcrText);
+
+    return {
+      values: localParsed,
+      providerUsed: "local_ocr",
+      modelUsed: "Tesseract OCR + Local Clinical Parser",
+      wasFallback: false
+    };
   }
 
-  if (selectedProvider === "groq" && groqKey && rawOcrText) {
+  // 2. Direct Groq AI Agent (if chosen explicitly)
+  if (selectedProvider === "groq") {
+    if (!groqKey) {
+      throw new Error("Groq AI Agent selected, but no Groq API Key is configured. Please click 'Switch ⚙️' and paste your free Groq API Key (from console.groq.com).");
+    }
+    if (!rawOcrText || rawOcrText.trim().length < 5) {
+      throw new Error("Groq text extraction requires readable text from report images. Please ensure image is well-lit.");
+    }
     try {
-      const values = await callDirectGroqExtract(rawOcrText, reportType, groqKey);
-      return { values, providerUsed: "groq", modelUsed: "llama-3.3-70b-versatile", wasFallback: false };
+      const rawValues = await callDirectGroqExtract(rawOcrText, reportType, groqKey);
+      const calibratedValues = calibrateExtractedReportValues(rawValues, rawOcrText, reportType);
+      return { values: calibratedValues, providerUsed: "groq", modelUsed: "llama-3.3-70b-versatile", wasFallback: false };
     } catch (err: any) {
       console.warn("Direct Groq extraction failed:", err.message);
+      throw new Error(`Groq AI Agent extraction failed: ${err.message}`);
     }
   }
 
-  if (selectedProvider === "openrouter" && openrouterKey) {
+  // 3. Direct OpenRouter Agent (if chosen explicitly)
+  if (selectedProvider === "openrouter") {
+    if (!openrouterKey) {
+      throw new Error("OpenRouter Agent selected, but no OpenRouter API Key is configured. Please click 'Switch ⚙️' and configure your key.");
+    }
     try {
-      const values = await callDirectOpenRouterExtract(imagesBase64, rawOcrText || "", reportType, openrouterKey);
-      return { values, providerUsed: "openrouter", modelUsed: "google/gemini-2.0-flash-001", wasFallback: false };
+      const rawValues = await callDirectOpenRouterExtract(imagesBase64, rawOcrText || "", reportType, openrouterKey);
+      const calibratedValues = calibrateExtractedReportValues(rawValues, rawOcrText, reportType);
+      return { values: calibratedValues, providerUsed: "openrouter", modelUsed: "google/gemini-2.0-flash-001", wasFallback: false };
     } catch (err: any) {
-      console.warn("Direct OpenRouter extraction failed:", err.message);
+      throw new Error(`OpenRouter extraction failed: ${err.message}`);
     }
   }
 
-  // 2. Cascade Priority (Auto Mode):
-  // Step A: Try user's Gemini Key with Gemini 2.0 Flash
+  // 4. Direct Gemini Agent (if chosen explicitly)
+  if (selectedProvider === "gemini") {
+    if (geminiKey) {
+      try {
+        const rawValues = await callDirectGeminiExtractocr(imagesBase64, reportType, rawOcrText, geminiKey);
+        const calibratedValues = calibrateExtractedReportValues(rawValues, rawOcrText, reportType);
+        return { values: calibratedValues, providerUsed: "gemini", modelUsed: "gemini-2.0-flash", wasFallback: false };
+      } catch (err: any) {
+        console.warn("Direct Gemini extraction with user key failed:", err.message);
+      }
+    }
+    // Try backend endpoint if user key was missing or failed
+    try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (geminiKey) headers["x-user-gemini-api-key"] = geminiKey;
+      const targetUrl = getAbsoluteUrl("/api/gemini/extract-report");
+      const response = await fetch(targetUrl, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ imagesBase64, reportType }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.values) {
+          const calibratedValues = calibrateExtractedReportValues(data.values, rawOcrText, reportType);
+          return { values: calibratedValues, providerUsed: "gemini", modelUsed: "gemini-2.0-flash", wasFallback: false };
+        }
+      }
+    } catch (err) {}
+    throw new Error("Google Gemini extraction failed. Please configure your free Gemini API Key in Provider Settings.");
+  }
+
+  // 5. Cascade Priority (Auto Mode):
+  // Step A: User Gemini Key with Gemini 2.0 Flash
   if (geminiKey) {
     try {
-      const values = await callDirectGeminiExtractocr(imagesBase64, reportType, rawOcrText, geminiKey);
-      return { values, providerUsed: "gemini", modelUsed: "gemini-2.0-flash", wasFallback: false };
+      const rawValues = await callDirectGeminiExtractocr(imagesBase64, reportType, rawOcrText, geminiKey);
+      const calibratedValues = calibrateExtractedReportValues(rawValues, rawOcrText, reportType);
+      return { values: calibratedValues, providerUsed: "gemini", modelUsed: "gemini-2.0-flash", wasFallback: false };
     } catch (err: any) {
-      console.warn("[CASCADE] Gemini failed, attempting next available agent:", err.message);
+      console.warn("[CASCADE] Gemini direct failed, attempting next available agent:", err.message);
     }
   }
 
-  // Step B: Try backend server endpoint
+  // Step B: Backend server endpoint
   try {
     const headers: Record<string, string> = { "Content-Type": "application/json" };
     if (geminiKey) headers["x-user-gemini-api-key"] = geminiKey;
@@ -1019,28 +1148,31 @@ export async function runGeminiExtractReport(
     if (response.ok && contentType.includes("json")) {
       const data = await response.json();
       if (data && data.values) {
-        return { values: data.values, providerUsed: "backend", modelUsed: "gemini-2.0-flash", wasFallback: false };
+        const calibratedValues = calibrateExtractedReportValues(data.values, rawOcrText, reportType);
+        return { values: calibratedValues, providerUsed: "backend", modelUsed: "gemini-2.0-flash", wasFallback: false };
       }
     }
   } catch (err) {
     console.warn("[CASCADE] Backend /api/gemini/extract-report unreachable, continuing cascade.");
   }
 
-  // Step C: Try user's Groq Key with Llama 3.3 70B
+  // Step C: Groq Key with Llama 3.3 70B
   if (groqKey && rawOcrText && rawOcrText.trim().length > 10) {
     try {
-      const values = await callDirectGroqExtract(rawOcrText, reportType, groqKey);
-      return { values, providerUsed: "groq", modelUsed: "llama-3.3-70b-versatile", wasFallback: true };
+      const rawValues = await callDirectGroqExtract(rawOcrText, reportType, groqKey);
+      const calibratedValues = calibrateExtractedReportValues(rawValues, rawOcrText, reportType);
+      return { values: calibratedValues, providerUsed: "groq", modelUsed: "llama-3.3-70b-versatile", wasFallback: true };
     } catch (err: any) {
       console.warn("[CASCADE] Groq extraction failed:", err.message);
     }
   }
 
-  // Step D: Try user's OpenRouter Key
+  // Step D: OpenRouter Key
   if (openrouterKey && rawOcrText && rawOcrText.trim().length > 10) {
     try {
-      const values = await callDirectOpenRouterExtract(imagesBase64, rawOcrText, reportType, openrouterKey);
-      return { values, providerUsed: "openrouter", modelUsed: "gemini-2.0-flash-001", wasFallback: true };
+      const rawValues = await callDirectOpenRouterExtract(imagesBase64, rawOcrText, reportType, openrouterKey);
+      const calibratedValues = calibrateExtractedReportValues(rawValues, rawOcrText, reportType);
+      return { values: calibratedValues, providerUsed: "openrouter", modelUsed: "gemini-2.0-flash-001", wasFallback: true };
     } catch (err: any) {
       console.warn("[CASCADE] OpenRouter extraction failed:", err.message);
     }
@@ -1064,7 +1196,6 @@ export async function runGeminiExtractReport(
     }
   }
 
-  // If no values could be extracted, throw a clear actionable error instead of returning fake mock data
   throw new Error("Unable to extract quantitative clinical parameters. Please ensure image is well-lit and clear, or configure a free Google Gemini or Groq API Key in AI Provider Settings for enhanced recognition.");
 }
 
