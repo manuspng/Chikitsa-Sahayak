@@ -69,7 +69,7 @@ function sanitizePatientName(name: any): string | undefined {
 
   // 4. Strip out trailing metadata, dates, or keywords
   const cutoffKeywords = [
-    /\b(?:age|sex|gender|dob|d\.o\.b|date|ref\s+by|ref:|doctor|uhid|pid|reg|ipd|opd|bill|sample|collected|reported|barcode|hospital|clinic|lab|pathology|biochemistry|department)\b/i,
+    /\b(?:accession(?:\s*id|\s*no)?|acc(?:\s*no|\s*id)?|mrn|cr(?:\s*no)?|uhid|pid|uid|sid|visit(?:\s*no|\s*id)?|case(?:\s*no|\s*id)?|specimen(?:\s*id|\s*no)?|encounter|patient\s*id|reg(?:\s*no)?|id|age|sex|gender|dob|d\.o\.b|date|ref(?:\s*by)?|dr\.|doctor|bed|ward|bill|sample|collected|received|reported|verified|status|barcode|phone|mob|hospital|clinic|lab|test|investigation|page|department)\b/i,
     /[:=]/
   ];
   for (const marker of cutoffKeywords) {
@@ -79,13 +79,24 @@ function sanitizePatientName(name: any): string | undefined {
     }
   }
 
-  // 5. Remove numbers and unwanted special symbols
+  // 5. Handle "Last, First" format
+  const commaNameMatch = clean.match(/^([A-Za-z.\-]+)\s*,\s*([A-Za-z.\-]+(?:\s+[A-Za-z.\-]+)?)$/);
+  if (commaNameMatch) {
+    clean = `${commaNameMatch[2]} ${commaNameMatch[1]}`;
+  }
+
+  // 6. Remove numbers and unwanted special symbols
   clean = clean.replace(/[^A-Za-z.\-\s]/g, " ").replace(/\s+/g, " ").trim();
 
-  // 6. Split into words and eliminate pure non-name noise
+  // 7. Split into words and eliminate pure non-name noise
   const forbiddenTerms = new Set([
-    "patient", "name", "pt", "reference", "range", "result", "normal",
-    "clinical", "report", "hospital", "lab", "page", "biochemistry", "pathology"
+    "patient", "name", "pt", "mr", "mrs", "ms", "dr", "doctor", "reference", "range", 
+    "result", "normal", "date", "clinical", "report", "hospital", "lab", "page", 
+    "male", "female", "years", "year", "biochemistry", "pathology", "haematology", 
+    "test", "profile", "specimen", "blood", "serum", "plasma", "accession", "acc",
+    "id", "no", "mrn", "crno", "uhid", "pid", "uid", "sid", "visit", "case", "reg",
+    "regno", "sample", "panel", "comprehensive", "metabolic", "hepatic", "vitals",
+    "provided", "intake", "alcohol", "center", "centre", "diagnostic", "community"
   ]);
 
   const words = clean.split(/\s+/).filter(w => w.length > 0 && !forbiddenTerms.has(w.toLowerCase()));

@@ -39,7 +39,7 @@ function cleanCandidateName(candidate: string): string | undefined {
 
   // 2. Cut off at standard medical/report delimiter keywords before column breaks
   const cutoffMarkers = [
-    /\b(?:age|sex|gender|dob|d\.o\.b|date|ref|dr\.|doctor|uhid|pid|reg|ipd|opd|bed|ward|bill|sample|collected|received|reported|barcode|phone|mob|hospital|clinic|lab|test|investigation|page)\b/i,
+    /\b(?:accession(?:\s*id|\s*no)?|acc(?:\s*no|\s*id)?|mrn|cr(?:\s*no)?|uhid|pid|uid|sid|visit(?:\s*no|\s*id)?|case(?:\s*no|\s*id)?|specimen(?:\s*id|\s*no)?|encounter|patient\s*id|reg(?:\s*no)?|id|age|sex|gender|dob|d\.o\.b|date|ref(?:\s*by)?|dr\.|doctor|bed|ward|bill|sample|collected|received|reported|verified|status|barcode|phone|mob|hospital|clinic|lab|test|investigation|page|department)\b/i,
     /[:=]/
   ];
 
@@ -50,17 +50,23 @@ function cleanCandidateName(candidate: string): string | undefined {
     }
   }
 
-  // 3. Separate at large gaps (3+ spaces, tabs, pipes, semicolons) - ignore distant column spillover!
-  const chunks = normalized.split(/\s{3,}|\t+|[|;\\/]+/);
+  // 3. Separate at table gaps (2+ spaces, tabs, pipes, semicolons) - ignore distant column spillover!
+  const chunks = normalized.split(/\s{2,}|\t+|[|;\\/]+/);
   let firstChunk = (chunks[0] || "").trim();
   if (!firstChunk && chunks.length > 1) {
     firstChunk = chunks[1].trim();
   }
 
-  // 4. Remove unwanted symbols and numbers
+  // 4. Handle "Last, First" or "Surname, GivenName" format: e.g. "Kumar, Ramesh" -> "Ramesh Kumar"
+  const commaNameMatch = firstChunk.match(/^([A-Za-z.\-]+)\s*,\s*([A-Za-z.\-]+(?:\s+[A-Za-z.\-]+)?)$/);
+  if (commaNameMatch) {
+    firstChunk = `${commaNameMatch[2]} ${commaNameMatch[1]}`;
+  }
+
+  // 5. Remove unwanted symbols and numbers
   firstChunk = firstChunk.replace(/[^A-Za-z.\-\s]/g, " ").replace(/\s+/g, " ").trim();
 
-  // 5. Extract words and filter
+  // 6. Extract words and filter
   const words = firstChunk.split(/\s+/).filter(w => w.length > 0);
   if (words.length === 0) return undefined;
 
@@ -69,7 +75,10 @@ function cleanCandidateName(candidate: string): string | undefined {
     "patient", "name", "pt", "mr", "mrs", "ms", "dr", "doctor", "reference", "range", 
     "result", "normal", "date", "clinical", "report", "hospital", "lab", "page", 
     "male", "female", "years", "year", "biochemistry", "pathology", "haematology", 
-    "test", "profile", "specimen", "blood", "serum", "plasma"
+    "test", "profile", "specimen", "blood", "serum", "plasma", "accession", "acc",
+    "id", "no", "mrn", "crno", "uhid", "pid", "uid", "sid", "visit", "case", "reg",
+    "regno", "sample", "panel", "comprehensive", "metabolic", "hepatic", "vitals",
+    "provided", "intake", "alcohol", "center", "centre", "diagnostic", "community"
   ]);
 
   const validWords: string[] = [];
@@ -107,11 +116,6 @@ export function sanitizePatientName(name: string): string {
   if (!name) return "";
   let cleaned = name.trim();
 
-  // If the extracted name is actually a doctor, hospital, or department label, reject it completely
-  if (/\b(?:dr|doctor|pathologist|pathology|hospital|clinic|center|centre|laboratory|lab|consultant|biochemistry|department|dept|incharge|reported|verified)\b/i.test(cleaned)) {
-    return "";
-  }
-
   // 1. Separate at large gaps (2+ spaces, tabs, pipes, semicolons)
   const chunks = cleaned.split(/\s{2,}|\t+|[|;\\/]+/);
   cleaned = (chunks[0] || "").trim();
@@ -119,12 +123,47 @@ export function sanitizePatientName(name: string): string {
   // 2. Normalize letter spacing
   cleaned = normalizeLetterSpacing(cleaned);
 
-  // 3. Remove metadata suffixes
-  cleaned = cleaned.replace(/\s+(?:male|female|m|f|yr|yrs|years|year|old|adult|pediatric|opd|ipd|uhid|reg|dob|bed|ward)[\w\s:.\-\/]*$/i, "");
+  // 3. Cut off at standard medical/report delimiter keywords
+  const cutoffMarkers = [
+    /\b(?:accession(?:\s*id|\s*no)?|acc(?:\s*no|\s*id)?|mrn|cr(?:\s*no)?|uhid|pid|uid|sid|visit(?:\s*no|\s*id)?|case(?:\s*no|\s*id)?|specimen(?:\s*id|\s*no)?|encounter|patient\s*id|reg(?:\s*no)?|id|age|sex|gender|dob|d\.o\.b|date|ref(?:\s*by)?|dr\.|doctor|bed|ward|bill|sample|collected|received|reported|verified|status|barcode|phone|mob|hospital|clinic|lab|test|investigation|page|department)\b/i,
+    /[:=]/
+  ];
+
+  for (const marker of cutoffMarkers) {
+    const match = cleaned.search(marker);
+    if (match !== -1) {
+      cleaned = cleaned.substring(0, match).trim();
+    }
+  }
+
+  // 4. Handle "Last, First" format
+  const commaNameMatch = cleaned.match(/^([A-Za-z.\-]+)\s*,\s*([A-Za-z.\-]+(?:\s+[A-Za-z.\-]+)?)$/);
+  if (commaNameMatch) {
+    cleaned = `${commaNameMatch[2]} ${commaNameMatch[1]}`;
+  }
+
   cleaned = cleaned.replace(/[^A-Za-z.\-\s]/g, " ").replace(/\s+/g, " ").trim();
 
-  if (cleaned.length >= 3 && cleaned.length <= 45) {
-    return cleaned;
+  const words = cleaned.split(/\s+/).filter(w => w.length > 0);
+  if (words.length === 0) return "";
+
+  const forbiddenTerms = new Set([
+    "patient", "name", "pt", "mr", "mrs", "ms", "dr", "doctor", "reference", "range", 
+    "result", "normal", "date", "clinical", "report", "hospital", "lab", "page", 
+    "male", "female", "years", "year", "biochemistry", "pathology", "haematology", 
+    "test", "profile", "specimen", "blood", "serum", "plasma", "accession", "acc",
+    "id", "no", "mrn", "crno", "uhid", "pid", "uid", "sid", "visit", "case", "reg",
+    "regno", "sample", "panel", "comprehensive", "metabolic", "hepatic", "vitals",
+    "provided", "intake", "alcohol", "center", "centre", "diagnostic", "community"
+  ]);
+
+  const validWords = words.filter(w => !forbiddenTerms.has(w.toLowerCase()));
+  const nonTitleWords = validWords.filter(w => !/^(mr|mrs|ms|miss|master|dr)\.?$/i.test(w));
+  if (nonTitleWords.length === 0) return "";
+
+  const finalName = validWords.slice(0, 4).join(" ");
+  if (finalName.length >= 3 && finalName.length <= 45) {
+    return finalName;
   }
   return "";
 }
