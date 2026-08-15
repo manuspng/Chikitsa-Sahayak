@@ -48,17 +48,17 @@ export default function MetricCard({
   const normalWidth = range > 0 ? ((maxNormal - minNormal) / range) * 100 : 50;
 
   return (
-    <div style={{ backgroundColor: "#ffffff" }} className="p-6 rounded-[20px] border-2 border-slate-300 shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-300">
+    <div className="p-6 rounded-[20px] border-2 border-slate-300 shadow-sm flex flex-col justify-between hover:shadow-md transition-all duration-300">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs block mb-1 uppercase tracking-wider">
+          <span className="card-title font-mono font-black text-xs block mb-1 uppercase tracking-wider">
             {label}
           </span>
           <div className="flex items-baseline gap-1 mt-1">
-            <span style={{ color: "#000000" }} className="text-3xl font-black font-mono tracking-tight">
+            <span className="text-3xl font-black font-mono tracking-tight">
               {value}
             </span>
-            <span style={{ color: "#000000" }} className="text-xs font-bold font-sans">{unit}</span>
+            <span className="text-xs font-bold font-sans">{unit}</span>
           </div>
         </div>
         <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border tracking-wide uppercase ${badgeColor}`}>
@@ -84,7 +84,7 @@ export default function MetricCard({
         </div>
 
         {/* Labels */}
-        <div style={{ color: "#000000" }} className="flex justify-between items-center text-xs font-mono mt-2 font-black">
+        <div className="flex justify-between items-center text-xs font-mono mt-2 font-black">
           <span>Ref Min: {minNormal}</span>
           <span className="text-emerald-800 font-black uppercase tracking-wider text-[9px]">Normal limits</span>
           <span>Ref Max: {maxNormal}</span>
@@ -92,7 +92,7 @@ export default function MetricCard({
       </div>
 
       {description && (
-        <span style={{ color: "#000000" }} className="text-xs leading-relaxed mt-3 block font-bold">
+        <span className="text-xs leading-relaxed mt-3 block font-bold">
           {description}
         </span>
       )}

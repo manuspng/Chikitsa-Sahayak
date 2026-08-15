@@ -16,8 +16,8 @@
   }
 
   .bento-card {
-    background-color: #ffffff !important;
-    border: 2px solid #cbd5e1 !important;
+    background-color: #ffffff;
+    border: 2px solid #cbd5e1;
     border-radius: 16px;
     padding: 24px;
     display: flex;
@@ -26,10 +26,10 @@
   }
 
   .card-title {
-    color: #000000 !important;
+    color: #1e293b;
     font-family: var(--font-mono);
     font-size: 13px;
-    font-weight: 900;
+    font-weight: 800;
     margin-bottom: 12px;
     text-transform: uppercase;
     letter-spacing: 0.1em;

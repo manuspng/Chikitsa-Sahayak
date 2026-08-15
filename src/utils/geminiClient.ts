@@ -342,7 +342,7 @@ All laboratory metrics below have been parsed from source data. Please verify ag
 #### 2. Validated Non-Invasive Clinical Scores
 * **FIB-4 Index**: Non-invasive assessment for hepatic fibrosis risk based on age, enzymes, and platelet count.
 * **APRI Index**: AST to Platelet Ratio Index evaluated for significant fibrosis/cirrhosis screening.
-* **MELD & Child-Pugh Class**: Severity index evaluated when bilirubin, INR, and creatinine are provided.
+* **Fatty Liver Index (FLI) & BARD Score**: Steatosis probability and non-invasive liver assessment evaluated from triglycerides, GGT, BMI, and waist circumference.
 
 #### 3. Metabolic & Systemic Risk Correlations
 * **Metabolic Syndrome Assessment (NCEP ATP III)**: Evaluates blood glucose, triglycerides, HDL cholesterol, blood pressure, and waist circumference.

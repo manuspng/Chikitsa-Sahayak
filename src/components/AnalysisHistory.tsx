@@ -45,7 +45,7 @@ export default function AnalysisHistory({ records, onDeleteRecord, onClearAll }:
   return (
     <div className="space-y-6">
       {/* Filters workspace */}
-      <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 flex flex-col md:flex-row gap-4 items-center justify-between p-5">
+      <div className="bento-card border-2 border-slate-300 flex flex-col md:flex-row gap-4 items-center justify-between p-5">
         <div className="relative w-full md:w-80">
           <span className="absolute left-3 top-2.5 text-slate-700">
             <Search size={16} />
@@ -60,7 +60,7 @@ export default function AnalysisHistory({ records, onDeleteRecord, onClearAll }:
         </div>
 
         <div className="flex gap-2 w-full md:w-auto items-center flex-wrap">
-          <span style={{ color: "#000000" }} className="text-xs font-black hidden sm:inline">Filter index:</span>
+          <span className="text-xs font-black hidden sm:inline">Filter index:</span>
           <div className="flex gap-1 bg-slate-100 p-1 rounded-xl border-2 border-slate-300">
             {["all", "lft", "cbc", "bmi", "metabolic"].map(t => (
               <button
@@ -91,13 +91,13 @@ export default function AnalysisHistory({ records, onDeleteRecord, onClearAll }:
 
       {/* List items */}
       {filteredRecords.length === 0 ? (
-        <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 text-center space-y-3 p-12">
+        <div className="bento-card border-2 border-slate-300 text-center space-y-3 p-12">
           <div className="mx-auto w-12 h-12 rounded-2xl bg-slate-100 text-slate-700 flex items-center justify-center border border-slate-200">
             <FileText size={24} />
           </div>
           <div>
-            <h3 style={{ color: "#000000" }} className="text-sm font-black">No Screening History</h3>
-            <p style={{ color: "#000000" }} className="text-xs font-bold mt-1 max-w-sm mx-auto">
+            <h3 className="text-sm font-black">No Screening History</h3>
+            <p className="text-xs font-bold mt-1 max-w-sm mx-auto">
               You haven't saved any diagnostic screening logs yet. Perform calculations inside panels and save them to view reports.
             </p>
           </div>
@@ -109,7 +109,6 @@ export default function AnalysisHistory({ records, onDeleteRecord, onClearAll }:
             return (
               <div 
                 key={r.id}
-                style={{ backgroundColor: "#ffffff" }}
                 className="bento-card border-2 border-slate-300 overflow-hidden transition-all duration-300 p-0 shadow-sm"
               >
                 {/* Header item */}
@@ -122,8 +121,8 @@ export default function AnalysisHistory({ records, onDeleteRecord, onClearAll }:
                       <FileText size={18} className="text-slate-800" />
                     </div>
                     <div>
-                      <h4 style={{ color: "#000000" }} className="text-sm font-black">{r.title}</h4>
-                      <div style={{ color: "#000000" }} className="flex items-center gap-2 text-xs font-mono mt-0.5 font-bold">
+                      <h4 className="text-sm font-black">{r.title}</h4>
+                      <div className="flex items-center gap-2 text-xs font-mono mt-0.5 font-bold">
                         <Calendar size={11} className="text-slate-800" />
                         <span>{new Date(r.date).toLocaleString()}</span>
                         <span>•</span>
@@ -157,12 +156,12 @@ export default function AnalysisHistory({ records, onDeleteRecord, onClearAll }:
                   <div className="p-5 border-t-2 border-slate-200 bg-slate-50 space-y-5">
                     {/* Input values checklist */}
                     <div>
-                      <h5 style={{ color: "#000000" }} className="text-xs font-black tracking-wider uppercase mb-2">Ingested biological ranges</h5>
+                      <h5 className="text-xs font-black tracking-wider uppercase mb-2">Ingested biological ranges</h5>
                       <div className="flex flex-wrap gap-2">
                         {Object.entries(r.inputs).map(([k, v]) => (
-                          <div key={k} style={{ backgroundColor: "#ffffff" }} className="px-3 py-1 border-2 border-slate-300 rounded-lg text-xs flex items-center gap-1">
-                            <span style={{ color: "#000000" }} className="font-bold">{k.toUpperCase()}:</span>
-                            <span style={{ color: "#000000" }} className="font-black font-mono">
+                          <div key={k} className="px-3 py-1 border-2 border-slate-300 rounded-lg text-xs flex items-center gap-1">
+                            <span className="font-bold">{k.toUpperCase()}:</span>
+                            <span className="font-black font-mono">
                               {typeof v === "boolean" ? (v ? "Yes" : "No") : v}
                             </span>
                           </div>
@@ -173,7 +172,7 @@ export default function AnalysisHistory({ records, onDeleteRecord, onClearAll }:
                     {/* Score summary panel */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Calculated scores */}
-                      <div style={{ backgroundColor: "#ffffff" }} className="p-4 border-2 border-slate-300 rounded-xl space-y-2">
+                      <div className="p-4 border-2 border-slate-300 rounded-xl space-y-2">
                         <span style={{ color: "#4338ca" }} className="text-xs font-black uppercase block">Assessment Calculations</span>
                         <div className="space-y-1.5 pt-1">
                           {Object.entries(r.results)
@@ -181,8 +180,8 @@ export default function AnalysisHistory({ records, onDeleteRecord, onClearAll }:
                             .slice(0, 6)
                             .map(([k, v]) => (
                               <div key={k} className="flex justify-between text-xs border-b border-dashed border-slate-200 last:border-0 pb-1 last:pb-0">
-                                <span style={{ color: "#000000" }} className="font-bold capitalize">{k.replace(/([A-Z])/g, " $1")}</span>
-                                <span style={{ color: "#000000" }} className="font-black font-mono">
+                                <span className="font-bold capitalize">{k.replace(/([A-Z])/g, " $1")}</span>
+                                <span className="font-black font-mono">
                                   {typeof v === "object" ? JSON.stringify(v) : String(v)}
                                 </span>
                               </div>
@@ -191,10 +190,10 @@ export default function AnalysisHistory({ records, onDeleteRecord, onClearAll }:
                       </div>
 
                       {/* Diagnostic outcomes summary */}
-                      <div style={{ backgroundColor: "#ffffff" }} className="p-4 border-2 border-slate-300 rounded-xl flex flex-col justify-between">
+                      <div className="p-4 border-2 border-slate-300 rounded-xl flex flex-col justify-between">
                         <div>
                           <span style={{ color: "#065f46" }} className="text-xs font-black uppercase block">Diagnostic Prognosis</span>
-                          <p style={{ color: "#000000" }} className="text-xs mt-2 leading-relaxed font-bold">
+                          <p className="text-xs mt-2 leading-relaxed font-bold">
                             {r.type === "lft" && (r.results as any).nafldDescription}
                             {r.type === "cbc" && (r.results as any).overallStatus}
                             {r.type === "bmi" && (r.results as any).metabolicRisk}
@@ -215,9 +214,9 @@ export default function AnalysisHistory({ records, onDeleteRecord, onClearAll }:
 
                     {/* Gemini advice */}
                     {r.aiInsight && (
-                      <div style={{ backgroundColor: "#ffffff" }} className="p-4 border-2 border-slate-300 rounded-xl space-y-2">
+                      <div className="p-4 border-2 border-slate-300 rounded-xl space-y-2">
                         <span style={{ color: "#065f46" }} className="text-xs font-black tracking-wider uppercase block">Saved Clinical Diagnosis</span>
-                        <p style={{ color: "#000000" }} className="text-xs leading-relaxed font-medium whitespace-pre-wrap max-h-48 overflow-y-auto pr-1">
+                        <p className="text-xs leading-relaxed font-medium whitespace-pre-wrap max-h-48 overflow-y-auto pr-1">
                           {r.aiInsight}
                         </p>
                       </div>

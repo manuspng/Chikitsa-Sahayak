@@ -155,15 +155,15 @@ export default function LftAnalyzer({ onAddRecord }: LftAnalyzerProps) {
   const isFieldMissing = (val: any) => (extractMeta !== null || missingExtractedKeys.length > 0) && (val === undefined || val === null || val === "");
   const getInputClass = (val: any, extraPadding = "pr-12") => {
     if (isFieldMissing(val)) {
-      return `w-full bg-red-50/40 dark:bg-red-950/20 border-2 border-red-500 dark:border-red-500 rounded-xl px-3 py-2 text-sm text-slate-950 dark:text-slate-100 font-black ${extraPadding} font-mono focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all`;
+      return `w-full bg-rose-50/60 border-2 border-rose-500 rounded-xl px-3 py-2 text-sm text-slate-900 font-bold ${extraPadding} font-mono focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all shadow-xs`;
     }
-    return `w-full bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-950 dark:text-slate-100 font-black ${extraPadding} font-mono focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all`;
+    return `w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 font-bold ${extraPadding} font-mono focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all shadow-xs`;
   };
   const getNameClass = (val: any) => {
     if (isFieldMissing(val)) {
-      return "w-full bg-red-50/40 dark:bg-red-950/20 border-2 border-red-500 dark:border-red-500 rounded-xl px-3 py-2 text-sm text-slate-950 dark:text-slate-100 font-bold placeholder-red-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all h-[42px]";
+      return "w-full bg-rose-50/60 border-2 border-rose-500 rounded-xl px-3 py-2 text-sm text-slate-900 font-bold placeholder-rose-400 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all h-[42px] shadow-xs";
     }
-    return "w-full bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-950 dark:text-slate-100 font-bold placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all h-[42px]";
+    return "w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 font-bold placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all h-[42px] shadow-xs";
   };
 
   const handleInputChange = (key: string, value: string | boolean) => {
@@ -663,11 +663,11 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
       <div className="p-4 bg-white dark:bg-slate-900/80 border-2 border-slate-300 dark:border-slate-700 rounded-2xl shadow-xs space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
           <div>
-            <h4 style={{ color: "#000000" }} className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 dark:text-white">
+            <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 dark:text-white">
               <Upload size={14} className="text-emerald-700 dark:text-emerald-400" />
               <span>Feed / Scan Report (Photo or PDF)</span>
             </h4>
-            <p style={{ color: "#000000" }} className="text-[11px] font-bold mt-0.5 dark:text-slate-200">
+            <p className="text-[11px] font-bold mt-0.5 dark:text-slate-200">
               Upload your lab report or prescription for automated parameter recognition
             </p>
           </div>
@@ -957,19 +957,19 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
           )}
 
       {/* Manual Input Workspace */}
-      <form onSubmit={handleCalculate} style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 space-y-6">
+      <form onSubmit={handleCalculate} className="bento-card border-2 border-slate-300 space-y-6">
         <div>
-          <h3 style={{ color: "#000000" }} className="text-base font-black uppercase tracking-wider flex items-center gap-2 font-sans mb-1">
+          <h3 className="text-base font-black uppercase tracking-wider flex items-center gap-2 font-sans mb-1">
             <span className="w-1.5 h-4.5 bg-emerald-600 rounded-full shrink-0" />
             <span>Patient & Analytical Core Parameters</span>
           </h3>
-          <p style={{ color: "#000000" }} className="text-xs font-bold">Incorporate patient demographics and clinical parameters evaluated during full liver screening cycles.</p>
+          <p className="text-xs font-bold">Incorporate patient demographics and clinical parameters evaluated during full liver screening cycles.</p>
         </div>
 
         {/* Patient Demographics Registration Profile */}
         <div className="p-4 bg-slate-50 rounded-2xl border-2 border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-1.5">
-            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Full Name</label>
+            <label className="text-xs font-black tracking-wide block">Patient Full Name</label>
             <input 
               type="text" 
               placeholder="e.g. Robert Chen"
@@ -983,7 +983,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
           </div>
 
           <div className="space-y-1.5">
-            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Gender / Sex</label>
+            <label className="text-xs font-black tracking-wide block">Patient Gender / Sex</label>
             <select
               value={patientGender}
               onChange={e => setPatientGender(e.target.value as "male" | "female")}
@@ -995,7 +995,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
           </div>
 
           <div className="space-y-1.5">
-            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Age</label>
+            <label className="text-xs font-black tracking-wide block">Patient Age</label>
             <div className="relative">
               <input 
                 type="number" 
@@ -1004,18 +1004,18 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 onChange={e => handleInputChange("age", e.target.value)}
                 className={getInputClass(formData.age, "pr-12")} 
               />
-              <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">Years</span>
+              <span className="absolute right-3 top-2.5 text-xs font-black">Years</span>
             </div>
           </div>
         </div>
 
         <div>
-          <h3 style={{ color: "#000000" }} className="text-xs font-black uppercase tracking-wide">Biological Core Markers</h3>
+          <h3 className="text-xs font-black uppercase tracking-wide">Biological Core Markers</h3>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <div className="space-y-1.5">
-            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">ALT / SGPT <span className="text-red-500">*</span></label>
+            <label className="text-xs font-black tracking-wide block">ALT / SGPT <span className="text-red-500">*</span></label>
             <div className="relative">
               <input 
                 type="number" 
@@ -1026,12 +1026,12 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 onChange={e => handleInputChange("alt", e.target.value)}
                 className={getInputClass(formData.alt, "pr-12")} 
               />
-              <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">U/L</span>
+              <span className="absolute right-3 top-2.5 text-xs font-black">U/L</span>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">AST / SGOT <span className="text-red-500">*</span></label>
+            <label className="text-xs font-black tracking-wide block">AST / SGOT <span className="text-red-500">*</span></label>
             <div className="relative">
               <input 
                 type="number" 
@@ -1042,12 +1042,12 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 onChange={e => handleInputChange("ast", e.target.value)}
                 className={getInputClass(formData.ast, "pr-12")} 
               />
-              <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">U/L</span>
+              <span className="absolute right-3 top-2.5 text-xs font-black">U/L</span>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Total Bilirubin <span className="text-red-500">*</span></label>
+            <label className="text-xs font-black tracking-wide block">Total Bilirubin <span className="text-red-500">*</span></label>
             <div className="relative">
               <input 
                 type="number" 
@@ -1058,12 +1058,12 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 onChange={e => handleInputChange("totalBilirubin", e.target.value)}
                 className={getInputClass(formData.totalBilirubin, "pr-14")} 
               />
-              <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
+              <span className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Albumin <span className="text-red-500">*</span></label>
+            <label className="text-xs font-black tracking-wide block">Albumin <span className="text-red-500">*</span></label>
             <div className="relative">
               <input 
                 type="number" 
@@ -1074,17 +1074,17 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 onChange={e => handleInputChange("albumin", e.target.value)}
                 className={getInputClass(formData.albumin, "pr-12")} 
               />
-              <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">g/dL</span>
+              <span className="absolute right-3 top-2.5 text-xs font-black">g/dL</span>
             </div>
           </div>
         </div>
 
         <div className="border-t border-slate-200 pt-6">
-          <h4 style={{ color: "#000000" }} className="text-xs font-black uppercase tracking-wide mb-4">Additional Screening Elements</h4>
+          <h4 className="text-xs font-black uppercase tracking-wide mb-4">Additional Screening Elements</h4>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div className="space-y-1.5">
-              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">ALP (Alk. Phosphatase)</label>
+              <label className="text-xs font-black tracking-wide block">ALP (Alk. Phosphatase)</label>
               <div className="relative">
                 <input 
                   type="number" 
@@ -1094,12 +1094,12 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                   onChange={e => handleInputChange("alp", e.target.value)}
                   className={getInputClass(formData.alp, "pr-12")} 
                 />
-                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">U/L</span>
+                <span className="absolute right-3 top-2.5 text-xs font-black">U/L</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">GGT (Gamma-Glutamyl)</label>
+              <label className="text-xs font-black tracking-wide block">GGT (Gamma-Glutamyl)</label>
               <div className="relative">
                 <input 
                   type="number" 
@@ -1109,12 +1109,12 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                   onChange={e => handleInputChange("ggt", e.target.value)}
                   className={getInputClass(formData.ggt, "pr-12")} 
                 />
-                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">U/L</span>
+                <span className="absolute right-3 top-2.5 text-xs font-black">U/L</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Direct Bilirubin</label>
+              <label className="text-xs font-black tracking-wide block">Direct Bilirubin</label>
               <div className="relative">
                 <input 
                   type="number" 
@@ -1124,12 +1124,12 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                   onChange={e => handleInputChange("directBilirubin", e.target.value)}
                   className={getInputClass(formData.directBilirubin, "pr-14")} 
                 />
-                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
+                <span className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Total Protein</label>
+              <label className="text-xs font-black tracking-wide block">Total Protein</label>
               <div className="relative">
                 <input 
                   type="number" 
@@ -1139,18 +1139,18 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                   onChange={e => handleInputChange("totalProtein", e.target.value)}
                   className={getInputClass(formData.totalProtein, "pr-12")} 
                 />
-                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">g/dL</span>
+                <span className="absolute right-3 top-2.5 text-xs font-black">g/dL</span>
               </div>
             </div>
           </div>
         </div>
 
         <div className="border-t border-slate-200 pt-6">
-          <h4 style={{ color: "#000000" }} className="text-xs font-black uppercase tracking-wide mb-4">Metadata & Demographic Inputs (FIB-4 & BARD)</h4>
+          <h4 className="text-xs font-black uppercase tracking-wide mb-4">Metadata & Demographic Inputs (FIB-4 & BARD)</h4>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <div className="space-y-1.5">
-              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Age</label>
+              <label className="text-xs font-black tracking-wide block">Patient Age</label>
               <div className="relative">
                 <input 
                   type="number" 
@@ -1159,12 +1159,12 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                   onChange={e => handleInputChange("age", e.target.value)}
                   className={getInputClass(formData.age, "pr-10")} 
                 />
-                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">yrs</span>
+                <span className="absolute right-3 top-2.5 text-xs font-black">yrs</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Platelets</label>
+              <label className="text-xs font-black tracking-wide block">Platelets</label>
               <div className="relative">
                 <input 
                   type="number" 
@@ -1173,7 +1173,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                   onChange={e => handleInputChange("platelets", e.target.value)}
                   className={getInputClass(formData.platelets, "pr-14")} 
                 />
-                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-[9px] font-black leading-tight">10^9/L</span>
+                <span className="absolute right-3 top-2.5 text-[9px] font-black leading-tight">10^9/L</span>
               </div>
               {formData.platelets && !isNaN(parseFloat(formData.platelets)) && (
                 <p style={{ color: "#065f46" }} className="text-xs font-black font-mono mt-1">
@@ -1183,7 +1183,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
             </div>
 
             <div className="space-y-1.5">
-              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Weight (for BMI)</label>
+              <label className="text-xs font-black tracking-wide block">Weight (for BMI)</label>
               <div className="relative">
                 <input 
                   type="number" 
@@ -1192,12 +1192,12 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                   onChange={e => handleInputChange("weight", e.target.value)}
                   className={getInputClass(formData.weight, "pr-10")} 
                 />
-                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">kg</span>
+                <span className="absolute right-3 top-2.5 text-xs font-black">kg</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Height (for BMI)</label>
+              <label className="text-xs font-black tracking-wide block">Height (for BMI)</label>
               <div className="relative">
                 <input 
                   type="number" 
@@ -1206,14 +1206,14 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                   onChange={e => handleInputChange("height", e.target.value)}
                   className={getInputClass(formData.height, "pr-10")} 
                 />
-                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">cm</span>
+                <span className="absolute right-3 top-2.5 text-xs font-black">cm</span>
               </div>
             </div>
           </div>
 
           <div className="pt-4 flex flex-wrap gap-4 items-center">
             <div className="space-y-1.5">
-              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">AST ULN (Lab Limit)</label>
+              <label className="text-xs font-black tracking-wide block">AST ULN (Lab Limit)</label>
               <input 
                 type="number" 
                 value={formData.astUln}
@@ -1229,7 +1229,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 onChange={e => handleInputChange("diabetes", e.target.checked)}
                 className="rounded border-slate-300 text-emerald-800 focus:ring-emerald-600 w-4 h-4"
               />
-              <span style={{ color: "#000000" }} className="text-xs font-black">
+              <span className="text-xs font-black">
                 Patient has Type 2 Diabetes (+1 point to BARD)
               </span>
             </label>
@@ -1244,14 +1244,14 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
             className="flex items-center justify-between w-full text-left"
           >
             <div className="space-y-0.5">
-              <h3 style={{ color: "#000000" }} className="text-sm font-black">
+              <h3 className="text-sm font-black">
                 Metabolic & Kidney Panel (Optional)
               </h3>
-              <p style={{ color: "#000000" }} className="text-xs font-bold">
+              <p className="text-xs font-bold">
                 Analyze metabolic syndrome risk (NCEP ATP III) & renal health staging (Urine ACR)
               </p>
             </div>
-            <div style={{ color: "#000000" }}>
+            <div>
               {metabolicPanelOpen ? (
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
@@ -1267,7 +1267,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
           {metabolicPanelOpen && (
             <div className="pt-2 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-left border-t border-slate-200">
               <div className="space-y-1.5">
-                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Waist Circumference</label>
+                <label className="text-xs font-black tracking-wide block">Waist Circumference</label>
                 <div className="relative">
                   <input
                     type="number"
@@ -1276,12 +1276,12 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                     onChange={e => handleInputChange("waistCircumference", e.target.value)}
                     className={getInputClass(formData.waistCircumference, "pr-10")}
                   />
-                  <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">cm</span>
+                  <span className="absolute right-3 top-2.5 text-xs font-black">cm</span>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Fasting Blood Glucose</label>
+                <label className="text-xs font-black tracking-wide block">Fasting Blood Glucose</label>
                 <div className="relative">
                   <input
                     type="number"
@@ -1290,12 +1290,12 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                     onChange={e => handleInputChange("fastingBloodGlucose", e.target.value)}
                     className={getInputClass(formData.fastingBloodGlucose, "pr-14")}
                   />
-                  <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
+                  <span className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Triglycerides</label>
+                <label className="text-xs font-black tracking-wide block">Triglycerides</label>
                 <div className="relative">
                   <input
                     type="number"
@@ -1304,12 +1304,12 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                     onChange={e => handleInputChange("triglycerides", e.target.value)}
                     className={getInputClass(formData.triglycerides, "pr-14")}
                   />
-                  <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
+                  <span className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">HDL Cholesterol</label>
+                <label className="text-xs font-black tracking-wide block">HDL Cholesterol</label>
                 <div className="relative">
                   <input
                     type="number"
@@ -1318,12 +1318,12 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                     onChange={e => handleInputChange("hdlCholesterol", e.target.value)}
                     className={getInputClass(formData.hdlCholesterol, "pr-14")}
                   />
-                  <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
+                  <span className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Systolic BP</label>
+                <label className="text-xs font-black tracking-wide block">Systolic BP</label>
                 <div className="relative">
                   <input
                     type="number"
@@ -1332,12 +1332,12 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                     onChange={e => handleInputChange("systolicBp", e.target.value)}
                     className={getInputClass(formData.systolicBp, "pr-14")}
                   />
-                  <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mmHg</span>
+                  <span className="absolute right-3 top-2.5 text-xs font-black">mmHg</span>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Diastolic BP</label>
+                <label className="text-xs font-black tracking-wide block">Diastolic BP</label>
                 <div className="relative">
                   <input
                     type="number"
@@ -1346,12 +1346,12 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                     onChange={e => handleInputChange("diastolicBp", e.target.value)}
                     className={getInputClass(formData.diastolicBp, "pr-14")}
                   />
-                  <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mmHg</span>
+                  <span className="absolute right-3 top-2.5 text-xs font-black">mmHg</span>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Urine ACR (Microalbuminuria)</label>
+                <label className="text-xs font-black tracking-wide block">Urine ACR (Microalbuminuria)</label>
                 <div className="relative">
                   <input
                     type="number"
@@ -1360,7 +1360,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                     onChange={e => handleInputChange("urineAcr", e.target.value)}
                     className={getInputClass(formData.urineAcr, "pr-14")}
                   />
-                  <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/g</span>
+                  <span className="absolute right-3 top-2.5 text-xs font-black">mg/g</span>
                 </div>
               </div>
 
@@ -1372,7 +1372,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                     onChange={e => handleInputChange("onHypertensionMeds", e.target.checked)}
                     className="rounded border-slate-300 text-emerald-800 focus:ring-emerald-600 w-4 h-4"
                   />
-                  <span style={{ color: "#000000" }} className="text-xs font-black">
+                  <span className="text-xs font-black">
                     Patient is on active treatment for systemic hypertension
                   </span>
                 </label>
@@ -1391,10 +1391,10 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
             className="mt-0.5 rounded border-slate-300 text-emerald-800 focus:ring-emerald-600 cursor-pointer bg-white w-4 h-4 shrink-0"
           />
           <div className="space-y-1">
-            <label htmlFor="lft-verification-calc-checkbox" style={{ color: "#000000" }} className="text-xs font-black cursor-pointer leading-tight block">
+            <label htmlFor="lft-verification-calc-checkbox" className="text-xs font-black cursor-pointer leading-tight block">
               I have verified the extracted values against the original report
             </label>
-            <p style={{ color: "#000000" }} className="text-xs font-bold leading-normal">
+            <p className="text-xs font-bold leading-normal">
               Confirming that all decimal points, values, and units are accurate prevents critical clinical and OCR errors.
             </p>
           </div>
@@ -1454,8 +1454,8 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
           </div>
 
           {/* Advanced scoring metrics */}
-          <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 space-y-4 p-6">
-            <h4 style={{ color: "#000000" }} className="text-sm font-black flex items-center gap-2 uppercase tracking-wide font-sans">
+          <div className="bento-card border-2 border-slate-300 space-y-4 p-6">
+            <h4 className="text-sm font-black flex items-center gap-2 uppercase tracking-wide font-sans">
               <span className="w-1.5 h-3.5 bg-emerald-600 rounded-full shrink-0" />
               <span>Advanced Clinical Risk Indexes</span>
             </h4>
@@ -1489,7 +1489,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 return (
                   <div className={`bento-card border-2 p-5 space-y-3 transition-all ${results.fib4Score !== undefined ? `${theme.cardBorder} ${theme.cardBg}` : "border-slate-300 bg-white dark:bg-slate-900/80"}`}>
                     <div className="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
-                      <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block dark:text-white">
+                      <span className="card-title font-mono font-black text-xs uppercase tracking-wider block dark:text-white">
                         FIB-4 Index (Fibrosis Triage)
                       </span>
                       <span className="text-[10px] font-bold text-slate-500 font-mono">
@@ -1556,7 +1556,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 return (
                   <div className={`bento-card border-2 p-5 space-y-3 transition-all ${results.apriScore !== undefined ? `${theme.cardBorder} ${theme.cardBg}` : "border-slate-300 bg-white dark:bg-slate-900/80"}`}>
                     <div className="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
-                      <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block dark:text-white">
+                      <span className="card-title font-mono font-black text-xs uppercase tracking-wider block dark:text-white">
                         APRI Index (Platelet Ratio)
                       </span>
                       <span className="text-[10px] font-bold text-slate-500 font-mono">
@@ -1616,7 +1616,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 return (
                   <div className={`bento-card border-2 p-5 space-y-3 transition-all ${results.bardScore !== undefined ? `${theme.cardBorder} ${theme.cardBg}` : "border-slate-300 bg-white dark:bg-slate-900/80"}`}>
                     <div className="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
-                      <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block dark:text-white">
+                      <span className="card-title font-mono font-black text-xs uppercase tracking-wider block dark:text-white">
                         BARD Score (NASH Fibrosis)
                       </span>
                       <span className="text-[10px] font-bold text-slate-500 font-mono">
@@ -1689,7 +1689,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 return (
                   <div className={`bento-card border-2 p-5 space-y-3 transition-all ${results.fliScore !== undefined ? `${theme.cardBorder} ${theme.cardBg}` : "border-slate-300 bg-white dark:bg-slate-900/80"}`}>
                     <div className="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
-                      <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block dark:text-white">
+                      <span className="card-title font-mono font-black text-xs uppercase tracking-wider block dark:text-white">
                         Fatty Liver Index (FLI)
                       </span>
                       <span className="text-[10px] font-bold text-slate-500 font-mono">
@@ -1760,8 +1760,8 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
               })()}
 
               {/* Metabolic Syndrome Card */}
-              <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 p-5 space-y-3">
-                <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block">Metabolic Syndrome (NCEP ATP III)</span>
+              <div className="bento-card border-2 border-slate-300 p-5 space-y-3">
+                <span className="card-title font-mono font-black text-xs uppercase tracking-wider block">Metabolic Syndrome (NCEP ATP III)</span>
                 {results.ncepMetabolicSyndrome ? (
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
@@ -1772,15 +1772,15 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                       }`}>
                         {results.ncepMetabolicSyndrome.met ? "Criteria Met" : "Low Risk"}
                       </span>
-                      <span style={{ color: "#000000" }} className="text-xs font-mono font-black">
+                      <span className="text-xs font-mono font-black">
                         {results.ncepMetabolicSyndrome.count} / 5 Criteria
                       </span>
                     </div>
-                    <p style={{ color: "#000000" }} className="text-xs font-black">
+                    <p className="text-xs font-black">
                       {results.ncepMetabolicSyndrome.conclusion}
                     </p>
                     <div className="space-y-1 pt-1 border-t border-slate-200">
-                      <div style={{ color: "#000000" }} className="text-[10px] uppercase font-black">Met Criteria:</div>
+                      <div className="text-[10px] uppercase font-black">Met Criteria:</div>
                       {results.ncepMetabolicSyndrome.criteriaMet.length > 0 ? (
                         results.ncepMetabolicSyndrome.criteriaMet.map((c: string, idx: number) => (
                           <div key={idx} className="flex items-start gap-1 text-xs text-rose-700 font-bold">
@@ -1788,11 +1788,11 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                           </div>
                         ))
                       ) : (
-                        <div style={{ color: "#000000" }} className="text-xs italic font-bold">None</div>
+                        <div className="text-xs italic font-bold">None</div>
                       )}
                     </div>
                     <div className="space-y-1">
-                      <div style={{ color: "#000000" }} className="text-[10px] uppercase font-black">Other / Unmet Criteria:</div>
+                      <div className="text-[10px] uppercase font-black">Other / Unmet Criteria:</div>
                       {results.ncepMetabolicSyndrome.criteriaNotMet.map((c: string, idx: number) => (
                         <div key={idx} className="flex items-start gap-1 text-xs text-slate-800 font-bold">
                           <span>○</span> <span className="text-left">{c}</span>
@@ -1818,8 +1818,8 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
               </div>
 
               {/* Kidney Risk Assessment Card */}
-              <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 p-5 space-y-3">
-                <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block">Kidney Risk Assessment (Urine ACR)</span>
+              <div className="bento-card border-2 border-slate-300 p-5 space-y-3">
+                <span className="card-title font-mono font-black text-xs uppercase tracking-wider block">Kidney Risk Assessment (Urine ACR)</span>
                 {results.acrAssessment ? (
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
@@ -1834,16 +1834,16 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                       </span>
                     </div>
                     <div>
-                      <div style={{ color: "#000000" }} className="text-lg font-mono font-black">
+                      <div className="text-lg font-mono font-black">
                         {results.acrAssessment.value} <span className="text-xs font-sans font-bold">mg/g</span>
                       </div>
-                      <p style={{ color: "#000000" }} className="text-xs mt-1 leading-relaxed text-justify font-bold">
+                      <p className="text-xs mt-1 leading-relaxed text-justify font-bold">
                         {results.acrAssessment.description}
                       </p>
                     </div>
                     <div className="pt-2 border-t border-slate-200">
-                      <div style={{ color: "#000000" }} className="text-[10px] uppercase font-black">Clinical Impact:</div>
-                      <p style={{ color: "#000000" }} className="text-xs italic font-bold leading-normal mt-0.5 text-justify">
+                      <div className="text-[10px] uppercase font-black">Clinical Impact:</div>
+                      <p className="text-xs italic font-bold leading-normal mt-0.5 text-justify">
                         {results.acrAssessment.clinicalSignificance}
                       </p>
                     </div>
@@ -1876,11 +1876,11 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
             </div>
 
             {/* Part A: Offline Rule-Based Basic Interpretation */}
-            <div style={{ backgroundColor: "#ffffff" }} className="space-y-1 p-4 rounded-2xl border-2 border-slate-300 shadow-xs">
+            <div className="space-y-1 p-4 rounded-2xl border-2 border-slate-300 shadow-xs">
               <span style={{ color: "#065f46" }} className="text-xs uppercase font-black tracking-widest block">
                 Local Basic Interpretation (Offline)
               </span>
-              <p style={{ color: "#000000" }} className="text-xs leading-relaxed font-semibold mt-1 text-justify">
+              <p className="text-xs leading-relaxed font-semibold mt-1 text-justify">
                 {results ? getOfflineLftSummary({
                   alt: parseFloat(formData.alt) || 0,
                   ast: parseFloat(formData.ast) || 0,
@@ -1904,8 +1904,8 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
             {/* Part B: On-Demand AI Interpretation */}
             <div className="space-y-3 pt-1">
               {!aiInsight && !isAiLoading && !aiError && (
-                <div style={{ backgroundColor: "#ffffff" }} className="relative flex flex-col items-center justify-center p-5 border-2 border-dashed border-slate-300 rounded-2xl space-y-4">
-                  <p style={{ color: "#000000" }} className="text-xs text-center font-bold leading-relaxed">
+                <div className="relative flex flex-col items-center justify-center p-5 border-2 border-dashed border-slate-300 rounded-2xl space-y-4">
+                  <p className="text-xs text-center font-bold leading-relaxed">
                     Need an deep expert clinical review of potential NAFLD/MASH progression, liver fibrosis risk scores, or hepatology staging trends with {activeProviderName}?
                   </p>
                   
@@ -1917,7 +1917,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                       id="lft-verification-checkbox"
                       className="mt-0.5 rounded border-slate-300 text-emerald-800 focus:ring-emerald-600 cursor-pointer bg-white w-4 h-4 shrink-0"
                     />
-                    <span style={{ color: "#000000" }} className="text-xs leading-normal font-black">
+                    <span className="text-xs leading-normal font-black">
                       I have verified the extracted values against the original report
                     </span>
                   </label>
@@ -1935,9 +1935,9 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
               )}
 
               {isAiLoading && (
-                <div style={{ backgroundColor: "#ffffff" }} className="h-28 flex flex-col items-center justify-center space-y-2 rounded-2xl border-2 border-slate-300">
+                <div className="h-28 flex flex-col items-center justify-center space-y-2 rounded-2xl border-2 border-slate-300">
                   <RefreshCw className="animate-spin text-emerald-800" size={24} />
-                  <p style={{ color: "#000000" }} className="text-xs font-black">Generating expert clinical interpretation with {activeProviderName}...</p>
+                  <p className="text-xs font-black">Generating expert clinical interpretation with {activeProviderName}...</p>
                 </div>
               )}
 
@@ -1968,7 +1968,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                       id="lft-verification-retry-checkbox"
                       className="mt-0.5 rounded border-slate-300 text-emerald-800 focus:ring-emerald-600 cursor-pointer bg-white w-4 h-4 shrink-0"
                     />
-                    <span style={{ color: "#000000" }} className="text-xs leading-normal font-black">
+                    <span className="text-xs leading-normal font-black">
                       I have verified the extracted values against the original report
                     </span>
                   </label>
@@ -1985,7 +1985,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
               )}
 
               {aiInsight && (
-                <div style={{ backgroundColor: "#ffffff" }} className="space-y-2 p-4 border-2 border-slate-300 rounded-2xl shadow-xs">
+                <div className="space-y-2 p-4 border-2 border-slate-300 rounded-2xl shadow-xs">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <span style={{ color: "#065f46" }} className="text-xs uppercase font-black tracking-widest block">
                       Clinical AI Analysis ({getProviderDisplayName(aiMeta?.providerUsed || currentProvider)})
@@ -1996,16 +1996,16 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                       </span>
                     )}
                   </div>
-                  <div style={{ color: "#000000" }} className="text-xs sm:text-sm whitespace-pre-wrap leading-relaxed text-justify pr-2 max-h-96 overflow-y-auto font-medium">
+                  <div className="text-xs sm:text-sm whitespace-pre-wrap leading-relaxed text-justify pr-2 max-h-96 overflow-y-auto font-medium">
                     {aiInsight}
                   </div>
                 </div>
               )}
             </div>
 
-            <div style={{ color: "#000000" }} className="border-t border-slate-300 pt-3 text-xs font-bold space-y-1.5 leading-relaxed">
+            <div className="border-t border-slate-300 pt-3 text-xs font-bold space-y-1.5 leading-relaxed">
               <p>
-                <strong style={{ color: "#000000" }} className="font-black">Medical Disclaimer:</strong> Decision-support only. This information should always be analyzed alongside professional clinicians.
+                <strong className="font-black">Medical Disclaimer:</strong> Decision-support only. This information should always be analyzed alongside professional clinicians.
               </p>
               <p className="border-l-2 border-emerald-600 pl-2">
                 AI-generated interpretation. Not a medical diagnosis. Consult a qualified doctor.
@@ -2015,7 +2015,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
 
           {/* Save panel */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-4 border-t border-slate-300 gap-4">
-            <span style={{ color: "#000000" }} className="text-xs font-bold text-justify">Ensure values are verified before sharing or saving to logs.</span>
+            <span className="text-xs font-bold text-justify">Ensure values are verified before sharing or saving to logs.</span>
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"

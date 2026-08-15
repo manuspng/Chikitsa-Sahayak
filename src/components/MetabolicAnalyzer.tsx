@@ -95,15 +95,15 @@ export default function MetabolicAnalyzer({ onAddRecord }: MetabolicAnalyzerProp
   const isFieldMissing = (val: any) => (extractMeta !== null || missingExtractedKeys.length > 0) && (val === undefined || val === null || val === "");
   const getInputClass = (val: any, extraPadding = "pr-12") => {
     if (isFieldMissing(val)) {
-      return `w-full bg-red-50/40 dark:bg-red-950/20 border-2 border-red-500 dark:border-red-500 rounded-xl px-3 py-2 text-sm text-slate-950 dark:text-slate-100 font-black ${extraPadding} font-mono focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all`;
+      return `w-full bg-rose-50/60 border-2 border-rose-500 rounded-xl px-3 py-2 text-sm text-slate-900 font-bold ${extraPadding} font-mono focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all shadow-xs`;
     }
-    return `w-full bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-950 dark:text-slate-100 font-black ${extraPadding} font-mono focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all`;
+    return `w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 font-bold ${extraPadding} font-mono focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all shadow-xs`;
   };
   const getNameClass = (val: any) => {
     if (isFieldMissing(val)) {
-      return "w-full bg-red-50/40 dark:bg-red-950/20 border-2 border-red-500 dark:border-red-500 rounded-xl px-3 py-2 text-sm text-slate-950 dark:text-slate-100 font-bold placeholder-red-400 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all h-[42px]";
+      return "w-full bg-rose-50/60 border-2 border-rose-500 rounded-xl px-3 py-2 text-sm text-slate-900 font-bold placeholder-rose-400 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all h-[42px] shadow-xs";
     }
-    return "w-full bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-950 dark:text-slate-100 font-bold placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all h-[42px]";
+    return "w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 font-bold placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all h-[42px] shadow-xs";
   };
 
   const handleWebcamCapture = (file: File) => {
@@ -559,11 +559,11 @@ OFFLINE CRITERIA SYNTHESIS:
       <div className="p-4 bg-white dark:bg-slate-900/80 border-2 border-slate-300 dark:border-slate-700 rounded-2xl shadow-xs space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
           <div>
-            <h4 style={{ color: "#000000" }} className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 dark:text-white">
+            <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 dark:text-white">
               <Upload size={14} className="text-emerald-700 dark:text-emerald-400" />
               <span>Feed / Scan Metabolic & ACR Report (Photo or PDF)</span>
             </h4>
-            <p style={{ color: "#000000" }} className="text-[11px] font-bold mt-0.5 dark:text-slate-200">
+            <p className="text-[11px] font-bold mt-0.5 dark:text-slate-200">
               Upload your metabolic or renal urine ACR panel for automated parameter recognition
             </p>
           </div>
@@ -849,14 +849,14 @@ OFFLINE CRITERIA SYNTHESIS:
 
 
       {/* Input / Calculation form */}
-      <form onSubmit={handleCalculate} style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 p-6 space-y-6">
+      <form onSubmit={handleCalculate} className="bento-card border-2 border-slate-300 p-6 space-y-6">
         <div className="border-b border-slate-200 pb-3">
-          <h2 style={{ color: "#000000" }} className="text-base font-black uppercase tracking-wider flex items-center gap-2 font-sans">
+          <h2 className="text-base font-black uppercase tracking-wider flex items-center gap-2 font-sans">
             <span className="w-1.5 h-4 bg-indigo-700 rounded-full shrink-0" />
             <span>Patient Demographics & Medical Profiles</span>
             <span style={{ width: "94.2734px" }} />
           </h2>
-          <p style={{ color: "#000000" }} className="text-xs font-bold mt-1">
+          <p className="text-xs font-bold mt-1">
             Fill in general demographic profiles or match criteria limits dynamically.
           </p>
         </div>
@@ -864,7 +864,7 @@ OFFLINE CRITERIA SYNTHESIS:
         {/* Name, Gender, Age Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-1.5">
-            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Name</label>
+            <label className="text-xs font-black tracking-wide block">Patient Name</label>
             <input 
               type="text" 
               placeholder="e.g. Suresh Kumar"
@@ -878,7 +878,7 @@ OFFLINE CRITERIA SYNTHESIS:
           </div>
 
           <div className="space-y-1.5">
-            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Assigned Sex</label>
+            <label className="text-xs font-black tracking-wide block">Patient Assigned Sex</label>
             <select
               value={formData.gender}
               onChange={e => handleInputChange("gender", e.target.value)}
@@ -890,7 +890,7 @@ OFFLINE CRITERIA SYNTHESIS:
           </div>
 
           <div className="space-y-1.5">
-            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Biological Age</label>
+            <label className="text-xs font-black tracking-wide block">Patient Biological Age</label>
             <div className="relative">
               <input 
                 type="number" 
@@ -899,7 +899,7 @@ OFFLINE CRITERIA SYNTHESIS:
                 onChange={e => handleInputChange("age", e.target.value)}
                 className={getInputClass(formData.age, "pr-12")} 
               />
-              <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">Years</span>
+              <span className="absolute right-3 top-2.5 text-xs font-black">Years</span>
             </div>
           </div>
         </div>
@@ -907,7 +907,7 @@ OFFLINE CRITERIA SYNTHESIS:
         {/* Input Parameters - METABOLIC SYNDROME */}
         <div className="space-y-4 pt-2">
           <div className="flex justify-between items-center border-b border-slate-200 pb-2">
-            <h3 style={{ color: "#000000" }} className="text-xs font-black uppercase tracking-wider flex items-center gap-2 font-sans">
+            <h3 className="text-xs font-black uppercase tracking-wider flex items-center gap-2 font-sans">
               <span className="w-1.5 h-3 bg-indigo-700 rounded-full shrink-0" />
               <span>Metabolic Syndrome (NCEP ATP III Criteria) Panels</span>
             </h3>
@@ -919,7 +919,7 @@ OFFLINE CRITERIA SYNTHESIS:
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
-                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide">Waist Circumference</label>
+                <label className="text-xs font-black tracking-wide">Waist Circumference</label>
                 <span className="text-[10px] text-indigo-700 font-black uppercase">{formData.gender === "female" ? "≤ 88 cm target" : "≤ 102 cm target"}</span>
               </div>
               <div className="relative">
@@ -931,13 +931,13 @@ OFFLINE CRITERIA SYNTHESIS:
                   onChange={e => handleInputChange("waistCircumference", e.target.value)}
                   className={getInputClass(formData.waistCircumference, "pr-12")} 
                 />
-                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">cm</span>
+                <span className="absolute right-3 top-2.5 text-xs font-black">cm</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
-                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide">Fasting Blood Glucose</label>
+                <label className="text-xs font-black tracking-wide">Fasting Blood Glucose</label>
                 <span className="text-[10px] text-indigo-700 font-black uppercase">{"< 100 mg/dL target"}</span>
               </div>
               <div className="relative">
@@ -949,13 +949,13 @@ OFFLINE CRITERIA SYNTHESIS:
                   onChange={e => handleInputChange("fastingBloodGlucose", e.target.value)}
                   className={getInputClass(formData.fastingBloodGlucose, "pr-14")} 
                 />
-                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
+                <span className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
-                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide">Serum Triglycerides</label>
+                <label className="text-xs font-black tracking-wide">Serum Triglycerides</label>
                 <span className="text-[10px] text-indigo-700 font-black uppercase">{"< 150 mg/dL target"}</span>
               </div>
               <div className="relative">
@@ -967,13 +967,13 @@ OFFLINE CRITERIA SYNTHESIS:
                   onChange={e => handleInputChange("triglycerides", e.target.value)}
                   className={getInputClass(formData.triglycerides, "pr-14")} 
                 />
-                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
+                <span className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
-                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide">HDL Cholesterol</label>
+                <label className="text-xs font-black tracking-wide">HDL Cholesterol</label>
                 <span className="text-[10px] text-indigo-700 font-black uppercase">{formData.gender === "female" ? "≥ 50 mg/dL target" : "≥ 40 mg/dL target"}</span>
               </div>
               <div className="relative">
@@ -985,13 +985,13 @@ OFFLINE CRITERIA SYNTHESIS:
                   onChange={e => handleInputChange("hdlCholesterol", e.target.value)}
                   className={getInputClass(formData.hdlCholesterol, "pr-14")} 
                 />
-                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
+                <span className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
-                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide">Systolic Blood Pressure</label>
+                <label className="text-xs font-black tracking-wide">Systolic Blood Pressure</label>
                 <span className="text-[10px] text-indigo-700 font-black uppercase">{"< 130 mmHg target"}</span>
               </div>
               <div className="relative">
@@ -1003,13 +1003,13 @@ OFFLINE CRITERIA SYNTHESIS:
                   onChange={e => handleInputChange("systolicBp", e.target.value)}
                   className={getInputClass(formData.systolicBp, "pr-14")} 
                 />
-                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mmHg</span>
+                <span className="absolute right-3 top-2.5 text-xs font-black">mmHg</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
-                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide">Diastolic Blood Pressure</label>
+                <label className="text-xs font-black tracking-wide">Diastolic Blood Pressure</label>
                 <span className="text-[10px] text-indigo-700 font-black uppercase">{"< 85 mmHg target"}</span>
               </div>
               <div className="relative">
@@ -1021,7 +1021,7 @@ OFFLINE CRITERIA SYNTHESIS:
                   onChange={e => handleInputChange("diastolicBp", e.target.value)}
                   className={getInputClass(formData.diastolicBp, "pr-14")} 
                 />
-                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mmHg</span>
+                <span className="absolute right-3 top-2.5 text-xs font-black">mmHg</span>
               </div>
             </div>
           </div>
@@ -1036,8 +1036,8 @@ OFFLINE CRITERIA SYNTHESIS:
                 className="rounded border-slate-300 text-indigo-700 focus:ring-indigo-500 cursor-pointer w-4 h-4"
               />
               <div className="text-left">
-                <span style={{ color: "#000000" }} className="text-xs font-black block">Antihypertensive Treatment</span>
-                <span style={{ color: "#000000" }} className="text-xs font-bold">Mark if patient is on antihypertensive medications</span>
+                <span className="text-xs font-black block">Antihypertensive Treatment</span>
+                <span className="text-xs font-bold">Mark if patient is on antihypertensive medications</span>
               </div>
             </label>
 
@@ -1049,8 +1049,8 @@ OFFLINE CRITERIA SYNTHESIS:
                 className="rounded border-slate-300 text-indigo-700 focus:ring-indigo-500 cursor-pointer w-4 h-4"
               />
               <div className="text-left">
-                <span style={{ color: "#000000" }} className="text-xs font-black block">Type 2 Diabetes Staging</span>
-                <span style={{ color: "#000000" }} className="text-xs font-bold">Mark if patient has a clinical history of Type 2 Diabetes</span>
+                <span className="text-xs font-black block">Type 2 Diabetes Staging</span>
+                <span className="text-xs font-bold">Mark if patient has a clinical history of Type 2 Diabetes</span>
               </div>
             </label>
           </div>
@@ -1059,7 +1059,7 @@ OFFLINE CRITERIA SYNTHESIS:
         {/* Albumin to Creatinine Ratio */}
         <div className="space-y-4 pt-2">
           <div className="flex justify-between items-center border-b border-slate-200 pb-2">
-            <h3 style={{ color: "#000000" }} className="text-xs font-black uppercase tracking-wider flex items-center gap-2 font-sans">
+            <h3 className="text-xs font-black uppercase tracking-wider flex items-center gap-2 font-sans">
               <span className="w-1.5 h-3 bg-indigo-700 rounded-full shrink-0" />
               <span>Urine Albumin-to-Creatinine Ratio (Urine ACR)</span>
             </h3>
@@ -1099,7 +1099,7 @@ OFFLINE CRITERIA SYNTHESIS:
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
-                    <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide">Urine Albumin</label>
+                    <label className="text-xs font-black tracking-wide">Urine Albumin</label>
                     <span className="text-[10px] text-indigo-700 font-black uppercase">mg/L</span>
                   </div>
                   <div className="relative">
@@ -1111,13 +1111,13 @@ OFFLINE CRITERIA SYNTHESIS:
                       onChange={e => handleInputChange("urineAlbumin", e.target.value)}
                       className={getInputClass(formData.urineAlbumin, "pr-14")} 
                     />
-                    <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/L</span>
+                    <span className="absolute right-3 top-2.5 text-xs font-black">mg/L</span>
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
-                    <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide">Urine Creatinine</label>
+                    <label className="text-xs font-black tracking-wide">Urine Creatinine</label>
                     <span className="text-[10px] text-indigo-700 font-black uppercase">mg/dL</span>
                   </div>
                   <div className="relative">
@@ -1129,7 +1129,7 @@ OFFLINE CRITERIA SYNTHESIS:
                       onChange={e => handleInputChange("urineCreatinine", e.target.value)}
                       className={getInputClass(formData.urineCreatinine, "pr-14")} 
                     />
-                    <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
+                    <span className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
                   </div>
                 </div>
               </div>
@@ -1137,17 +1137,17 @@ OFFLINE CRITERIA SYNTHESIS:
               {/* Live result displayed underneath */}
               <div className="p-4 bg-slate-50 border-2 border-slate-300 rounded-xl space-y-2 mt-2">
                 <div className="flex justify-between items-center flex-wrap gap-2">
-                  <span style={{ color: "#000000" }} className="text-xs font-black uppercase tracking-wider">Urinary ACR Formula Reference</span>
+                  <span className="text-xs font-black uppercase tracking-wider">Urinary ACR Formula Reference</span>
                   <span className="text-xs font-black text-indigo-700 font-mono">ACR (mg/g) = (Albumin [mg/L] / Creatinine [mg/dL]) * 100</span>
                 </div>
                 
                 <div className="flex justify-between items-baseline pt-1">
-                  <span style={{ color: "#000000" }} className="text-xs font-black">Calculated Urinary ACR:</span>
+                  <span className="text-xs font-black">Calculated Urinary ACR:</span>
                   <div className="text-right">
                     {formData.urineAcr ? (
                       <div className="flex items-center gap-2">
                         <span className="text-base font-black text-indigo-700 font-mono">
-                          {formData.urineAcr} <span style={{ color: "#000000" }} className="text-xs font-black">mg/g</span>
+                          {formData.urineAcr} <span className="text-xs font-black">mg/g</span>
                         </span>
                         {(() => {
                           const val = parseFloat(formData.urineAcr);
@@ -1162,12 +1162,12 @@ OFFLINE CRITERIA SYNTHESIS:
                         })()}
                       </div>
                     ) : (
-                      <span style={{ color: "#000000" }} className="text-xs italic font-bold">Enter Urine Albumin and Urine Creatinine parameters above</span>
+                      <span className="text-xs italic font-bold">Enter Urine Albumin and Urine Creatinine parameters above</span>
                     )}
                   </div>
                 </div>
                 {formData.urineAcr && (
-                  <p style={{ color: "#000000" }} className="text-xs font-bold leading-relaxed border-t border-slate-300 pt-2 mt-1">
+                  <p className="text-xs font-bold leading-relaxed border-t border-slate-300 pt-2 mt-1">
                     {(() => {
                       const val = parseFloat(formData.urineAcr);
                       if (val < 30) return "Normal / Optimal kidney status. Albumin excretion level is within normal limits.";
@@ -1181,7 +1181,7 @@ OFFLINE CRITERIA SYNTHESIS:
           ) : (
             <div className="max-w-md space-y-1.5">
               <div className="flex justify-between items-center">
-                <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Urine ACR</label>
+                <label className="text-xs font-black tracking-wide block">Urine ACR</label>
                 <span className="text-[10px] text-indigo-700 font-black uppercase font-mono">{"< 30 mg/g normal excretion target"}</span>
               </div>
               <div className="relative">
@@ -1193,9 +1193,9 @@ OFFLINE CRITERIA SYNTHESIS:
                   onChange={e => handleInputChange("urineAcr", e.target.value)}
                   className={getInputClass(formData.urineAcr, "pr-14")} 
                 />
-                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">mg/g</span>
+                <span className="absolute right-3 top-2.5 text-xs font-black">mg/g</span>
               </div>
-              <p style={{ color: "#000000" }} className="text-xs leading-normal font-bold pt-1">
+              <p className="text-xs leading-normal font-bold pt-1">
                 Used as a primary screening parameter for diabetic nephropathy and systemic cardiovascular vulnerabilities.
               </p>
             </div>
@@ -1219,14 +1219,14 @@ OFFLINE CRITERIA SYNTHESIS:
           {/* Header Actions */}
           <div className="flex justify-between items-center border-b border-slate-300 pb-3 flex-wrap gap-3">
             <div>
-              <h2 style={{ color: "#000000" }} className="text-base font-black uppercase tracking-widest flex items-center gap-2">
+              <h2 className="text-base font-black uppercase tracking-widest flex items-center gap-2">
                 <span className="w-1.5 h-4.5 bg-indigo-700 rounded-full shrink-0" />
                 <span>Diagnostic Report Outcomes</span>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-950 uppercase tracking-widest font-black border border-indigo-300">
                   {results.riskLevel} risk
                 </span>
               </h2>
-              <p style={{ color: "#000000" }} className="text-xs font-bold">Computed patient parameters and multi-panel kidney/cardiovascular assessments.</p>
+              <p className="text-xs font-bold">Computed patient parameters and multi-panel kidney/cardiovascular assessments.</p>
             </div>
 
             <div className="flex gap-2">
@@ -1257,7 +1257,7 @@ OFFLINE CRITERIA SYNTHESIS:
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
             {/* Risk Gauge */}
-            <div style={{ backgroundColor: "#ffffff" }} className="lg:col-span-4 flex flex-col items-center justify-center p-6 border-2 border-slate-300 rounded-3xl min-h-[290px] relative shadow-sm">
+            <div className="lg:col-span-4 flex flex-col items-center justify-center p-6 border-2 border-slate-300 rounded-3xl min-h-[290px] relative shadow-sm">
               <div className="absolute top-4 left-4">
                 <span className="text-[10px] bg-slate-200 text-slate-950 px-2 py-0.5 rounded font-black uppercase tracking-widest border border-slate-300">
                   Aggregated Risk
@@ -1265,8 +1265,8 @@ OFFLINE CRITERIA SYNTHESIS:
               </div>
               <ScoreGauge score={results.riskLevel === "high" ? 85 : results.riskLevel === "moderate" ? 45 : 15} maxScore={100} label="Patient Risk Scale" riskLevel={results.riskLevel || "low"} />
               <div className="text-center mt-3">
-                <h4 style={{ color: "#000000" }} className="text-xs font-black uppercase tracking-widest">Composite Patient Status</h4>
-                <p style={{ color: "#000000" }} className="text-xs font-bold max-w-[200px] leading-relaxed mx-auto mt-1">Based on aggregated visceral criteria (NCEP ATP III) and diabetic nephropathy risk.</p>
+                <h4 className="text-xs font-black uppercase tracking-widest">Composite Patient Status</h4>
+                <p className="text-xs font-bold max-w-[200px] leading-relaxed mx-auto mt-1">Based on aggregated visceral criteria (NCEP ATP III) and diabetic nephropathy risk.</p>
               </div>
             </div>
 
@@ -1274,23 +1274,23 @@ OFFLINE CRITERIA SYNTHESIS:
             <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-5">
               {/* Card A: Metabolic Syndrome Card */}
               {results.ncepMetabolicSyndrome ? (
-                <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 p-5 flex flex-col justify-between shadow-sm">
+                <div className="bento-card border-2 border-slate-300 p-5 flex flex-col justify-between shadow-sm">
                   <div className="space-y-4">
                     <div className="flex justify-between items-start">
                       <div>
                         <span className="text-[10px] bg-indigo-100 text-indigo-950 px-2.5 py-0.5 rounded font-black uppercase tracking-widest block max-w-fit border border-indigo-300">
                           NCEP ATP III Criteria
                         </span>
-                        <h4 style={{ color: "#000000" }} className="text-sm font-black mt-2 flex items-center gap-1.5 font-sans">
+                        <h4 className="text-sm font-black mt-2 flex items-center gap-1.5 font-sans">
                           <span className="w-1 h-3 bg-indigo-700 rounded-full shrink-0" />
                           <span>Visceral Core Parameters</span>
                         </h4>
                       </div>
-                      <span style={{ color: "#000000" }} className="text-xs font-black">Score: <strong className="text-indigo-700">{results.ncepMetabolicSyndrome.count} / 5</strong></span>
+                      <span className="text-xs font-black">Score: <strong className="text-indigo-700">{results.ncepMetabolicSyndrome.count} / 5</strong></span>
                     </div>
 
                     <div className="space-y-2 text-xs">
-                      <div style={{ color: "#000000" }} className="text-xs font-black flex items-center gap-1">
+                      <div className="text-xs font-black flex items-center gap-1">
                         <Check size={14} className={results.ncepMetabolicSyndrome.met ? "text-red-600" : "text-emerald-600"} />
                         <span>{results.ncepMetabolicSyndrome.conclusion}</span>
                       </div>
@@ -1309,7 +1309,7 @@ OFFLINE CRITERIA SYNTHESIS:
                         {results.ncepMetabolicSyndrome.criteriaNotMet.length > 0 && (
                           <div>
                             <span className="text-[10px] font-black text-emerald-800 uppercase tracking-wider block">Not Satisfied Risks:</span>
-                            <ul style={{ color: "#000000" }} className="list-disc pl-3 text-xs leading-relaxed font-bold">
+                            <ul className="list-disc pl-3 text-xs leading-relaxed font-bold">
                               {results.ncepMetabolicSyndrome.criteriaNotMet.map((c: string, idx: number) => (
                                 <li key={idx}>{c}</li>
                               ))}
@@ -1321,8 +1321,8 @@ OFFLINE CRITERIA SYNTHESIS:
                   </div>
                 </div>
               ) : (
-                <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 p-5 space-y-2">
-                  <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block">Metabolic Syndrome (NCEP ATP III)</span>
+                <div className="bento-card border-2 border-slate-300 p-5 space-y-2">
+                  <span className="card-title font-mono font-black text-xs uppercase tracking-wider block">Metabolic Syndrome (NCEP ATP III)</span>
                   <p className="text-xs font-black glow-red-text flex items-center gap-1">
                     <AlertCircle size={13} className="text-red-600 shrink-0" />
                     <span>Incomplete. Missing required metabolic inputs:</span>
@@ -1339,36 +1339,36 @@ OFFLINE CRITERIA SYNTHESIS:
 
               {/* Card B: Kidney Risk Albumin to Creatinine Ratio Assessment Card */}
               {results.acrAssessment ? (
-                <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 p-5 flex flex-col justify-between shadow-sm">
+                <div className="bento-card border-2 border-slate-300 p-5 flex flex-col justify-between shadow-sm">
                   <div className="space-y-4">
                     <div className="flex justify-between items-start">
                       <div>
                         <span className="text-[10px] bg-indigo-100 text-indigo-950 px-2.5 py-0.5 rounded font-black uppercase tracking-widest block max-w-fit border border-indigo-300">
                           Kidney Risk Assessment
                         </span>
-                        <h4 style={{ color: "#000000" }} className="text-sm font-black mt-2">Urine Albumin-to-Creatinine</h4>
+                        <h4 className="text-sm font-black mt-2">Urine Albumin-to-Creatinine</h4>
                       </div>
-                      <span style={{ color: "#000000" }} className="font-mono text-xs font-black">Val: <strong className="text-indigo-700">{results.acrAssessment.value} mg/g</strong></span>
+                      <span className="font-mono text-xs font-black">Val: <strong className="text-indigo-700">{results.acrAssessment.value} mg/g</strong></span>
                     </div>
 
                     <div className="space-y-2 text-xs">
                       <div>
                         <span className="text-[10px] font-black text-indigo-700 uppercase tracking-widest block">Urine ACR Category</span>
-                        <span style={{ color: "#000000" }} className="text-xs font-black leading-normal">{results.acrAssessment.category.toUpperCase()}</span>
+                        <span className="text-xs font-black leading-normal">{results.acrAssessment.category.toUpperCase()}</span>
                       </div>
                       
-                      <p style={{ color: "#000000" }} className="text-xs leading-normal font-bold">{results.acrAssessment.description}</p>
+                      <p className="text-xs leading-normal font-bold">{results.acrAssessment.description}</p>
                       
                       <div className="pt-2 border-t border-slate-200">
                         <span className="text-[10px] font-black text-indigo-700 uppercase tracking-widest block">Clinical Correlation</span>
-                        <p style={{ color: "#000000" }} className="text-xs font-bold leading-relaxed text-justify mt-1">{results.acrAssessment.clinicalSignificance}</p>
+                        <p className="text-xs font-bold leading-relaxed text-justify mt-1">{results.acrAssessment.clinicalSignificance}</p>
                       </div>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 p-5 space-y-2">
-                  <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block">Kidney Risk Assessment (Urine ACR)</span>
+                <div className="bento-card border-2 border-slate-300 p-5 space-y-2">
+                  <span className="card-title font-mono font-black text-xs uppercase tracking-wider block">Kidney Risk Assessment (Urine ACR)</span>
                   <p className="text-xs font-black glow-red-text flex items-center gap-1">
                     <AlertCircle size={13} className="text-red-600 shrink-0" />
                     <span>Incomplete. Urine ACR parameter not supplied:</span>
@@ -1394,11 +1394,11 @@ OFFLINE CRITERIA SYNTHESIS:
             </div>
 
             {/* Offline Summary */}
-            <div style={{ backgroundColor: "#ffffff" }} className="space-y-1 p-4 rounded-2xl border-2 border-slate-300 shadow-xs">
+            <div className="space-y-1 p-4 rounded-2xl border-2 border-slate-300 shadow-xs">
               <span style={{ color: "#065f46" }} className="text-xs uppercase font-black tracking-widest block">
                 Local Basic Interpretation (Offline)
               </span>
-              <p style={{ color: "#000000" }} className="text-xs leading-relaxed font-semibold mt-1 text-justify">
+              <p className="text-xs leading-relaxed font-semibold mt-1 text-justify">
                 {getOfflineMetabolicSummary({
                   gender: formData.gender,
                   age: formData.age ? parseInt(formData.age) : undefined,
@@ -1418,8 +1418,8 @@ OFFLINE CRITERIA SYNTHESIS:
             {/* Dynamic AI Prompter */}
             <div className="space-y-3 pt-1">
               {!aiInsight && !isAiLoading && !aiError && (
-                <div style={{ backgroundColor: "#ffffff" }} className="relative flex flex-col items-center justify-center p-5 border-2 border-dashed border-slate-300 rounded-2xl space-y-4">
-                  <p style={{ color: "#000000" }} className="text-xs text-center font-bold leading-relaxed">
+                <div className="relative flex flex-col items-center justify-center p-5 border-2 border-dashed border-slate-300 rounded-2xl space-y-4">
+                  <p className="text-xs text-center font-bold leading-relaxed">
                     Need a deep expert clinical review of potential visceral anomalies, hypertension patterns, or full microalbuminuria and cardiovascular trends with {activeProviderName}?
                   </p>
                   
@@ -1431,7 +1431,7 @@ OFFLINE CRITERIA SYNTHESIS:
                       id="meta-verification-checkbox"
                       className="mt-0.5 rounded border-slate-300 text-emerald-800 focus:ring-emerald-600 cursor-pointer bg-white w-4 h-4 shrink-0"
                     />
-                    <span style={{ color: "#000000" }} className="text-xs leading-normal font-black">
+                    <span className="text-xs leading-normal font-black">
                       I have verified the extracted values against the original report
                     </span>
                   </label>
@@ -1449,9 +1449,9 @@ OFFLINE CRITERIA SYNTHESIS:
               )}
 
               {isAiLoading && (
-                <div style={{ backgroundColor: "#ffffff" }} className="h-28 flex flex-col items-center justify-center space-y-2 rounded-2xl border-2 border-slate-300">
+                <div className="h-28 flex flex-col items-center justify-center space-y-2 rounded-2xl border-2 border-slate-300">
                   <RefreshCw className="animate-spin text-emerald-800" size={24} />
-                  <p style={{ color: "#000000" }} className="text-xs font-black">Generating expert clinical interpretation with {activeProviderName}...</p>
+                  <p className="text-xs font-black">Generating expert clinical interpretation with {activeProviderName}...</p>
                 </div>
               )}
 
@@ -1470,7 +1470,7 @@ OFFLINE CRITERIA SYNTHESIS:
                       id="meta-verification-retry-checkbox"
                       className="mt-0.5 rounded border-slate-300 text-emerald-800 focus:ring-emerald-600 cursor-pointer bg-white w-4 h-4 shrink-0"
                     />
-                    <span style={{ color: "#000000" }} className="text-xs leading-normal font-black">
+                    <span className="text-xs leading-normal font-black">
                       I have verified the extracted values against the original report
                     </span>
                   </label>
@@ -1487,7 +1487,7 @@ OFFLINE CRITERIA SYNTHESIS:
               )}
 
               {aiInsight && (
-                <div style={{ backgroundColor: "#ffffff" }} className="space-y-2 p-4 border-2 border-slate-300 rounded-2xl shadow-xs">
+                <div className="space-y-2 p-4 border-2 border-slate-300 rounded-2xl shadow-xs">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <span style={{ color: "#065f46" }} className="text-xs uppercase font-black tracking-widest block">
                       Clinical AI Analysis ({getProviderDisplayName(aiMeta?.providerUsed || currentProvider)})
@@ -1498,14 +1498,14 @@ OFFLINE CRITERIA SYNTHESIS:
                       </span>
                     )}
                   </div>
-                  <div style={{ color: "#000000" }} className="text-xs sm:text-sm whitespace-pre-wrap leading-relaxed text-justify pr-2 max-h-96 overflow-y-auto font-medium">
+                  <div className="text-xs sm:text-sm whitespace-pre-wrap leading-relaxed text-justify pr-2 max-h-96 overflow-y-auto font-medium">
                     {aiInsight}
                   </div>
                 </div>
               )}
             </div>
 
-            <div style={{ color: "#000000" }} className="border-t border-slate-300 pt-3 text-xs font-bold space-y-1.5 leading-relaxed">
+            <div className="border-t border-slate-300 pt-3 text-xs font-bold space-y-1.5 leading-relaxed">
               <p>
                 * AI insights are dynamically fetched from the chosen medical model. This analysis incorporates patient parameters like systolic/diastolic blood pressure, microalbuminuria, lipid/triglyceride ratios, and historical clinical data recursively.
               </p>

@@ -274,19 +274,19 @@ Please write an expert, professional clinical interpretation of this patient's m
       </div>
 
       {/* Manual Input Workspace */}
-      <form onSubmit={handleCalculate} style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 space-y-6">
+      <form onSubmit={handleCalculate} className="bento-card border-2 border-slate-300 space-y-6">
         <div>
-          <h3 style={{ color: "#000000" }} className="text-base font-black uppercase tracking-wider flex items-center gap-2 font-sans mb-1">
+          <h3 className="text-base font-black uppercase tracking-wider flex items-center gap-2 font-sans mb-1">
             <span className="w-1.5 h-4.5 bg-emerald-600 rounded-full shrink-0" />
             <span>Patient & Metabolic Core Parameters</span>
           </h3>
-          <p style={{ color: "#000000" }} className="text-xs font-bold">Incorporate patient demographics and clinical panels evaluated during full diagnostic screening cycles.</p>
+          <p className="text-xs font-bold">Incorporate patient demographics and clinical panels evaluated during full diagnostic screening cycles.</p>
         </div>
 
         {/* Patient Demographics Registration Profile */}
         <div className="p-4 bg-slate-50 rounded-2xl border-2 border-slate-200 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-1.5">
-            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Full Name</label>
+            <label className="text-xs font-black tracking-wide block">Patient Full Name</label>
             <input 
               type="text" 
               placeholder="e.g. Robert Chen"
@@ -300,7 +300,7 @@ Please write an expert, professional clinical interpretation of this patient's m
           </div>
 
           <div className="space-y-1.5">
-            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Gender / Sex</label>
+            <label className="text-xs font-black tracking-wide block">Patient Gender / Sex</label>
             <select
               value={formData.gender}
               onChange={e => handleInputChange("gender", e.target.value)}
@@ -312,7 +312,7 @@ Please write an expert, professional clinical interpretation of this patient's m
           </div>
 
           <div className="space-y-1.5">
-            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Patient Age</label>
+            <label className="text-xs font-black tracking-wide block">Patient Age</label>
             <div className="relative">
               <input 
                 type="number" 
@@ -321,14 +321,14 @@ Please write an expert, professional clinical interpretation of this patient's m
                 onChange={e => handleInputChange("age", e.target.value)}
                 className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-12 font-mono focus:ring-2 focus:ring-emerald-500 h-[42px]" 
               />
-              <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">Years</span>
+              <span className="absolute right-3 top-2.5 text-xs font-black">Years</span>
             </div>
           </div>
         </div>
 
         <div className="flex justify-between items-center flex-wrap gap-4 border-t border-slate-200 pt-4">
           <div>
-            <h3 style={{ color: "#000000" }} className="text-xs font-black uppercase tracking-wide flex items-center gap-2">
+            <h3 className="text-xs font-black uppercase tracking-wide flex items-center gap-2">
               <span className="w-1.5 h-3 bg-emerald-600 rounded-full shrink-0" />
               <span>Biological Core Markers</span>
             </h3>
@@ -337,7 +337,7 @@ Please write an expert, professional clinical interpretation of this patient's m
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="space-y-1.5">
-            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Weight <span className="text-red-500">*</span></label>
+            <label className="text-xs font-black tracking-wide block">Weight <span className="text-red-500">*</span></label>
             <div className="relative">
               <input 
                 type="number" 
@@ -348,12 +348,12 @@ Please write an expert, professional clinical interpretation of this patient's m
                 onChange={e => handleInputChange("weight", e.target.value)}
                 className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-10 font-mono focus:ring-2 focus:ring-emerald-500" 
               />
-              <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">kg</span>
+              <span className="absolute right-3 top-2.5 text-xs font-black">kg</span>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Height <span className="text-red-500">*</span></label>
+            <label className="text-xs font-black tracking-wide block">Height <span className="text-red-500">*</span></label>
             <div className="relative">
               <input 
                 type="number" 
@@ -364,12 +364,12 @@ Please write an expert, professional clinical interpretation of this patient's m
                 onChange={e => handleInputChange("height", e.target.value)}
                 className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-10 font-mono focus:ring-2 focus:ring-emerald-500" 
               />
-              <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">cm</span>
+              <span className="absolute right-3 top-2.5 text-xs font-black">cm</span>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Age</label>
+            <label className="text-xs font-black tracking-wide block">Age</label>
             <div className="relative">
               <input 
                 type="number" 
@@ -378,14 +378,14 @@ Please write an expert, professional clinical interpretation of this patient's m
                 onChange={e => handleInputChange("age", e.target.value)}
                 className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-10 font-mono focus:ring-2 focus:ring-emerald-500" 
               />
-              <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">yrs</span>
+              <span className="absolute right-3 top-2.5 text-xs font-black">yrs</span>
             </div>
           </div>
         </div>
 
         <div className="border-t border-slate-200 pt-6">
           <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
-            <h4 style={{ color: "#000000" }} className="text-xs font-black uppercase tracking-wide flex items-center gap-2">
+            <h4 className="text-xs font-black uppercase tracking-wide flex items-center gap-2">
               <span className="w-1.5 h-3 bg-emerald-600 rounded-full shrink-0" />
               <span>Visceral Fat Adiposity Parameters (WHR Ratio)</span>
             </h4>
@@ -417,7 +417,7 @@ Please write an expert, professional clinical interpretation of this patient's m
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Waist Circumference</label>
+              <label className="text-xs font-black tracking-wide block">Waist Circumference</label>
               <div className="relative">
                 <input 
                   type="number" 
@@ -427,12 +427,12 @@ Please write an expert, professional clinical interpretation of this patient's m
                   onChange={e => handleInputChange("waist", e.target.value)}
                   className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-10 font-mono focus:ring-2 focus:ring-emerald-500" 
                 />
-                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">cm</span>
+                <span className="absolute right-3 top-2.5 text-xs font-black">cm</span>
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <label style={{ color: "#000000" }} className="text-xs font-black tracking-wide block">Hip Circumference</label>
+              <label className="text-xs font-black tracking-wide block">Hip Circumference</label>
               <div className="relative">
                 <input 
                   type="number" 
@@ -442,7 +442,7 @@ Please write an expert, professional clinical interpretation of this patient's m
                   onChange={e => handleInputChange("hip", e.target.value)}
                   className="w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-950 font-black pr-10 font-mono focus:ring-2 focus:ring-emerald-500" 
                 />
-                <span style={{ color: "#000000" }} className="absolute right-3 top-2.5 text-xs font-black">cm</span>
+                <span className="absolute right-3 top-2.5 text-xs font-black">cm</span>
               </div>
             </div>
           </div>
@@ -473,25 +473,25 @@ Please write an expert, professional clinical interpretation of this patient's m
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Ideal Weight Card */}
-            <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 space-y-1.5 p-6">
-              <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block">Clinician Healthy Target Weight Range</span>
-              <div style={{ color: "#000000" }} className="text-xl font-black font-mono">
+            <div className="bento-card border-2 border-slate-300 space-y-1.5 p-6">
+              <span className="card-title font-mono font-black text-xs uppercase tracking-wider block">Clinician Healthy Target Weight Range</span>
+              <div className="text-xl font-black font-mono">
                 {results.idealWeightMin} - {results.idealWeightMax} <span className="text-xs font-bold font-sans">kg</span>
               </div>
-              <p style={{ color: "#000000" }} className="text-xs font-bold leading-normal">
+              <p className="text-xs font-bold leading-normal">
                 Weight parameters required to represent a standard compensated body index (18.5 - 24.9) at current stature limits.
               </p>
             </div>
 
             {/* WHR Card */}
-            <div style={{ backgroundColor: "#ffffff" }} className="bento-card border-2 border-slate-300 space-y-1.5 p-6">
-              <span style={{ color: "#000000" }} className="card-title font-mono font-black text-xs uppercase tracking-wider block">Waist-to-Hip Ratio (WHR)</span>
+            <div className="bento-card border-2 border-slate-300 space-y-1.5 p-6">
+              <span className="card-title font-mono font-black text-xs uppercase tracking-wider block">Waist-to-Hip Ratio (WHR)</span>
               {results.whr !== undefined ? (
                 <div>
-                  <div style={{ color: "#000000" }} className="text-xl font-black font-mono">
+                  <div className="text-xl font-black font-mono">
                     {results.whr}
                   </div>
-                  <p style={{ color: "#000000" }} className="text-xs font-bold leading-normal">
+                  <p className="text-xs font-bold leading-normal">
                     {results.whrInterpretation}
                   </p>
                 </div>
@@ -523,11 +523,11 @@ Please write an expert, professional clinical interpretation of this patient's m
             </div>
 
             {/* Part A: Offline Rule-Based Basic Interpretation */}
-            <div style={{ backgroundColor: "#ffffff" }} className="space-y-1 p-4 rounded-2xl border-2 border-slate-300 shadow-xs">
+            <div className="space-y-1 p-4 rounded-2xl border-2 border-slate-300 shadow-xs">
               <span style={{ color: "#065f46" }} className="text-xs uppercase font-black tracking-widest block">
                 Local Basic Interpretation (Offline)
               </span>
-              <p style={{ color: "#000000" }} className="text-xs leading-relaxed font-semibold mt-1 text-justify">
+              <p className="text-xs leading-relaxed font-semibold mt-1 text-justify">
                 {results ? getOfflineBmiSummary({
                   weight: parseFloat(formData.weight) || 0,
                   height: parseFloat(formData.height) || 0,
@@ -542,8 +542,8 @@ Please write an expert, professional clinical interpretation of this patient's m
             {/* Part B: On-Demand AI Interpretation */}
             <div className="space-y-3 pt-1">
               {!aiInsight && !isAiLoading && !aiError && (
-                <div style={{ backgroundColor: "#ffffff" }} className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-300 rounded-2xl space-y-3">
-                  <p style={{ color: "#000000" }} className="text-xs text-center font-bold leading-relaxed">
+                <div className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-300 rounded-2xl space-y-3">
+                  <p className="text-xs text-center font-bold leading-relaxed">
                     Need an deep expert clinical review of obesity/metabolic indexes, fat deposit locations, and customized dietary and health plans with {activeProviderName}?
                   </p>
                   <button
@@ -559,9 +559,9 @@ Please write an expert, professional clinical interpretation of this patient's m
               )}
 
               {isAiLoading && (
-                <div style={{ backgroundColor: "#ffffff" }} className="h-28 flex flex-col items-center justify-center space-y-2 rounded-2xl border-2 border-slate-300">
+                <div className="h-28 flex flex-col items-center justify-center space-y-2 rounded-2xl border-2 border-slate-300">
                   <RefreshCw className="animate-spin text-emerald-800" size={24} />
-                  <p style={{ color: "#000000" }} className="text-xs font-black">Generating expert clinical interpretation with {activeProviderName}...</p>
+                  <p className="text-xs font-black">Generating expert clinical interpretation with {activeProviderName}...</p>
                 </div>
               )}
 
@@ -583,7 +583,7 @@ Please write an expert, professional clinical interpretation of this patient's m
               )}
 
               {aiInsight && (
-                <div style={{ backgroundColor: "#ffffff" }} className="space-y-2 p-4 border-2 border-slate-300 rounded-2xl shadow-xs">
+                <div className="space-y-2 p-4 border-2 border-slate-300 rounded-2xl shadow-xs">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <span style={{ color: "#065f46" }} className="text-xs uppercase font-black tracking-widest block">
                       Clinical AI Analysis ({getProviderDisplayName(aiMeta?.providerUsed || currentProvider)})
@@ -594,16 +594,16 @@ Please write an expert, professional clinical interpretation of this patient's m
                       </span>
                     )}
                   </div>
-                  <div style={{ color: "#000000" }} className="text-xs sm:text-sm whitespace-pre-wrap leading-relaxed text-justify pr-2 max-h-96 overflow-y-auto font-medium">
+                  <div className="text-xs sm:text-sm whitespace-pre-wrap leading-relaxed text-justify pr-2 max-h-96 overflow-y-auto font-medium">
                     {aiInsight}
                   </div>
                 </div>
               )}
             </div>
 
-            <div style={{ color: "#000000" }} className="border-t border-slate-300 pt-3 text-xs font-bold space-y-1.5 leading-relaxed">
+            <div className="border-t border-slate-300 pt-3 text-xs font-bold space-y-1.5 leading-relaxed">
               <p>
-                <strong style={{ color: "#000000" }} className="font-black">Medical Disclaimer:</strong> Decision-support only. This information should always be analyzed alongside professional clinicians.
+                <strong className="font-black">Medical Disclaimer:</strong> Decision-support only. This information should always be analyzed alongside professional clinicians.
               </p>
               <p className="border-l-2 border-emerald-600 pl-2">
                 AI-generated interpretation. Not a medical diagnosis. Consult a qualified doctor.
@@ -613,7 +613,7 @@ Please write an expert, professional clinical interpretation of this patient's m
 
           {/* Save panel */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-4 border-t border-slate-300 gap-4">
-            <span style={{ color: "#000000" }} className="text-xs font-bold">Ensure values are verified before sharing or saving to logs.</span>
+            <span className="text-xs font-bold">Ensure values are verified before sharing or saving to logs.</span>
             <div className="flex items-center gap-2 flex-wrap">
               <button
                 type="button"
