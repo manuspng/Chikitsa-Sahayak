@@ -49,18 +49,16 @@ function sanitizePatientName(name: any): string | undefined {
   if (typeof name !== "string" || !name) return undefined;
   let clean = name.trim();
   
-  // If the extracted name is actually a doctor, hospital, or department label, reject it completely
-  if (/\b(?:dr|doctor|pathologist|pathology|hospital|clinic|center|centre|laboratory|lab|consultant|biochemistry|department|dept|incharge|reported|verified)\b/i.test(clean)) {
-    return undefined;
-  }
+  // 1. If name begins with or contains labels like "Patient Name:", "Name:", "Pt:", strip them out
+  clean = clean.replace(/^(?:patient\s*name|pt\s*name|name|patient)\s*[:\-\t=.]*\s*/i, "");
 
-  // 1. Separate at large gaps (2+ spaces, tabs, pipes, semicolons) - ignore distant column words
+  // 2. Separate at large gaps (2+ spaces, tabs, pipes, semicolons) - ignore distant column words
   const chunks = clean.split(/\s{2,}|\t+|[|;\\/]+/);
   if (chunks.length > 0 && chunks[0].trim().length >= 2) {
     clean = chunks[0].trim();
   }
 
-  // 2. Normalize letter-spaced characters (e.g., "R a j e s h" -> "Rajesh")
+  // 3. Normalize letter-spaced characters (e.g., "R a j e s h" -> "Rajesh")
   clean = clean.replace(/\b([A-Za-z])\s+([A-Za-z])(?:\s+([A-Za-z]))*(?:\s+([A-Za-z]))*\b/g, (match) => {
     const chars = match.split(/\s+/);
     if (chars.every(c => c.length === 1)) {
@@ -69,35 +67,40 @@ function sanitizePatientName(name: any): string | undefined {
     return match;
   });
 
-  // 3. Strip common image/file dates or timestamps if glued
-  clean = clean.replace(/\d{4}[\-\/]\d{2}[\-\/]\d{2}[_\s]?\d{2}:\d{2}:\d{2}.*$/i, "");
-  clean = clean.replace(/\d{4}[:\-\/]\d{2}[:\-\/]\d{2}.*/i, "");
-  clean = clean.replace(/\d{2}[:\-\/]\d{2}[:\-\/]\d{4}.*/i, "");
-  
-  // Strip generic sentence explanations or guidelines often outputted by models
-  const expressions = [
-    "results represent", "represent", "lab data", "as of", "patient name is",
-    "json mapping", "let's list", "schema", "json", "total bilirubin",
-    "direct bilirubin", "ast (sgot)", "alt (sgpt)", "ggt", "alp", "albumin",
-    "ref by", "ref:", "dr.", "doctor", "age", "sex", "gender", "dob", "uhid", "pid"
+  // 4. Strip out trailing metadata, dates, or keywords
+  const cutoffKeywords = [
+    /\b(?:age|sex|gender|dob|d\.o\.b|date|ref\s+by|ref:|doctor|uhid|pid|reg|ipd|opd|bill|sample|collected|reported|barcode|hospital|clinic|lab|pathology|biochemistry|department)\b/i,
+    /[:=]/
   ];
-  
-  for (const exp of expressions) {
-    const idx = clean.toLowerCase().indexOf(" " + exp);
-    if (idx !== -1) {
-      clean = clean.substring(0, idx);
+  for (const marker of cutoffKeywords) {
+    const match = clean.search(marker);
+    if (match !== -1) {
+      clean = clean.substring(0, match).trim();
     }
   }
 
-  clean = clean.replace(/\d{4}.*$/g, "");
-  clean = clean.replace(/\d+.*$/g, "");
+  // 5. Remove numbers and unwanted special symbols
   clean = clean.replace(/[^A-Za-z.\-\s]/g, " ").replace(/\s+/g, " ").trim();
-  
-  if (clean.length > 50) {
-    clean = clean.substring(0, 50).trim();
+
+  // 6. Split into words and eliminate pure non-name noise
+  const forbiddenTerms = new Set([
+    "patient", "name", "pt", "reference", "range", "result", "normal",
+    "clinical", "report", "hospital", "lab", "page", "biochemistry", "pathology"
+  ]);
+
+  const words = clean.split(/\s+/).filter(w => w.length > 0 && !forbiddenTerms.has(w.toLowerCase()));
+  if (words.length === 0) return undefined;
+
+  // Reject if only title/prefix remains without actual name (e.g. "Dr." or "Mr.")
+  const nonTitleWords = words.filter(w => !/^(?:mr|mrs|ms|miss|master|dr|shri|smt)\.?$/i.test(w));
+  if (nonTitleWords.length === 0) return undefined;
+
+  const finalName = words.slice(0, 4).join(" ");
+  if (finalName.length >= 2 && finalName.length <= 50) {
+    return finalName;
   }
   
-  return (clean.length >= 2) ? clean : undefined;
+  return undefined;
 }
 
 function formatGeminiError(error: any): string {
@@ -712,7 +715,17 @@ Convert the extracted items into a single flat JSON dictionary representing valu
       };
     }
 
-    const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-2.0-flash"];
+    const modelPreference = req.body.modelPreference;
+    let modelsToTry = ["gemini-2.0-pro-exp-02-05", "gemini-1.5-pro", "gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-2.0-flash"];
+    if (modelPreference === "gemini_2_pro") {
+      modelsToTry = ["gemini-2.0-pro-exp-02-05", "gemini-2.0-pro-exp", "gemini-1.5-pro", "gemini-1.5-flash"];
+    } else if (modelPreference === "gemini_15_pro") {
+      modelsToTry = ["gemini-1.5-pro", "gemini-2.0-pro-exp-02-05", "gemini-1.5-flash"];
+    } else if (modelPreference === "gemini_2_flash") {
+      modelsToTry = ["gemini-2.0-flash", "gemini-1.5-flash"];
+    } else if (modelPreference === "gemini_15_flash" || modelPreference === "gemini") {
+      modelsToTry = ["gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-2.0-flash", "gemini-2.0-pro-exp-02-05"];
+    }
     let lastError: any = null;
     let textStr = "{}";
 

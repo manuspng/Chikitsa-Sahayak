@@ -172,18 +172,16 @@ export function sanitizePatientName(name: any): string | undefined {
   if (typeof name !== "string" || !name) return undefined;
   let clean = name.trim();
 
-  // If the extracted name is actually a doctor, hospital, or department label, reject it completely
-  if (/\b(?:dr|doctor|pathologist|pathology|hospital|clinic|center|centre|laboratory|lab|consultant|biochemistry|department|dept|incharge|reported|verified)\b/i.test(clean)) {
-    return undefined;
-  }
+  // 1. If name begins with or contains labels like "Patient Name:", "Name:", "Pt:", strip them out
+  clean = clean.replace(/^(?:patient\s*name|pt\s*name|name|patient)\s*[:\-\t=.]*\s*/i, "");
 
-  // 1. Separate at large gaps (2+ spaces, tabs, pipes, semicolons) - ignore distant column words
+  // 2. Separate at large gaps (2+ spaces, tabs, pipes, semicolons) - ignore distant column words
   const chunks = clean.split(/\s{2,}|\t+|[|;\\/]+/);
   if (chunks.length > 0 && chunks[0].trim().length >= 2) {
     clean = chunks[0].trim();
   }
 
-  // 2. Normalize letter-spaced characters (e.g., "R a j e s h" -> "Rajesh")
+  // 3. Normalize letter-spaced characters (e.g., "R a j e s h" -> "Rajesh")
   clean = clean.replace(/\b([A-Za-z])\s+([A-Za-z])(?:\s+([A-Za-z]))*(?:\s+([A-Za-z]))*\b/g, (match) => {
     const chars = match.split(/\s+/);
     if (chars.every(c => c.length === 1)) {
@@ -192,34 +190,40 @@ export function sanitizePatientName(name: any): string | undefined {
     return match;
   });
 
-  // 3. Cut off at standard trailing metadata
-  clean = clean.replace(/\d{4}[\-\/]\d{2}[\-\/]\d{2}[_\s]?\d{2}:\d{2}:\d{2}.*$/i, "");
-  clean = clean.replace(/\d{4}[:\-\/]\d{2}[:\-\/]\d{2}.*/i, "");
-  clean = clean.replace(/\d{2}[:\-\/]\d{2}[:\-\/]\d{4}.*/i, "");
-  
-  const expressions = [
-    "results represent", "represent", "lab data", "as of", "patient name is",
-    "json mapping", "let's list", "schema", "json", "total bilirubin",
-    "direct bilirubin", "ast (sgot)", "alt (sgpt)", "ggt", "alp", "albumin",
-    "ref by", "ref:", "dr.", "doctor", "age", "sex", "gender", "dob", "uhid", "pid"
+  // 4. Strip out trailing metadata, dates, or keywords
+  const cutoffKeywords = [
+    /\b(?:age|sex|gender|dob|d\.o\.b|date|ref\s+by|ref:|doctor|uhid|pid|reg|ipd|opd|bill|sample|collected|reported|barcode|hospital|clinic|lab|pathology|biochemistry|department)\b/i,
+    /[:=]/
   ];
-  
-  for (const exp of expressions) {
-    const idx = clean.toLowerCase().indexOf(" " + exp);
-    if (idx !== -1) {
-      clean = clean.substring(0, idx);
+  for (const marker of cutoffKeywords) {
+    const match = clean.search(marker);
+    if (match !== -1) {
+      clean = clean.substring(0, match).trim();
     }
   }
 
-  clean = clean.replace(/\d{4}.*$/g, "");
-  clean = clean.replace(/\d+.*$/g, "");
+  // 5. Remove numbers and unwanted special symbols
   clean = clean.replace(/[^A-Za-z.\-\s]/g, " ").replace(/\s+/g, " ").trim();
-  
-  if (clean.length > 50) {
-    clean = clean.substring(0, 50).trim();
+
+  // 6. Split into words and eliminate pure non-name noise
+  const forbiddenTerms = new Set([
+    "patient", "name", "pt", "reference", "range", "result", "normal",
+    "clinical", "report", "hospital", "lab", "page", "biochemistry", "pathology"
+  ]);
+
+  const words = clean.split(/\s+/).filter(w => w.length > 0 && !forbiddenTerms.has(w.toLowerCase()));
+  if (words.length === 0) return undefined;
+
+  // Reject if only title/prefix remains without actual name (e.g. "Dr." or "Mr.")
+  const nonTitleWords = words.filter(w => !/^(?:mr|mrs|ms|miss|master|dr|shri|smt)\.?$/i.test(w));
+  if (nonTitleWords.length === 0) return undefined;
+
+  const finalName = words.slice(0, 4).join(" ");
+  if (finalName.length >= 2 && finalName.length <= 50) {
+    return finalName;
   }
   
-  return (clean.length >= 2) ? clean : undefined;
+  return undefined;
 }
 
 /**
@@ -373,10 +377,14 @@ export interface AnalysisResponse {
 export function getProviderDisplayName(providerId: string): string {
   const map: Record<string, string> = {
     auto: "Auto (Smart Multi-Agent Cascade)",
-    gemini: "Gemini 1.5 Flash (100% Free - 1500 req/day)",
-    groq: "Groq (Llama 3.3 70B - Free High Speed)",
-    openrouter: "OpenRouter Multi-Model",
-    local_ocr: "Local Offline OCR (Tesseract - Unlimited & Free)",
+    gemini_2_pro: "👑 Google Gemini 2.0 Pro Exp (Flagship Vision Accuracy)",
+    gemini_15_pro: "💎 Google Gemini 1.5 Pro (Deep Clinical Reasoning)",
+    gemini_2_flash: "⚡ Google Gemini 2.0 Flash (Next-Gen Fast)",
+    gemini_15_flash: "✨ Google Gemini 1.5 Flash (1500 req/day Free)",
+    gemini: "✨ Google Gemini 1.5 Flash (100% Free)",
+    groq: "⚡ Groq (Llama 3.3 70B - Free High Speed)",
+    openrouter: "🌐 OpenRouter Multi-Model",
+    local_ocr: "🔒 Local Offline OCR (Tesseract - Unlimited & Free)",
     openai: "OpenAI GPT-4o-mini",
     claude: "Claude 3.5 Haiku",
     deepseek: "DeepSeek Chat",
@@ -676,8 +684,9 @@ async function callDirectGeminiExtractocr(
   images: { base64: string, mimeType: string }[],
   reportType: "lft" | "cbc" | "metabolic",
   rawOcrText: string | undefined,
-  apiKey: string
-): Promise<any> {
+  apiKey: string,
+  providerPreference?: string
+): Promise<{ values: any; modelUsed: string }> {
   const imageParts = images.map(img => ({
     inlineData: {
       mimeType: img.mimeType || "image/jpeg",
@@ -809,12 +818,18 @@ ${rawOcrText ? `\n\nOCR Pre-scanned text:\n${rawOcrText}` : ""}`;
     };
   }
 
-  // Google Gemini Free Tier Models:
-  // gemini-1.5-flash: 1,500 requests/day, 15 RPM, 1M context (100% Free, most reliable for multimodal OCR)
-  // gemini-1.5-flash-8b: 1,500 requests/day, 15 RPM, ultra-fast
-  // gemini-2.0-flash: 1,500 requests/day, 15 RPM
-  // gemini-1.5-pro: 50 requests/day
-  const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-2.0-flash", "gemini-1.5-pro"];
+  let modelsToTry = ["gemini-2.0-pro-exp-02-05", "gemini-1.5-pro", "gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-2.0-flash"];
+  
+  if (providerPreference === "gemini_2_pro") {
+    modelsToTry = ["gemini-2.0-pro-exp-02-05", "gemini-2.0-pro-exp", "gemini-1.5-pro", "gemini-1.5-flash"];
+  } else if (providerPreference === "gemini_15_pro") {
+    modelsToTry = ["gemini-1.5-pro", "gemini-2.0-pro-exp-02-05", "gemini-1.5-flash"];
+  } else if (providerPreference === "gemini_2_flash") {
+    modelsToTry = ["gemini-2.0-flash", "gemini-1.5-flash"];
+  } else if (providerPreference === "gemini_15_flash" || providerPreference === "gemini") {
+    modelsToTry = ["gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-2.0-flash", "gemini-2.0-pro-exp-02-05", "gemini-1.5-pro"];
+  }
+
   let lastError: any = null;
 
   for (const model of modelsToTry) {
@@ -883,7 +898,7 @@ ${rawOcrText ? `\n\nOCR Pre-scanned text:\n${rawOcrText}` : ""}`;
       if (parsed.patientName) {
         parsed.patientName = sanitizePatientName(parsed.patientName);
       }
-      return parsed;
+      return { values: parsed, modelUsed: model };
     } catch (err: any) {
       lastError = err;
       console.warn(`[GEMINI EXTRACT] Model ${model} failed, trying next fallback:`, err.message);
@@ -1131,17 +1146,22 @@ export async function runGeminiExtractReport(
     }
   }
 
-  // 4. Direct Gemini Agent (if chosen explicitly)
-  if (selectedProvider === "gemini") {
+  // 4. Direct Gemini Agent (if chosen explicitly, e.g. Gemini 2.0 Pro, 1.5 Pro, 2.0 Flash, 1.5 Flash)
+  if (selectedProvider.startsWith("gemini")) {
     if (geminiKey) {
       try {
-        const rawValues = await callDirectGeminiExtractocr(imagesBase64, reportType, rawOcrText, geminiKey);
-        const calibratedValues = calibrateExtractedReportValues(rawValues, rawOcrText, reportType);
-        return { values: calibratedValues, providerUsed: "gemini", modelUsed: "gemini-1.5-flash", wasFallback: false };
+        const result = await callDirectGeminiExtractocr(imagesBase64, reportType, rawOcrText, geminiKey, selectedProvider);
+        const calibratedValues = calibrateExtractedReportValues(result.values, rawOcrText, reportType);
+        return { values: calibratedValues, providerUsed: "gemini", modelUsed: result.modelUsed, wasFallback: false };
       } catch (err: any) {
         console.warn("Direct Gemini extraction with user key failed:", err.message);
       }
+    } else {
+      // User selected a high-accuracy Gemini model but hasn't entered key yet
+      window.dispatchEvent(new CustomEvent("open-ai-provider-modal"));
+      throw new Error(`Google ${getProviderDisplayName(selectedProvider)} requires a Gemini API Key to enable cloud vision extraction. Please enter your free API Key in the settings popup.`);
     }
+
     // Try backend endpoint if user key was missing or failed
     try {
       const headers: Record<string, string> = { "Content-Type": "application/json" };
@@ -1150,7 +1170,7 @@ export async function runGeminiExtractReport(
       const response = await fetch(targetUrl, {
         method: "POST",
         headers,
-        body: JSON.stringify({ imagesBase64, reportType }),
+        body: JSON.stringify({ imagesBase64, reportType, modelPreference: selectedProvider }),
       });
       if (response.ok) {
         const data = await response.json();
@@ -1184,12 +1204,12 @@ export async function runGeminiExtractReport(
   }
 
   // 5. Cascade Priority (Auto Mode):
-  // Step A: User Gemini Key with Gemini 1.5 Flash (100% Free - 1,500 req/day)
+  // Step A: User Gemini Key with Flagship Vision (Gemini 2.0 Pro Exp / 1.5 Pro / 1.5 Flash)
   if (geminiKey) {
     try {
-      const rawValues = await callDirectGeminiExtractocr(imagesBase64, reportType, rawOcrText, geminiKey);
-      const calibratedValues = calibrateExtractedReportValues(rawValues, rawOcrText, reportType);
-      return { values: calibratedValues, providerUsed: "gemini", modelUsed: "gemini-1.5-flash", wasFallback: false };
+      const result = await callDirectGeminiExtractocr(imagesBase64, reportType, rawOcrText, geminiKey, "auto");
+      const calibratedValues = calibrateExtractedReportValues(result.values, rawOcrText, reportType);
+      return { values: calibratedValues, providerUsed: "gemini", modelUsed: result.modelUsed, wasFallback: false };
     } catch (err: any) {
       console.warn("[CASCADE] Gemini direct failed, attempting next available agent:", err.message);
     }

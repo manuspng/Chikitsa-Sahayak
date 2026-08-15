@@ -600,7 +600,10 @@ OFFLINE CRITERIA SYNTHESIS:
               className="bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-600 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-900 dark:text-slate-100 cursor-pointer shadow-xs focus:ring-2 focus:ring-emerald-500"
             >
               <option value="auto">⚡ Auto Smart Cascade (Recommended)</option>
-              <option value="gemini">✨ Google Gemini 1.5 Flash (100% Free - 1,500 req/day)</option>
+              <option value="gemini_2_pro">👑 Google Gemini 2.0 Pro Exp (Flagship Highest Accuracy - Free Trial)</option>
+              <option value="gemini_15_pro">💎 Google Gemini 1.5 Pro (Deep Clinical Reasoning - Free Trial)</option>
+              <option value="gemini_2_flash">⚡ Google Gemini 2.0 Flash (Next-Gen Fast)</option>
+              <option value="gemini_15_flash">✨ Google Gemini 1.5 Flash (100% Free - 1,500 req/day)</option>
               <option value="groq">⚡ Groq Llama 3.3 70B (100% Free - High Speed)</option>
               <option value="openrouter">🌐 OpenRouter Universal Engine</option>
               <option value="local_ocr">🔒 Local Offline OCR (Tesseract - Unlimited & Free)</option>

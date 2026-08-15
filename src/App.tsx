@@ -1091,7 +1091,10 @@ export default function App() {
                     className="w-full pl-4 pr-10 py-2.5 bg-slate-50 dark:bg-slate-900/40 border-2 border-slate-300 dark:border-slate-800 rounded-xl text-xs font-black text-slate-950 dark:text-slate-100 outline-none appearance-none cursor-pointer focus:border-emerald-500"
                   >
                     <option value="auto">✨ Auto (Smart Multi-Agent Cascade - Recommended)</option>
-                    <option value="gemini">✨ Google Gemini 1.5 Flash (100% Free - 1,500 req/day)</option>
+                    <option value="gemini_2_pro">👑 Google Gemini 2.0 Pro Exp (Flagship Vision Accuracy - Free Trial)</option>
+                    <option value="gemini_15_pro">💎 Google Gemini 1.5 Pro (Deep Clinical Reasoning - Free Trial)</option>
+                    <option value="gemini_2_flash">⚡ Google Gemini 2.0 Flash (Next-Gen Fast)</option>
+                    <option value="gemini_15_flash">✨ Google Gemini 1.5 Flash (100% Free - 1,500 req/day)</option>
                     <option value="groq">⚡ Groq Llama 3.3 70B (100% Free - High Speed)</option>
                     <option value="openrouter">🌐 OpenRouter (Universal Multi-Model)</option>
                     <option value="local_ocr">🔒 Local Offline OCR (Tesseract - Unlimited & Free)</option>
