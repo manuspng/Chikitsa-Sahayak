@@ -456,11 +456,18 @@ Please provide a decisive, robust, and pinpointed clinical diagnostic assessment
         filesList.map(file => preprocessImageForOcr(file))
       );
 
-      // 2. Perform OCR text recognition using Tesseract.js (provides clean text for both modes)
+      // 2. Perform OCR text recognition using Tesseract.js (skip for PDFs which are processed natively by AI)
       let aggregatedText = "";
       let index = 0;
       for (const dataUrl of preprocessedUrls) {
         index++;
+        if (dataUrl.startsWith("data:application/pdf")) {
+          if (mode === "offline") {
+            throw new Error("PDF documents require multi-agent AI Extraction. Please select 'AI to Extract' to parse your PDF report directly.");
+          }
+          // In AI mode, skip Tesseract text scan since Gemini receives the PDF document directly
+          continue;
+        }
         setOcrStatusText(`Page ${index}/${preprocessedUrls.length}: Scanning image text...`);
         const ocrResult = await Tesseract.recognize(dataUrl, "eng", {
           logger: m => {

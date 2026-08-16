@@ -5,78 +5,108 @@
 
 export function preprocessImageForOcr(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
+    // If the file is a PDF, pass through data URL directly without canvas manipulation
+    if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        resolve(event.target?.result as string || "");
+      };
+      reader.onerror = () => {
+        reject(new Error("Unable to read PDF document. Please check file permissions."));
+      };
+      reader.readAsDataURL(file);
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (event) => {
+      const rawDataUrl = (event.target?.result as string) || "";
+      if (!rawDataUrl) {
+        resolve("");
+        return;
+      }
+
       const img = new Image();
       img.onload = () => {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-          resolve(event.target?.result as string);
-          return;
+        try {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            resolve(rawDataUrl);
+            return;
+          }
+
+          // Auto upscale low resolution images or downscale huge images to keep OCR fast and accurate
+          let width = img.width || 1200;
+          let height = img.height || 800;
+          const targetWidth = 1200; // Optimal width for text reading
+
+          if (width < 600 || width > 1800) {
+            const ratio = targetWidth / width;
+            width = targetWidth;
+            height = Math.round(height * ratio);
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          // Draw image on canvas with high-quality scaling
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Retrieve pixel data
+          const imgData = ctx.getImageData(0, 0, width, height);
+          const data = imgData.data;
+
+          // Apply high-contrast grayscaling filter (Luminance based + contrast stretching)
+          const contrast = 40; // High contrast boost slider (-100 to 100 range)
+          const factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
+
+          for (let i = 0; i < data.length; i += 4) {
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+
+            // 1. Grayscale luminance
+            let gray = 0.299 * r + 0.587 * g + 0.114 * b;
+
+            // 2. High contrast stretch
+            gray = factor * (gray - 128) + 128;
+
+            // Clamp to valid [0, 255]
+            if (gray < 0) gray = 0;
+            if (gray > 255) gray = 255;
+
+            data[i] = gray;     // Red
+            data[i + 1] = gray; // Green
+            data[i + 2] = gray; // Blue
+            // Alpha is left intact
+          }
+
+          ctx.putImageData(imgData, 0, 0);
+
+          // Export as JPEG (lighter than PNG)
+          resolve(canvas.toDataURL("image/jpeg", 0.9));
+        } catch (canvasErr) {
+          console.warn("Canvas preprocessing warning, falling back to original image data:", canvasErr);
+          resolve(rawDataUrl);
         }
-
-        // Auto upscale low resolution images or downscale huge images to keep OCR fast and accurate
-        let width = img.width;
-        let height = img.height;
-        const targetWidth = 1200; // Optimal width for text reading
-
-        if (width < 600 || width > 1800) {
-          const ratio = targetWidth / width;
-          width = targetWidth;
-          height = Math.round(height * ratio);
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-
-        // Draw image on canvas with high-quality scaling
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = "high";
-        ctx.drawImage(img, 0, 0, width, height);
-
-        // Retrieve pixel data
-        const imgData = ctx.getImageData(0, 0, width, height);
-        const data = imgData.data;
-
-        // Apply high-contrast grayscaling filter (Luminance based + contrast stretching)
-        const contrast = 40; // High contrast boost slider (-100 to 100 range)
-        const factor = (259 * (contrast + 255)) / (255 * (259 - contrast));
-
-        for (let i = 0; i < data.length; i += 4) {
-          const r = data[i];
-          const g = data[i + 1];
-          const b = data[i + 2];
-
-          // 1. Grayscale luminance
-          let gray = 0.299 * r + 0.587 * g + 0.114 * b;
-
-          // 2. High contrast stretch
-          gray = factor * (gray - 128) + 128;
-
-          // Clamp to valid [0, 255]
-          if (gray < 0) gray = 0;
-          if (gray > 255) gray = 255;
-
-          data[i] = gray;     // Red
-          data[i + 1] = gray; // Green
-          data[i + 2] = gray; // Blue
-          // Alpha is left intact
-        }
-
-        ctx.putImageData(imgData, 0, 0);
-
-        // Export as JPEG (lighter than PNG)
-        resolve(canvas.toDataURL("image/jpeg", 0.9));
       };
+
       img.onerror = () => {
-        reject(new Error("Failed to load image for preprocessing"));
+        // Graceful fallback: return original raw data URL instead of failing the pipeline
+        console.warn("Could not decode image format for canvas contrast boost, passing original file data URL.");
+        resolve(rawDataUrl);
       };
-      img.src = event.target?.result as string;
+
+      img.src = rawDataUrl;
     };
+
     reader.onerror = () => {
-      reject(new Error("Failed to read image file"));
+      reject(new Error("Failed to read image file. Please verify file integrity."));
     };
+
     reader.readAsDataURL(file);
   });
 }

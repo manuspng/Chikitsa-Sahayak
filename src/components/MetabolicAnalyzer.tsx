@@ -178,10 +178,17 @@ export default function MetabolicAnalyzer({ onAddRecord }: MetabolicAnalyzerProp
 
       for (let i = 0; i < filesToProcess.length; i++) {
         const file = filesToProcess[i];
-        setOcrStatusText(`Scanning report page ${i + 1} of ${filesToProcess.length}...`);
-        
         const preprocessedImgSrc = await preprocessImageForOcr(file);
-        
+
+        if (preprocessedImgSrc.startsWith("data:application/pdf")) {
+          if (mode === "offline") {
+            throw new Error("PDF documents require multi-agent AI Extraction. Please select 'AI to Extract' to parse your PDF report directly.");
+          }
+          // In AI mode, skip Tesseract text scan since Gemini receives the PDF document directly
+          continue;
+        }
+
+        setOcrStatusText(`Scanning report page ${i + 1} of ${filesToProcess.length}...`);
         const result = await Tesseract.recognize(
           preprocessedImgSrc,
           "eng",
