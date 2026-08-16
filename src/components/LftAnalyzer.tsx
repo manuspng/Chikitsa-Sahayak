@@ -439,7 +439,7 @@ Please provide a decisive, robust, and pinpointed clinical diagnostic assessment
     setIsVerifiedCheck(false);
   };
 
-  const runOcrExtract = async (filesList: File[], mode: "offline" | "ai" = "ai") => {
+  const runOcrExtract = async (filesList: File[], requestedMode?: "offline" | "ai") => {
     if (filesList.length === 0) {
       setSelectedFiles([]);
       return;
@@ -448,7 +448,28 @@ Please provide a decisive, robust, and pinpointed clinical diagnostic assessment
     setIsOcrLoading(true);
     setOcrError(null);
     setOcrErrorStack(null);
-    setOcrStatusText("Preparing report scan...");
+
+    const hasPdf = filesList.some(f => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf"));
+    let mode: "offline" | "ai" = requestedMode || (hasPdf ? "ai" : "ai");
+
+    // If offline mode was explicitly requested but a PDF is included
+    if (hasPdf && requestedMode === "offline") {
+      if (navigator.onLine) {
+        mode = "ai";
+      } else {
+        setIsOcrLoading(false);
+        setOcrError("PDF documents require an internet connection for Clinical AI extraction. If offline, please take a photo or screenshot (JPEG/PNG) of the report.");
+        return;
+      }
+    }
+
+    setOcrStatusText(
+      mode === "offline" 
+        ? "Preprocessing images for offline scan..." 
+        : hasPdf 
+        ? "Processing PDF with Multi-Agent Clinical AI..." 
+        : "Scanning report with Clinical AI..."
+    );
 
     try {
       // 1. Preprocess images locally for OCR analysis
@@ -462,9 +483,6 @@ Please provide a decisive, robust, and pinpointed clinical diagnostic assessment
       for (const dataUrl of preprocessedUrls) {
         index++;
         if (dataUrl.startsWith("data:application/pdf")) {
-          if (mode === "offline") {
-            throw new Error("PDF documents require multi-agent AI Extraction. Please select 'AI to Extract' to parse your PDF report directly.");
-          }
           // In AI mode, skip Tesseract text scan since Gemini receives the PDF document directly
           continue;
         }
@@ -518,7 +536,7 @@ Please provide a decisive, robust, and pinpointed clinical diagnostic assessment
             wasFallback: data.wasFallback
           });
         } else {
-          throw new Error("The AI model was unable to extract report fields. Please verify image quality.");
+          throw new Error("The AI model was unable to extract report fields. Please verify image/document quality.");
         }
       }
     } catch (err: any) {
@@ -546,7 +564,7 @@ Please provide a decisive, robust, and pinpointed clinical diagnostic assessment
     const files = e.dataTransfer.files;
     const newFiles: File[] = [];
     for (let i = 0; i < files.length; i++) {
-      if (files[i].type.startsWith("image/")) {
+      if (files[i].type.startsWith("image/") || files[i].type === "application/pdf" || files[i].name.toLowerCase().endsWith(".pdf")) {
         newFiles.push(files[i]);
       }
     }
@@ -554,11 +572,11 @@ Please provide a decisive, robust, and pinpointed clinical diagnostic assessment
     if (newFiles.length > 0) {
       setSelectedFiles(prev => {
         const combined = [...prev, ...newFiles].slice(0, 3);
-        runOcrExtract(combined);
+        runOcrExtract(combined, "ai");
         return combined;
       });
     } else {
-      setOcrError("Invalid file type. Please upload valid report image(s).");
+      setOcrError("Invalid file type. Please upload valid report image(s) or PDF document.");
     }
   };
 
@@ -569,7 +587,7 @@ Please provide a decisive, robust, and pinpointed clinical diagnostic assessment
       const newFiles = Array.from(files);
       setSelectedFiles(prev => {
         const combined = [...prev, ...newFiles].slice(0, 3);
-        runOcrExtract(combined);
+        runOcrExtract(combined, "ai");
         return combined;
       });
       // Reset input value so re-uploading the same file works

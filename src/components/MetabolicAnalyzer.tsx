@@ -167,11 +167,31 @@ export default function MetabolicAnalyzer({ onAddRecord }: MetabolicAnalyzerProp
     setMissingExtractedKeys(missing);
   };
 
-  const processFilesForOcr = async (filesToProcess: File[], mode: "offline" | "ai" = "ai") => {
+  const processFilesForOcr = async (filesToProcess: File[], requestedMode?: "offline" | "ai") => {
     if (filesToProcess.length === 0) return;
     setIsOcrLoading(true);
     setOcrError(null);
-    setOcrStatusText("Starting biological report scan...");
+
+    const hasPdf = filesToProcess.some(f => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf"));
+    let mode: "offline" | "ai" = requestedMode || (hasPdf ? "ai" : "ai");
+
+    if (hasPdf && requestedMode === "offline") {
+      if (navigator.onLine) {
+        mode = "ai";
+      } else {
+        setIsOcrLoading(false);
+        setOcrError("PDF documents require an internet connection for Clinical AI extraction. If offline, please take a photo or screenshot (JPEG/PNG) of the report.");
+        return;
+      }
+    }
+
+    setOcrStatusText(
+      mode === "offline" 
+        ? "Preprocessing images for offline scan..." 
+        : hasPdf 
+        ? "Processing PDF with Multi-Agent Clinical AI..." 
+        : "Scanning report with Clinical AI..."
+    );
 
     try {
       let combinedOcrText = "";
@@ -181,9 +201,6 @@ export default function MetabolicAnalyzer({ onAddRecord }: MetabolicAnalyzerProp
         const preprocessedImgSrc = await preprocessImageForOcr(file);
 
         if (preprocessedImgSrc.startsWith("data:application/pdf")) {
-          if (mode === "offline") {
-            throw new Error("PDF documents require multi-agent AI Extraction. Please select 'AI to Extract' to parse your PDF report directly.");
-          }
           // In AI mode, skip Tesseract text scan since Gemini receives the PDF document directly
           continue;
         }
@@ -209,7 +226,7 @@ export default function MetabolicAnalyzer({ onAddRecord }: MetabolicAnalyzerProp
         applyMetabolicOcrValues(parsedData);
         setExtractMeta({ providerUsed: "Local Tesseract OCR", modelUsed: "Offline Pattern Parser", wasFallback: false });
       } else {
-        setOcrStatusText("Encoding images for Clinical AI Engine...");
+        setOcrStatusText("Encoding document for Clinical AI Engine...");
         const base64Promises = filesToProcess.map(file => {
           return new Promise<{ base64: string, mimeType: string }>((resolve, reject) => {
             const reader = new FileReader();
@@ -235,7 +252,7 @@ export default function MetabolicAnalyzer({ onAddRecord }: MetabolicAnalyzerProp
             wasFallback: data.wasFallback
           });
         } else {
-          throw new Error("The AI model was unable to extract report fields. Please verify image quality.");
+          throw new Error("The AI model was unable to extract report fields. Please verify image/document quality.");
         }
       }
 
@@ -543,12 +560,12 @@ Please provide a decisive, robust, and pinpointed clinical diagnostic assessment
     setIsDragging(false);
     setOcrError(null);
 
-    const files = Array.from(e.dataTransfer.files).filter((f: any) => f.type.startsWith("image/"));
+    const files = Array.from(e.dataTransfer.files).filter((f: any) => f.type.startsWith("image/") || f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf"));
     if (files.length === 0) return;
 
     const newFiles = [...selectedFiles, ...files].slice(0, 3);
     setSelectedFiles(newFiles);
-    processFilesForOcr(newFiles);
+    processFilesForOcr(newFiles, "ai");
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -557,7 +574,7 @@ Please provide a decisive, robust, and pinpointed clinical diagnostic assessment
       const files = Array.from(e.target.files);
       const newFiles = [...selectedFiles, ...files].slice(0, 3);
       setSelectedFiles(newFiles);
-      processFilesForOcr(newFiles);
+      processFilesForOcr(newFiles, "ai");
       // Reset input value so re-uploading the same file works
       e.target.value = "";
     }
