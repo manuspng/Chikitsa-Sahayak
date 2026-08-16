@@ -444,6 +444,8 @@ export function calculateCBC(inputs: CBCInputs): CBCResults {
     mcv,
     mch,
     mchc,
+    rdw,
+    vitaminB12,
     neutrophils,
     lymphocytes,
     gender,
@@ -455,26 +457,162 @@ export function calculateCBC(inputs: CBCInputs): CBCResults {
   const hbMin = gender === "male" ? 13.5 : 12.0;
   const hbMax = gender === "male" ? 17.5 : 15.5;
   let hemoglobinStatus = "Normal";
-  let anemiaType: string | undefined;
+  let isAnemic = false;
 
   if (hemoglobin < hbMin) {
     abnormalCount++;
+    isAnemic = true;
     if (mcv < 80) {
-      anemiaType = "Microcytic anemia (likely iron deficiency, chronic blood loss, or thalassemia trait)";
       hemoglobinStatus = "Low – Microcytic";
     } else if (mcv > 100) {
-      anemiaType = "Macrocytic anemia (possible Vitamin B12 or Folate deficiency)";
       hemoglobinStatus = "Low – Macrocytic";
     } else {
-      anemiaType = "Normocytic anemia (possible active infection, chronic inflammatory disease, or anemia of chronic disease)";
       hemoglobinStatus = "Low – Normocytic";
     }
   } else if (hemoglobin > hbMax) {
     abnormalCount++;
-    hemoglobinStatus = "High – Polycythemia (could indicate dehydration or elevated red cell mass)";
+    hemoglobinStatus = "High – Polycythemia / Erythrocytosis";
   }
 
-  // 2. WBC Assessment (White Blood Cells)
+  // 2. Red Cell Indices Interpretations (MCV, MCH, MCHC)
+  // 2a. MCV (Mean Corpuscular Volume: 80 - 100 fL)
+  let mcvStatus = "Normal (Normocytic)";
+  let mcvInterpretation = "Erythrocyte volume is within standard reference range (80–100 fL).";
+  if (mcv < 80) {
+    abnormalCount++;
+    mcvStatus = "Low (Microcytic)";
+    mcvInterpretation = "Microcytic erythrocytes (< 80 fL). Suggestive of iron deficiency, thalassemia trait, or sideroblastic anemia.";
+  } else if (mcv > 100) {
+    abnormalCount++;
+    mcvStatus = "High (Macrocytic)";
+    mcvInterpretation = "Macrocytic erythrocytes (> 100 fL). Suggestive of Vitamin B12 deficiency, folate deficiency, reticulocytosis, alcoholism, or liver disease.";
+  }
+
+  // 2b. MCH (Mean Corpuscular Hemoglobin: 27 - 33 pg)
+  let mchStatus = "Normal (Normochromic)";
+  let mchInterpretation = "Mean cellular hemoglobin content is normal (27–33 pg).";
+  if (mch < 27) {
+    abnormalCount++;
+    mchStatus = "Low (Hypochromic)";
+    mchInterpretation = "Hypochromic erythrocytes (< 27 pg). Reduced cellular hemoglobin content per red cell.";
+  } else if (mch > 33) {
+    abnormalCount++;
+    mchStatus = "High (Hyperchromic)";
+    mchInterpretation = "Hyperchromic erythrocytes (> 33 pg). Elevated cellular hemoglobin content per red cell.";
+  }
+
+  // 2c. MCHC (Mean Corpuscular Hemoglobin Concentration: 32 - 36 g/dL)
+  let mchcStatus = "Normal (Normochromic)";
+  let mchcInterpretation = "Cellular hemoglobin concentration is optimal (32–36 g/dL).";
+  if (mchc < 32) {
+    abnormalCount++;
+    mchcStatus = "Low (Hypochromic)";
+    mchcInterpretation = "Hypochromic concentration (< 32 g/dL). Decreased relative hemoglobin density.";
+  } else if (mchc > 36) {
+    abnormalCount++;
+    mchcStatus = "High (Hyperchromic)";
+    mchcInterpretation = "Elevated MCHC (> 36 g/dL). Consider hereditary spherocytosis, cold agglutinins, or true hyperchromia.";
+  }
+
+  // 2d. RDW (Red Cell Distribution Width: 11.5% - 14.5%)
+  let rdwStatus: string | undefined;
+  let rdwInterpretation: string | undefined;
+  if (rdw !== undefined && rdw > 0) {
+    if (rdw > 14.5) {
+      abnormalCount++;
+      rdwStatus = "Elevated (Anisocytosis)";
+      rdwInterpretation = `Elevated RDW (${rdw}% > 14.5%). Significant variation in red cell size (anisocytosis), characteristic of active iron deficiency, early nutritional anemia, or mixed etiology.`;
+    } else if (rdw < 11.5) {
+      rdwStatus = "Low (Homogeneous)";
+      rdwInterpretation = `Low RDW (${rdw}% < 11.5%). Uniform red blood cell sizing with minimal variation.`;
+    } else {
+      rdwStatus = "Normal Distribution";
+      rdwInterpretation = `Normal RDW (${rdw}% within 11.5%–14.5%). Homogeneous cell size distribution.`;
+    }
+  }
+
+  // 2e. Vitamin B12 (Cobalamin: 200 - 900 pg/mL)
+  let vitaminB12Status: string | undefined;
+  let vitaminB12Interpretation: string | undefined;
+  if (vitaminB12 !== undefined && vitaminB12 > 0) {
+    if (vitaminB12 < 200) {
+      abnormalCount++;
+      vitaminB12Status = "Deficient (< 200 pg/mL)";
+      vitaminB12Interpretation = `Low serum Vitamin B12 (${vitaminB12} pg/mL). High risk of megaloblastic macrocytic anemia, peripheral neuropathy, subacute combined spinal cord degeneration, and glossitis. Prompt therapeutic cobalamin replenishment indicated.`;
+    } else if (vitaminB12 <= 300) {
+      abnormalCount++;
+      vitaminB12Status = "Borderline (200–300 pg/mL)";
+      vitaminB12Interpretation = `Borderline Vitamin B12 reserve (${vitaminB12} pg/mL). Marginal cellular stores; recommend evaluating serum methylmalonic acid (MMA) or homocysteine to identify early tissue deficiency.`;
+    } else if (vitaminB12 > 900) {
+      vitaminB12Status = "Elevated (> 900 pg/mL)";
+      vitaminB12Interpretation = `Elevated serum Vitamin B12 (${vitaminB12} pg/mL). May reflect high-dose cobalamin supplementation, acute hepatocellular damage/liver disease, renal insufficiency, or myeloproliferative disorders.`;
+    } else {
+      vitaminB12Status = "Normal (300–900 pg/mL)";
+      vitaminB12Interpretation = `Normal physiological Vitamin B12 level (${vitaminB12} pg/mL).`;
+    }
+  }
+
+  // 2f. Mentzer Index (MCV / RBC) for Microcytosis
+  let mentzerIndex: number | undefined;
+  let mentzerInterpretation: string | undefined;
+  if (mcv < 80 && rbc > 0) {
+    mentzerIndex = parseFloat((mcv / rbc).toFixed(2));
+    if (mentzerIndex < 13) {
+      mentzerInterpretation = `Mentzer Index: ${mentzerIndex} (< 13). Suggestive of Thalassemia Trait / Minor due to preserved RBC count relative to microcytosis.`;
+    } else {
+      mentzerInterpretation = `Mentzer Index: ${mentzerIndex} (≥ 13). Suggestive of Iron Deficiency Anemia (IDA) due to depressed erythropoiesis relative to cell volume.`;
+    }
+  }
+
+  // 2g. Integrated Anemia Morphological Classification
+  let anemiaType: string | undefined;
+  let morphologyClassification: string | undefined;
+  let morphologyDetails: string | undefined;
+
+  if (isAnemic) {
+    if (mcv < 80) {
+      if (rdw !== undefined && rdw > 14.5) {
+        anemiaType = "Microcytic Hypochromic Anemia (Iron Deficiency Pattern)";
+        morphologyClassification = "Microcytic Hypochromic with Anisocytosis";
+        morphologyDetails = `High likelihood of Iron Deficiency Anemia (IDA) evidenced by microcytosis (MCV: ${mcv} fL), hypochromia (MCH: ${mch} pg), and elevated RDW (${rdw}%).`;
+      } else if (mentzerIndex !== undefined && mentzerIndex < 13) {
+        anemiaType = "Microcytic Anemia (Thalassemia Trait Pattern)";
+        morphologyClassification = "Microcytic with Normal RDW / High RBC Count";
+        morphologyDetails = `Microcytic anemia with Mentzer Index ${mentzerIndex} (< 13) and normal size distribution. High suspicion of Beta-Thalassemia Trait/Minor. Confirm with Hb HPLC / Electrophoresis.`;
+      } else {
+        anemiaType = "Microcytic Hypochromic Anemia";
+        morphologyClassification = "Microcytic Hypochromic Profile";
+        morphologyDetails = `Reduced erythrocyte volume (MCV: ${mcv} fL) and hemoglobin content (MCH: ${mch} pg). Recommend serum ferritin, total iron binding capacity (TIBC), and hemoglobin electrophoresis.`;
+      }
+    } else if (mcv > 100) {
+      if (vitaminB12 !== undefined && vitaminB12 < 200) {
+        anemiaType = "Macrocytic Megaloblastic Anemia (Confirmed B12 Deficiency)";
+        morphologyClassification = "Macrocytic Megaloblastic with Severe B12 Depletion";
+        morphologyDetails = `Macrocytosis (MCV: ${mcv} fL) directly driven by severe Vitamin B12 deficiency (${vitaminB12} pg/mL). High clinical risk of neuropathy and nuclear maturation defects.`;
+      } else if (vitaminB12 !== undefined && vitaminB12 <= 300) {
+        anemiaType = "Macrocytic Anemia (Borderline B12 / Folate Suspected)";
+        morphologyClassification = "Macrocytic with Borderline B12";
+        morphologyDetails = `Macrocytic indices with borderline Vitamin B12 reserve (${vitaminB12} pg/mL). Assess red cell folate, serum MMA, and reticulocyte count.`;
+      } else {
+        anemiaType = "Macrocytic Anemia";
+        morphologyClassification = "Macrocytic Erythrocyte Morphology";
+        morphologyDetails = `Elevated red cell volume (MCV: ${mcv} fL). Evaluate Vitamin B12, serum folate, thyroid function (TSH), hepatic profile, and alcohol history.`;
+      }
+    } else {
+      anemiaType = "Normocytic Normochromic Anemia";
+      morphologyClassification = "Normocytic Normochromic Profile";
+      morphologyDetails = `Normal erythrocyte size (MCV: ${mcv} fL) with depressed hemoglobin. Differential includes acute blood loss, hemolysis, anemia of chronic disease / inflammation, or renal impairment.`;
+    }
+  } else if (hemoglobin > hbMax) {
+    anemiaType = "Polycythemia / Erythrocytosis";
+    morphologyClassification = "Elevated Red Cell Mass";
+    morphologyDetails = `Elevated hemoglobin (${hemoglobin} g/dL) and hematocrit (${hematocrit}%). Evaluate hydration status, hypoxemia, smoking, or myeloproliferative disorder (JAK2 mutation).`;
+  } else {
+    morphologyClassification = "Normal Red Cell Indices";
+    morphologyDetails = `Red cell volume (MCV: ${mcv} fL), cellular hemoglobin (MCH: ${mch} pg), and concentration (MCHC: ${mchc} g/dL) are all balanced.`;
+  }
+
+  // 3. WBC Assessment (White Blood Cells)
   let wbcStatus = "Normal";
   let infectionRisk = "Normal immunological count";
   if (wbc < 4.5) {
@@ -489,7 +627,7 @@ export function calculateCBC(inputs: CBCInputs): CBCResults {
       : "Mild rise – possible biological stress response, inflammatory response, or mild infection";
   }
 
-  // 3. Platelets Assessment
+  // 4. Platelets Assessment
   let plateletStatus = "Normal";
   if (platelets < 150) {
     abnormalCount++;
@@ -501,7 +639,7 @@ export function calculateCBC(inputs: CBCInputs): CBCResults {
     plateletStatus = "High (Thrombocytosis) – reactive inflammation or essential thrombocythemia";
   }
 
-  // 4. NLR Ratio (Neutrophil-to-Lymphocyte Ratio)
+  // 5. NLR Ratio (Neutrophil-to-Lymphocyte Ratio)
   let nlratio: number | undefined;
   let nlratioInterpretation: string | undefined;
   if (neutrophils && lymphocytes && lymphocytes > 0) {
@@ -515,24 +653,26 @@ export function calculateCBC(inputs: CBCInputs): CBCResults {
     }
   }
 
-  // 5. Triage Level
+  // 6. Triage Level
   let riskLevel: RiskLevel = "low";
-  let overallStatus = "Normal baseline immunoprofile";
+  let overallStatus = "Normal baseline hematological & nutrient profile";
   if (abnormalCount === 0) {
     riskLevel = "low";
-    overallStatus = "All core CBC parameters remain within standard clinical reference ranges";
+    overallStatus = "All core CBC parameters and red cell indices remain within standard clinical reference ranges";
   } else if (abnormalCount === 1) {
     riskLevel = "moderate";
     overallStatus = "Single out-of-range metric detected – clinical context and symptom tracking requested";
   } else if (abnormalCount === 2) {
     riskLevel = "high";
-    overallStatus = "Multiple deviations found – recommend expert primary care checkup";
+    overallStatus = "Multiple hematological / nutrient deviations found – recommend physician consultation and targeted workup";
   } else {
     riskLevel = "critical";
-    overallStatus = "Clustered hematological exceptions – urgent physician clinical overview recommended";
+    overallStatus = "Clustered hematological exceptions – urgent physician clinical overview and laboratory correlation recommended";
   }
 
-  const summary = `Hb: ${hemoglobin} | WBC: ${wbc} | Plt: ${platelets} | Status: ${abnormalCount} Abnormalities`;
+  const rdwPart = rdw ? ` | RDW: ${rdw}%` : "";
+  const b12Part = vitaminB12 ? ` | B12: ${vitaminB12} pg/mL` : "";
+  const summary = `Hb: ${hemoglobin} | MCV: ${mcv} | MCH: ${mch} | MCHC: ${mchc}${rdwPart}${b12Part} | Status: ${abnormalCount} Abnormalities`;
 
   return {
     hemoglobinStatus,
@@ -542,6 +682,20 @@ export function calculateCBC(inputs: CBCInputs): CBCResults {
     plateletStatus,
     nlratio,
     nlratioInterpretation,
+    mcvStatus,
+    mcvInterpretation,
+    mchStatus,
+    mchInterpretation,
+    mchcStatus,
+    mchcInterpretation,
+    rdwStatus,
+    rdwInterpretation,
+    vitaminB12Status,
+    vitaminB12Interpretation,
+    mentzerIndex,
+    mentzerInterpretation,
+    morphologyClassification,
+    morphologyDetails,
     overallStatus,
     riskLevel,
     abnormalCount,

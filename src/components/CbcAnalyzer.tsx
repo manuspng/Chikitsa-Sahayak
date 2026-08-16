@@ -13,39 +13,74 @@ import WebcamCaptureModal from "./WebcamCaptureModal";
 
 function getOfflineCbcSummary(inputs: CBCInputs, results: CBCResults): string {
   if (results.abnormalCount === 0) {
-    return "Normal CBC profile. All core blood counts are within standard reference ranges. No active hematological, immunological or platelet flags detected.";
+    return "Normal CBC & Red Cell Indices Profile. All core blood counts, erythrocyte sizing (MCV), cellular hemoglobin content (MCH/MCHC), distribution width (RDW), and nutritional reserves are within standard physiological reference ranges.";
   }
   
   const segments: string[] = [];
+
+  // Hemoglobin & Morphology
   if (results.hemoglobinStatus.startsWith("Low") || (inputs.hemoglobin < (inputs.gender === "male" ? 13.5 : 12.0))) {
-    if (results.anemiaType?.toLowerCase().includes("microcytic")) {
-      segments.push("Mild microcytic anemia pattern. Lower hemoglobin and decreased cell volume size suggests potential iron deficiency or hemoglobin synthesis profile.");
-    } else if (results.anemiaType?.toLowerCase().includes("macrocytic")) {
-      segments.push("Mild macrocytic anemia pattern. Lower hemoglobin with elevated cell sizes suggesting Vitamin B12 or folate level evaluation.");
-    } else {
-      segments.push("Mild normocytic anemia pattern. Normal cell size but reduced hemoglobin levels, sometimes seen in general systemic inflammatory status.");
+    if (results.morphologyDetails) {
+      segments.push(`Anemia Identified: ${results.morphologyDetails}`);
+    } else if (results.anemiaType) {
+      segments.push(`Anemia Identified: ${results.anemiaType}.`);
     }
   } else if (results.hemoglobinStatus.startsWith("High")) {
-    segments.push("Polycythemia pattern. Elevated hemoglobin density which can suggest dehydration status or erythropoietin upregulation.");
+    segments.push("Polycythemia / Erythrocytosis pattern: Elevated hemoglobin and hematocrit indicate increased red cell density; consider hydration status or secondary erythrocytosis.");
   }
 
+  // Red Cell Indices specifics
+  const indexAnomalies: string[] = [];
+  if (inputs.mcv < 80) indexAnomalies.push(`Microcytosis (MCV: ${inputs.mcv} fL)`);
+  else if (inputs.mcv > 100) indexAnomalies.push(`Macrocytosis (MCV: ${inputs.mcv} fL)`);
+
+  if (inputs.mch < 27) indexAnomalies.push(`Hypochromia (MCH: ${inputs.mch} pg)`);
+  else if (inputs.mch > 33) indexAnomalies.push(`Hyperchromia (MCH: ${inputs.mch} pg)`);
+
+  if (inputs.mchc < 32) indexAnomalies.push(`Reduced MCHC (${inputs.mchc} g/dL)`);
+  else if (inputs.mchc > 36) indexAnomalies.push(`Elevated MCHC (${inputs.mchc} g/dL)`);
+
+  if (inputs.rdw !== undefined && inputs.rdw > 14.5) {
+    indexAnomalies.push(`Anisocytosis with high RDW (${inputs.rdw}%)`);
+  }
+
+  if (inputs.vitaminB12 !== undefined) {
+    if (inputs.vitaminB12 < 200) {
+      indexAnomalies.push(`Severe Vitamin B12 Deficiency (${inputs.vitaminB12} pg/mL)`);
+    } else if (inputs.vitaminB12 <= 300) {
+      indexAnomalies.push(`Borderline Vitamin B12 Reserve (${inputs.vitaminB12} pg/mL)`);
+    }
+  }
+
+  if (indexAnomalies.length > 0) {
+    segments.push(`Red Cell Indices & Biomarkers: ${indexAnomalies.join(", ")}.`);
+  }
+
+  // Mentzer Index
+  if (results.mentzerIndex !== undefined && results.mentzerInterpretation) {
+    segments.push(`Differential Sizing: ${results.mentzerInterpretation}`);
+  }
+
+  // WBC & Immunological
   if (results.wbcStatus.startsWith("High") || inputs.wbc > 11.0) {
-    segments.push("Leukocytosis suggestive of active infection/inflammation profile. Increased white cells alert the immune system reactivity.");
+    segments.push("Leukocytosis: Elevated white blood cell count suggesting active systemic immune reactivity, bacterial infection, or acute tissue inflammation.");
   } else if (results.wbcStatus.startsWith("Low") || inputs.wbc < 4.5) {
-    segments.push("Leukopenia pattern. Reduced white cells suggest potential immune vulnerability.");
+    segments.push("Leukopenia: Reduced leukocyte count indicating potential bone marrow suppression, viral clearance stress, or immune vulnerability.");
   }
 
+  // Platelets
   if (results.plateletStatus.startsWith("Low") || results.plateletStatus.includes("Critical") || inputs.platelets < 150) {
-    segments.push(inputs.platelets < 55 ? "Critical thrombocytopenia pattern warning (increased systemic bleeding limits)." : "Thrombocytopenia profile noted. Lower platelets suggests potential clearance stress, sequestering, or diminished platelet production.");
+    segments.push(inputs.platelets < 55 ? "Critical Thrombocytopenia Warning: Platelet count severely depressed (< 55 ×10⁹/L); high hemorrhagic vulnerability requires immediate clinical evaluation." : "Thrombocytopenia: Reduced platelet count; consider portal hypertension / splenic sequestration or peripheral consumption.");
   } else if (results.plateletStatus.startsWith("High") || inputs.platelets > 450) {
-    segments.push("Thrombocytosis pattern (reactive platelet elevation suggestions).");
+    segments.push("Thrombocytosis: Reactive platelet elevation often seen in systemic inflammation, tissue injury, or iron deficiency.");
   }
 
+  // NLR
   if (results.nlratio !== undefined && results.nlratio > 3.0) {
-    segments.push(`NLR ratio of ${results.nlratio} suggests active systemic stress response.`);
+    segments.push(`Inflammatory Ratio: Elevated NLR (${results.nlratio}) reflects active systemic micro-inflammation or biological stress.`);
   }
 
-  return segments.join(" ") || "Normal CBC profile. All indices balanced.";
+  return segments.join(" ") || "CBC profile evaluated. Maintain routine primary healthcare monitoring.";
 }
 
 interface CbcAnalyzerProps {
@@ -62,6 +97,8 @@ export default function CbcAnalyzer({ onAddRecord }: CbcAnalyzerProps) {
     mcv: "",
     mch: "",
     mchc: "",
+    rdw: "",
+    vitaminB12: "",
     neutrophils: "",
     lymphocytes: "",
     monocytes: "",
@@ -142,6 +179,25 @@ export default function CbcAnalyzer({ onAddRecord }: CbcAnalyzerProps) {
     setIsVerifiedCheck(false);
   };
 
+  const getCbcInputs = (): CBCInputs => ({
+    hemoglobin: parseFloat(formData.hemoglobin),
+    hematocrit: parseFloat(formData.hematocrit),
+    rbc: parseFloat(formData.rbc),
+    wbc: parseFloat(formData.wbc),
+    platelets: parseFloat(formData.platelets),
+    mcv: parseFloat(formData.mcv),
+    mch: parseFloat(formData.mch),
+    mchc: parseFloat(formData.mchc),
+    rdw: formData.rdw ? parseFloat(formData.rdw) : undefined,
+    vitaminB12: formData.vitaminB12 ? parseFloat(formData.vitaminB12) : undefined,
+    neutrophils: formData.neutrophils ? parseFloat(formData.neutrophils) : undefined,
+    lymphocytes: formData.lymphocytes ? parseFloat(formData.lymphocytes) : undefined,
+    monocytes: formData.monocytes ? parseFloat(formData.monocytes) : undefined,
+    eosinophils: formData.eosinophils ? parseFloat(formData.eosinophils) : undefined,
+    basophils: formData.basophils ? parseFloat(formData.basophils) : undefined,
+    gender: formData.gender,
+  });
+
   const handleCalculate = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -150,23 +206,7 @@ export default function CbcAnalyzer({ onAddRecord }: CbcAnalyzerProps) {
       return;
     }
 
-    const inputs: CBCInputs = {
-      hemoglobin: parseFloat(formData.hemoglobin),
-      hematocrit: parseFloat(formData.hematocrit),
-      rbc: parseFloat(formData.rbc),
-      wbc: parseFloat(formData.wbc),
-      platelets: parseFloat(formData.platelets),
-      mcv: parseFloat(formData.mcv),
-      mch: parseFloat(formData.mch),
-      mchc: parseFloat(formData.mchc),
-      neutrophils: formData.neutrophils ? parseFloat(formData.neutrophils) : undefined,
-      lymphocytes: formData.lymphocytes ? parseFloat(formData.lymphocytes) : undefined,
-      monocytes: formData.monocytes ? parseFloat(formData.monocytes) : undefined,
-      eosinophils: formData.eosinophils ? parseFloat(formData.eosinophils) : undefined,
-      basophils: formData.basophils ? parseFloat(formData.basophils) : undefined,
-      gender: formData.gender,
-    };
-
+    const inputs = getCbcInputs();
     const calculated = calculateCBC(inputs);
     setResults(calculated);
     setAiInsight(null);
@@ -204,23 +244,7 @@ export default function CbcAnalyzer({ onAddRecord }: CbcAnalyzerProps) {
         return;
     }
 
-    const inputs: CBCInputs = {
-      hemoglobin: parseFloat(formData.hemoglobin),
-      hematocrit: parseFloat(formData.hematocrit),
-      rbc: parseFloat(formData.rbc),
-      wbc: parseFloat(formData.wbc),
-      platelets: parseFloat(formData.platelets),
-      mcv: parseFloat(formData.mcv),
-      mch: parseFloat(formData.mch),
-      mchc: parseFloat(formData.mchc),
-      neutrophils: formData.neutrophils ? parseFloat(formData.neutrophils) : undefined,
-      lymphocytes: formData.lymphocytes ? parseFloat(formData.lymphocytes) : undefined,
-      monocytes: formData.monocytes ? parseFloat(formData.monocytes) : undefined,
-      eosinophils: formData.eosinophils ? parseFloat(formData.eosinophils) : undefined,
-      basophils: formData.basophils ? parseFloat(formData.basophils) : undefined,
-      gender: formData.gender,
-    };
-
+    const inputs = getCbcInputs();
     requestAiInsight(inputs, results, currentRecordId);
   };
 
@@ -230,27 +254,35 @@ export default function CbcAnalyzer({ onAddRecord }: CbcAnalyzerProps) {
     setAiErrorStack(null);
 
     try {
-      const prompt = `Interpret the following Patient Complete Blood Count (CBC) results:
+      const prompt = `Interpret the following Patient Complete Blood Count (CBC) and Red Cell Indices results:
 - Hemoglobin: ${inputs.hemoglobin} g/dL (Reference: Male: 13.5-17.5, Female: 12.0-15.5)
 - Hematocrit: ${inputs.hematocrit}% (Reference: Male: 38.3-48.6%, Female: 35.5-44.9%)
 - RBC Count: ${inputs.rbc} x10^12/L (Reference: Male: 4.3-5.9, Female: 3.8-5.2)
-- WBC Count: ${inputs.wbc} = ${calculated.wbcStatus} (Reference: 4.5-11.0)
-- Platelets: ${inputs.platelets} = ${calculated.plateletStatus} (Reference: 150-400)
-- MCV: ${inputs.mcv} fL (Reference: 80-100)
-- MCH: ${inputs.mch} pg (Reference: 27-33)
-- MCHC: ${inputs.mchc} g/dL (Reference: 32-36)
+- WBC Count: ${inputs.wbc} 10^9/L = ${calculated.wbcStatus} (Reference: 4.5-11.0)
+- Platelets: ${inputs.platelets} 10^9/L = ${calculated.plateletStatus} (Reference: 150-400)
+- MCV (Mean Corpuscular Volume): ${inputs.mcv} fL (${calculated.mcvStatus}) (Reference: 80-100)
+- MCH (Mean Corpuscular Hemoglobin): ${inputs.mch} pg (${calculated.mchStatus}) (Reference: 27-33)
+- MCHC (Mean Corpuscular Hb Concentration): ${inputs.mchc} g/dL (${calculated.mchcStatus}) (Reference: 32-36)
+- RDW (Red Cell Distribution Width): ${inputs.rdw !== undefined ? `${inputs.rdw}% (${calculated.rdwStatus})` : "Not Provided"} (Reference: 11.5-14.5%)
+- Serum Vitamin B12: ${inputs.vitaminB12 !== undefined ? `${inputs.vitaminB12} pg/mL (${calculated.vitaminB12Status})` : "Not Provided"} (Reference: 200-900 pg/mL)
 - Neutrophils: ${inputs.neutrophils ?? "N/A"}%
 - Lymphocytes: ${inputs.lymphocytes ?? "N/A"}%
 - Patient Gender: ${inputs.gender}
 
-Calculated Markers:
+Calculated Clinical Findings & Diagnostic Indexes:
 - Hemoglobin State: ${calculated.hemoglobinStatus} ${calculated.anemiaType ? `(${calculated.anemiaType})` : ""}
+- Morphology Classification: ${calculated.morphologyClassification ?? "N/A"} (${calculated.morphologyDetails ?? "N/A"})
+- Mentzer Index (MCV/RBC): ${calculated.mentzerIndex ?? "N/A"} (${calculated.mentzerInterpretation ?? "N/A"})
 - Platelet Condition: ${calculated.plateletStatus}
 - WBC & Infection Context: ${calculated.infectionRisk}
 - Neutrophil-to-Lymphocyte Ratio (NLR): ${calculated.nlratio ?? "N/A"} (${calculated.nlratioInterpretation ?? "N/A"})
-- Out-of-Range Anomalies: ${calculated.abnormalCount}
+- Total Out-of-Range Anomalies: ${calculated.abnormalCount}
 
-Please write an expert, professional clinical interpretation of these results. Mention the implications for hepatic portal hypertension (if platelets are significantly low), iron or nutrient profiles, systemic inflammation flags, or any other findings.`;
+Please write an expert, professional clinical interpretation formatted clearly for primary care physicians:
+1. Red Cell Morphology & Anemia Etiology (Iron deficiency vs Thalassemia trait vs Megaloblastic/B12 deficiency)
+2. Immunological & Leukocyte Proliferation Findings (WBC & NLR)
+3. Platelet & Hemostatic Assessment
+4. Recommended Confirmatory Diagnostic Workup (e.g. Ferritin, TIBC, HPLC, Serum B12/MMA, Folate) & Lifestyle Guidance`;
 
       const provider = localStorage.getItem("selected_ai_provider") || "auto";
       const data = await runGeminiAnalyze("cbc", prompt, provider);
@@ -302,21 +334,8 @@ Please write an expert, professional clinical interpretation of these results. M
       patientGender: formData.gender,
       patientAge: patientAge ? parseInt(patientAge) : undefined,
       inputs: {
-        hemoglobin: parseFloat(formData.hemoglobin),
+        ...getCbcInputs(),
         offset: 0,
-        hematocrit: parseFloat(formData.hematocrit),
-        rbc: parseFloat(formData.rbc),
-        wbc: parseFloat(formData.wbc),
-        platelets: parseFloat(formData.platelets),
-        mcv: parseFloat(formData.mcv),
-        mch: parseFloat(formData.mch),
-        mchc: parseFloat(formData.mchc),
-        neutrophils: formData.neutrophils ? parseFloat(formData.neutrophils) : undefined,
-        lymphocytes: formData.lymphocytes ? parseFloat(formData.lymphocytes) : undefined,
-        monocytes: formData.monocytes ? parseFloat(formData.monocytes) : undefined,
-        eosinophils: formData.eosinophils ? parseFloat(formData.eosinophils) : undefined,
-        basophils: formData.basophils ? parseFloat(formData.basophils) : undefined,
-        gender: formData.gender,
       } as any,
       results,
       aiInsight: aiInsight || undefined,
@@ -333,22 +352,7 @@ Please write an expert, professional clinical interpretation of these results. M
       patientName: patientName || "Not Specified",
       patientGender: formData.gender,
       patientAge: patientAge ? parseInt(patientAge) : undefined,
-      inputs: {
-        hemoglobin: parseFloat(formData.hemoglobin),
-        hematocrit: parseFloat(formData.hematocrit),
-        rbc: parseFloat(formData.rbc),
-        wbc: parseFloat(formData.wbc),
-        platelets: parseFloat(formData.platelets),
-        mcv: parseFloat(formData.mcv),
-        mch: parseFloat(formData.mch),
-        mchc: parseFloat(formData.mchc),
-        neutrophils: formData.neutrophils ? parseFloat(formData.neutrophils) : undefined,
-        lymphocytes: formData.lymphocytes ? parseFloat(formData.lymphocytes) : undefined,
-        monocytes: formData.monocytes ? parseFloat(formData.monocytes) : undefined,
-        eosinophils: formData.eosinophils ? parseFloat(formData.eosinophils) : undefined,
-        basophils: formData.basophils ? parseFloat(formData.basophils) : undefined,
-        gender: formData.gender,
-      },
+      inputs: getCbcInputs(),
       results,
       aiInsight: aiInsight || undefined,
       riskLevel: results.riskLevel,
@@ -376,6 +380,8 @@ Please write an expert, professional clinical interpretation of these results. M
         mcv: vals["MCV"] !== undefined ? String(vals["MCV"]) : prev.mcv,
         mch: vals["MCH"] !== undefined ? String(vals["MCH"]) : prev.mch,
         mchc: vals["MCHC"] !== undefined ? String(vals["MCHC"]) : prev.mchc,
+        rdw: vals["RDW"] !== undefined ? String(vals["RDW"]) : prev.rdw,
+        vitaminB12: vals["vitaminB12"] !== undefined ? String(vals["vitaminB12"]) : prev.vitaminB12,
         neutrophils: vals["Neutrophils"] !== undefined ? String(vals["Neutrophils"]) : prev.neutrophils,
         lymphocytes: vals["Lymphocytes"] !== undefined ? String(vals["Lymphocytes"]) : prev.lymphocytes,
       };
@@ -388,6 +394,8 @@ Please write an expert, professional clinical interpretation of these results. M
       if (!next.mcv) missing.push("MCV (Cell Size)");
       if (!next.mch) missing.push("MCH");
       if (!next.mchc) missing.push("MCHC");
+      if (!next.rdw) missing.push("RDW %");
+      if (!next.vitaminB12) missing.push("Vitamin B12 (pg/mL)");
       if (!next.neutrophils) missing.push("Neutrophils % (for NLR)");
       if (!next.lymphocytes) missing.push("Lymphocytes % (for NLR)");
       if (!vals.patientName && !patientName) missing.push("Patient Name");
@@ -1047,7 +1055,10 @@ Please write an expert, professional clinical interpretation of these results. M
         </div>
 
         <div className="border-t border-slate-200 pt-6">
-          <h4 className="text-xs font-black uppercase tracking-wide mb-4">Core Indexes (Red Cell Size & Weight)</h4>
+          <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
+            <h4 className="text-xs font-black uppercase tracking-wide">Red Blood Cell Indices & Nutritional Biomarkers</h4>
+            <span className="text-xs font-bold text-slate-500">MCV, MCH, MCHC, RDW, and Vit B12 evaluate anemia morphology and deficiencies</span>
+          </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
@@ -1095,6 +1106,36 @@ Please write an expert, professional clinical interpretation of these results. M
                   className={getInputClass(formData.mchc, "pr-12")} 
                 />
                 <span className="absolute right-3 top-2.5 text-xs font-black">g/dL</span>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-black tracking-wide block">RDW (Red Cell Dist. Width)</label>
+              <div className="relative">
+                <input 
+                  type="number" 
+                  step="any"
+                  placeholder="11.5-14.5"
+                  value={formData.rdw}
+                  onChange={e => handleInputChange("rdw", e.target.value)}
+                  className={getInputClass(formData.rdw, "pr-10")} 
+                />
+                <span className="absolute right-3 top-2.5 text-xs font-black">%</span>
+              </div>
+            </div>
+
+            <div className="space-y-1.5 sm:col-span-2">
+              <label className="text-xs font-black tracking-wide block">Vitamin B12 (Cobalamin)</label>
+              <div className="relative">
+                <input 
+                  type="number" 
+                  step="any"
+                  placeholder="200-900"
+                  value={formData.vitaminB12}
+                  onChange={e => handleInputChange("vitaminB12", e.target.value)}
+                  className={getInputClass(formData.vitaminB12, "pr-16")} 
+                />
+                <span className="absolute right-3 top-2.5 text-xs font-black">pg/mL</span>
               </div>
             </div>
           </div>
@@ -1192,7 +1233,7 @@ Please write an expert, professional clinical interpretation of these results. M
           <ScoreGauge 
             label="Anomalies Triage Index"
             score={results.abnormalCount}
-            maxScore={5}
+            maxScore={6}
             riskLevel={results.riskLevel}
           />
           
@@ -1200,6 +1241,7 @@ Please write an expert, professional clinical interpretation of these results. M
             {results.overallStatus}
           </div>
 
+          {/* 3 Core Metric Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <MetricCard 
               label="Hemoglobin"
@@ -1229,100 +1271,329 @@ Please write an expert, professional clinical interpretation of these results. M
             />
           </div>
 
-          {/* Advanced scoring metrics */}
-          <div className="bento-card border-2 border-slate-300 space-y-4 p-6">
-            <h4 className="text-sm font-black flex items-center gap-2 uppercase tracking-wide font-sans">
-              <span className="w-1.5 h-3.5 bg-emerald-600 rounded-full shrink-0" />
-              <span>Immunology and Nutrient Status Panels</span>
-            </h4>
+          {/* Red Blood Cell Indices & Morphological Assessment Panel */}
+          <div className="bento-card border-2 border-slate-300 space-y-6 p-6">
+            <div className="flex items-center justify-between gap-2 border-b border-slate-200 pb-3 flex-wrap">
+              <h4 className="text-sm font-black flex items-center gap-2 uppercase tracking-wide font-sans">
+                <span className="w-1.5 h-3.5 bg-emerald-600 rounded-full shrink-0" />
+                <span>Red Blood Cell Indices & Nutritional Biomarkers</span>
+              </h4>
+              <span className="text-[11px] font-bold text-slate-500 font-mono">
+                5-Parameter Morphological Evaluation
+              </span>
+            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* NLR Card */}
+            {/* 5 Index Bento Cards Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* 1. MCV Card */}
               {(() => {
-                const nlrRisk = results.nlratio === undefined
-                  ? "low"
-                  : results.nlratio > 3.0
-                  ? "high"
-                  : results.nlratio < 1.0
-                  ? "moderate"
-                  : "low";
-
-                const theme = nlrRisk === "low"
-                  ? {
-                      cardBorder: "border-emerald-300 dark:border-emerald-700/80",
-                      cardBg: "bg-emerald-50/50 dark:bg-emerald-950/20",
-                      scoreColor: "text-emerald-700 dark:text-emerald-400",
-                      badgeBg: "bg-emerald-100 text-emerald-900 border border-emerald-300 dark:bg-emerald-900/60 dark:text-emerald-200 dark:border-emerald-700",
-                      infoBox: "bg-emerald-100/70 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-800 text-emerald-950 dark:text-emerald-200",
-                    }
-                  : nlrRisk === "moderate"
-                  ? {
-                      cardBorder: "border-amber-300 dark:border-amber-700/80",
-                      cardBg: "bg-amber-50/50 dark:bg-amber-950/20",
-                      scoreColor: "text-amber-700 dark:text-amber-400",
-                      badgeBg: "bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-900/60 dark:text-amber-200 dark:border-amber-700",
-                      infoBox: "bg-amber-100/70 dark:bg-amber-950/50 border-amber-300 dark:border-amber-800 text-amber-950 dark:text-amber-200",
-                    }
-                  : {
-                      cardBorder: "border-rose-300 dark:border-rose-700/80",
-                      cardBg: "bg-rose-50/50 dark:bg-rose-950/20",
-                      scoreColor: "text-rose-700 dark:text-rose-400",
-                      badgeBg: "bg-rose-100 text-rose-900 border border-rose-300 dark:bg-rose-900/60 dark:text-rose-200 dark:border-rose-700",
-                      infoBox: "bg-rose-100/70 dark:bg-rose-950/50 border-rose-300 dark:border-rose-800 text-rose-950 dark:text-rose-200",
-                    };
+                const val = parseFloat(formData.mcv);
+                const isOut = val < 80 || val > 100;
+                const cardBorder = isOut ? "border-rose-300" : "border-emerald-300";
+                const cardBg = isOut ? "bg-rose-50/50" : "bg-emerald-50/50";
+                const scoreColor = isOut ? "text-rose-700" : "text-emerald-700";
+                const badgeBg = isOut ? "bg-rose-100 text-rose-900 border border-rose-300" : "bg-emerald-100 text-emerald-900 border border-emerald-300";
+                const infoBox = isOut ? "bg-rose-100/70 border-rose-300 text-rose-950" : "bg-emerald-100/70 border-emerald-300 text-emerald-950";
 
                 return (
-                  <div className={`bento-card border-2 p-5 space-y-3 transition-all ${results.nlratio !== undefined ? `${theme.cardBorder} ${theme.cardBg}` : "border-slate-300 bg-white dark:bg-slate-900/80"}`}>
-                    <div className="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
-                      <span className="card-title font-mono font-black text-xs uppercase tracking-wider block dark:text-white">
-                        Neutrophil-to-Lymphocyte Ratio (NLR)
+                  <div className={`bento-card border-2 p-5 space-y-3 transition-all ${cardBorder} ${cardBg}`}>
+                    <div className="flex items-center justify-between gap-2 border-b border-slate-200 pb-2">
+                      <span className="card-title font-mono font-black text-xs uppercase tracking-wider block">
+                        MCV (Cell Volume)
                       </span>
                       <span className="text-[10px] font-bold text-slate-500 font-mono">
-                        Inflammatory Marker
+                        80–100 fL
                       </span>
                     </div>
-                    {results.nlratio !== undefined ? (
-                      <div className="flex flex-col items-center justify-center text-center py-2 space-y-2.5">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                          Exact Calculated Reading
+                    <div className="flex flex-col items-center justify-center text-center py-1 space-y-2">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                        Exact Reading
+                      </span>
+                      <div className={`text-5xl font-black font-mono tracking-tight ${scoreColor}`}>
+                        {val.toFixed(1)} <span className="text-sm font-sans font-bold text-slate-500">fL</span>
+                      </div>
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-black uppercase tracking-wider ${badgeBg}`}>
+                        {results.mcvStatus || (val < 80 ? "Microcytic (< 80 fL)" : val > 100 ? "Macrocytic (> 100 fL)" : "Normocytic")}
+                      </span>
+                      <div className={`p-2.5 rounded-xl border text-xs font-bold leading-relaxed text-center w-full ${infoBox}`}>
+                        {results.mcvInterpretation}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* 2. MCH Card */}
+              {(() => {
+                const val = parseFloat(formData.mch);
+                const isOut = val < 27 || val > 33;
+                const cardBorder = isOut ? "border-amber-300" : "border-emerald-300";
+                const cardBg = isOut ? "bg-amber-50/50" : "bg-emerald-50/50";
+                const scoreColor = isOut ? "text-amber-700" : "text-emerald-700";
+                const badgeBg = isOut ? "bg-amber-100 text-amber-900 border border-amber-300" : "bg-emerald-100 text-emerald-900 border border-emerald-300";
+                const infoBox = isOut ? "bg-amber-100/70 border-amber-300 text-amber-950" : "bg-emerald-100/70 border-emerald-300 text-emerald-950";
+
+                return (
+                  <div className={`bento-card border-2 p-5 space-y-3 transition-all ${cardBorder} ${cardBg}`}>
+                    <div className="flex items-center justify-between gap-2 border-b border-slate-200 pb-2">
+                      <span className="card-title font-mono font-black text-xs uppercase tracking-wider block">
+                        MCH (Cellular Hb)
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-500 font-mono">
+                        27–33 pg
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-center justify-center text-center py-1 space-y-2">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                        Exact Reading
+                      </span>
+                      <div className={`text-5xl font-black font-mono tracking-tight ${scoreColor}`}>
+                        {val.toFixed(1)} <span className="text-sm font-sans font-bold text-slate-500">pg</span>
+                      </div>
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-black uppercase tracking-wider ${badgeBg}`}>
+                        {results.mchStatus || (val < 27 ? "Hypochromic (< 27 pg)" : val > 33 ? "Hyperchromic (> 33 pg)" : "Normochromic")}
+                      </span>
+                      <div className={`p-2.5 rounded-xl border text-xs font-bold leading-relaxed text-center w-full ${infoBox}`}>
+                        {results.mchInterpretation}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* 3. MCHC Card */}
+              {(() => {
+                const val = parseFloat(formData.mchc);
+                const isOut = val < 32 || val > 36;
+                const cardBorder = isOut ? "border-amber-300" : "border-emerald-300";
+                const cardBg = isOut ? "bg-amber-50/50" : "bg-emerald-50/50";
+                const scoreColor = isOut ? "text-amber-700" : "text-emerald-700";
+                const badgeBg = isOut ? "bg-amber-100 text-amber-900 border border-amber-300" : "bg-emerald-100 text-emerald-900 border border-emerald-300";
+                const infoBox = isOut ? "bg-amber-100/70 border-amber-300 text-amber-950" : "bg-emerald-100/70 border-emerald-300 text-emerald-950";
+
+                return (
+                  <div className={`bento-card border-2 p-5 space-y-3 transition-all ${cardBorder} ${cardBg}`}>
+                    <div className="flex items-center justify-between gap-2 border-b border-slate-200 pb-2">
+                      <span className="card-title font-mono font-black text-xs uppercase tracking-wider block">
+                        MCHC (Concentration)
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-500 font-mono">
+                        32–36 g/dL
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-center justify-center text-center py-1 space-y-2">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                        Exact Reading
+                      </span>
+                      <div className={`text-5xl font-black font-mono tracking-tight ${scoreColor}`}>
+                        {val.toFixed(1)} <span className="text-sm font-sans font-bold text-slate-500">g/dL</span>
+                      </div>
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-black uppercase tracking-wider ${badgeBg}`}>
+                        {results.mchcStatus || (val < 32 ? "Low Concentration (< 32)" : val > 36 ? "High Concentration (> 36)" : "Optimal")}
+                      </span>
+                      <div className={`p-2.5 rounded-xl border text-xs font-bold leading-relaxed text-center w-full ${infoBox}`}>
+                        {results.mchcInterpretation}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* 4. RDW Card */}
+              {(() => {
+                const hasRdw = formData.rdw && !isNaN(parseFloat(formData.rdw));
+                const val = hasRdw ? parseFloat(formData.rdw) : 0;
+                const isOut = hasRdw && (val > 14.5 || val < 11.5);
+                const cardBorder = !hasRdw ? "border-slate-300" : isOut ? "border-rose-300" : "border-emerald-300";
+                const cardBg = !hasRdw ? "bg-white" : isOut ? "bg-rose-50/50" : "bg-emerald-50/50";
+                const scoreColor = !hasRdw ? "text-slate-400" : isOut ? "text-rose-700" : "text-emerald-700";
+                const badgeBg = !hasRdw ? "bg-slate-100 text-slate-700 border border-slate-300" : isOut ? "bg-rose-100 text-rose-900 border border-rose-300" : "bg-emerald-100 text-emerald-900 border border-emerald-300";
+                const infoBox = !hasRdw ? "bg-slate-50 border-slate-200 text-slate-700" : isOut ? "bg-rose-100/70 border-rose-300 text-rose-950" : "bg-emerald-100/70 border-emerald-300 text-emerald-950";
+
+                return (
+                  <div className={`bento-card border-2 p-5 space-y-3 transition-all ${cardBorder} ${cardBg}`}>
+                    <div className="flex items-center justify-between gap-2 border-b border-slate-200 pb-2">
+                      <span className="card-title font-mono font-black text-xs uppercase tracking-wider block">
+                        RDW (Size Variation)
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-500 font-mono">
+                        11.5%–14.5%
+                      </span>
+                    </div>
+                    {hasRdw ? (
+                      <div className="flex flex-col items-center justify-center text-center py-1 space-y-2">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                          Exact Reading
                         </span>
-                        <div className={`text-5xl sm:text-6xl font-black font-mono tracking-tight ${theme.scoreColor}`}>
-                          {results.nlratio.toFixed(2)}
+                        <div className={`text-5xl font-black font-mono tracking-tight ${scoreColor}`}>
+                          {val.toFixed(1)} <span className="text-sm font-sans font-bold text-slate-500">%</span>
                         </div>
-                        <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${theme.badgeBg}`}>
-                          {results.nlratio > 3.0 ? "High Inflammatory Risk (> 3.0)" : results.nlratio < 1.0 ? "Low Ratio (< 1.0)" : "Normal Reference (1.0–3.0)"}
+                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-black uppercase tracking-wider ${badgeBg}`}>
+                          {results.rdwStatus || (val > 14.5 ? "Anisocytosis (> 14.5%)" : "Normal Size Distribution")}
                         </span>
-                        <div className={`p-3 rounded-xl border text-xs font-bold leading-relaxed text-center w-full ${theme.infoBox}`}>
-                          {results.nlratioInterpretation}
+                        <div className={`p-2.5 rounded-xl border text-xs font-bold leading-relaxed text-center w-full ${infoBox}`}>
+                          {results.rdwInterpretation}
                         </div>
                       </div>
                     ) : (
-                      <div className="space-y-2 pt-1">
-                        <p className="text-xs font-black glow-red-text flex items-center gap-1">
-                          <AlertCircle size={13} className="text-red-600 shrink-0" />
-                          <span>NLR Incomplete. Missing required differentials:</span>
+                      <div className="space-y-2 py-2">
+                        <p className="text-xs font-bold text-slate-600 leading-relaxed">
+                          RDW was not provided. Enter RDW % in the form above to evaluate red cell size heterogeneity (anisocytosis) and differentiate iron deficiency from thalassemia trait.
                         </p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {!formData.neutrophils && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Neutrophils %</span>}
-                          {!formData.lymphocytes && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Lymphocytes %</span>}
-                        </div>
                       </div>
                     )}
                   </div>
                 );
               })()}
 
-              {/* Anemia Index Card */}
-              <div className="bento-card border-2 border-slate-300 p-5 space-y-2">
-                <span className="card-title font-mono font-black text-xs uppercase tracking-wider block">Nutritional Anemia Vector</span>
-                <div>
-                  <div className="text-base font-black">Type: <span className="text-emerald-800">{results.anemiaType || "Normal profile (no active anemia)"}</span></div>
-                  <p className="text-xs font-bold leading-relaxed mt-2">
-                    Size (MCV) and weight (MCH/MCHC) parameters are integrated to determine if any microcytic or macrocytic iron-deficiency markers exist.
-                  </p>
-                </div>
+              {/* 5. Vitamin B12 Card */}
+              {(() => {
+                const hasB12 = formData.vitaminB12 && !isNaN(parseFloat(formData.vitaminB12));
+                const val = hasB12 ? parseFloat(formData.vitaminB12) : 0;
+                const isDeficient = hasB12 && val < 200;
+                const isBorderline = hasB12 && val >= 200 && val <= 300;
+                const cardBorder = !hasB12 ? "border-slate-300" : isDeficient ? "border-rose-400" : isBorderline ? "border-amber-300" : "border-emerald-300";
+                const cardBg = !hasB12 ? "bg-white" : isDeficient ? "bg-rose-50/60" : isBorderline ? "bg-amber-50/50" : "bg-emerald-50/50";
+                const scoreColor = !hasB12 ? "text-slate-400" : isDeficient ? "text-rose-700" : isBorderline ? "text-amber-700" : "text-emerald-700";
+                const badgeBg = !hasB12 ? "bg-slate-100 text-slate-700 border border-slate-300" : isDeficient ? "bg-rose-100 text-rose-900 border border-rose-300" : isBorderline ? "bg-amber-100 text-amber-900 border border-amber-300" : "bg-emerald-100 text-emerald-900 border border-emerald-300";
+                const infoBox = !hasB12 ? "bg-slate-50 border-slate-200 text-slate-700" : isDeficient ? "bg-rose-100/70 border-rose-300 text-rose-950" : isBorderline ? "bg-amber-100/70 border-amber-300 text-amber-950" : "bg-emerald-100/70 border-emerald-300 text-emerald-950";
+
+                return (
+                  <div className={`bento-card border-2 p-5 space-y-3 transition-all sm:col-span-2 lg:col-span-2 ${cardBorder} ${cardBg}`}>
+                    <div className="flex items-center justify-between gap-2 border-b border-slate-200 pb-2">
+                      <span className="card-title font-mono font-black text-xs uppercase tracking-wider block">
+                        Serum Vitamin B12 (Cobalamin)
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-500 font-mono">
+                        200–900 pg/mL
+                      </span>
+                    </div>
+                    {hasB12 ? (
+                      <div className="flex flex-col items-center justify-center text-center py-1 space-y-2">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                          Exact Reading
+                        </span>
+                        <div className={`text-5xl font-black font-mono tracking-tight ${scoreColor}`}>
+                          {val.toFixed(0)} <span className="text-sm font-sans font-bold text-slate-500">pg/mL</span>
+                        </div>
+                        <span className={`px-3 py-0.5 rounded-full text-xs font-black uppercase tracking-wider ${badgeBg}`}>
+                          {results.vitaminB12Status || (val < 200 ? "Deficient (< 200 pg/mL)" : val <= 300 ? "Borderline (200-300 pg/mL)" : "Adequate")}
+                        </span>
+                        <div className={`p-3 rounded-xl border text-xs font-bold leading-relaxed text-center w-full ${infoBox}`}>
+                          {results.vitaminB12Interpretation}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 py-2">
+                        <p className="text-xs font-bold text-slate-600 leading-relaxed">
+                          Serum Vitamin B12 was not provided. Inputting B12 levels confirms or rules out Megaloblastic Macrocytic Anemia and guides neuropathy prevention.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Anemia Morphology Classification & Mentzer Index Card */}
+            <div className="p-5 rounded-2xl border-2 border-slate-300 bg-slate-50/70 space-y-3">
+              <div className="flex items-center justify-between gap-2 border-b border-slate-200 pb-2 flex-wrap">
+                <span className="text-xs font-black uppercase tracking-wider font-mono text-slate-800">
+                  Nutritional Anemia Vector & Morphological Classification
+                </span>
+                <span className="text-xs px-2.5 py-0.5 rounded-full font-black bg-emerald-100 text-emerald-900 border border-emerald-300">
+                  {results.morphologyClassification || "Standard Morphology"}
+                </span>
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs font-bold text-slate-800 leading-relaxed">
+                  {results.morphologyDetails || results.anemiaType || "Normal red cell morphology and indices."}
+                </p>
+                {results.mentzerIndex !== undefined && (
+                  <div className="p-3 rounded-xl bg-cyan-50 border border-cyan-300 text-cyan-950 text-xs font-bold flex items-center justify-between gap-2 flex-wrap">
+                    <span><strong>Mentzer Index (MCV / RBC):</strong> {results.mentzerIndex}</span>
+                    <span className="text-[11px] font-black bg-cyan-100 px-2 py-0.5 rounded-md border border-cyan-400">
+                      {results.mentzerIndex < 13 ? "Mentzer < 13 → Thalassemia Pattern" : "Mentzer ≥ 13 → Iron Deficiency Pattern"}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
+
+            {/* NLR Card */}
+            {(() => {
+              const nlrRisk = results.nlratio === undefined
+                ? "low"
+                : results.nlratio > 3.0
+                ? "high"
+                : results.nlratio < 1.0
+                ? "moderate"
+                : "low";
+
+              const theme = nlrRisk === "low"
+                ? {
+                    cardBorder: "border-emerald-300",
+                    cardBg: "bg-emerald-50/50",
+                    scoreColor: "text-emerald-700",
+                    badgeBg: "bg-emerald-100 text-emerald-900 border border-emerald-300",
+                    infoBox: "bg-emerald-100/70 border-emerald-300 text-emerald-950",
+                  }
+                : nlrRisk === "moderate"
+                ? {
+                    cardBorder: "border-amber-300",
+                    cardBg: "bg-amber-50/50",
+                    scoreColor: "text-amber-700",
+                    badgeBg: "bg-amber-100 text-amber-900 border border-amber-300",
+                    infoBox: "bg-amber-100/70 border-amber-300 text-amber-950",
+                  }
+                : {
+                    cardBorder: "border-rose-300",
+                    cardBg: "bg-rose-50/50",
+                    scoreColor: "text-rose-700",
+                    badgeBg: "bg-rose-100 text-rose-900 border border-rose-300",
+                    infoBox: "bg-rose-100/70 border-rose-300 text-rose-950",
+                  };
+
+              return (
+                <div className={`bento-card border-2 p-5 space-y-3 transition-all ${results.nlratio !== undefined ? `${theme.cardBorder} ${theme.cardBg}` : "border-slate-300 bg-white"}`}>
+                  <div className="flex items-center justify-between gap-2 border-b border-slate-200 pb-2">
+                    <span className="card-title font-mono font-black text-xs uppercase tracking-wider block">
+                      Neutrophil-to-Lymphocyte Ratio (NLR)
+                    </span>
+                    <span className="text-[10px] font-bold text-slate-500 font-mono">
+                      Inflammatory Biomarker
+                    </span>
+                  </div>
+                  {results.nlratio !== undefined ? (
+                    <div className="flex flex-col items-center justify-center text-center py-2 space-y-2.5">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                        Exact Calculated Reading
+                      </span>
+                      <div className={`text-5xl sm:text-6xl font-black font-mono tracking-tight ${theme.scoreColor}`}>
+                        {results.nlratio.toFixed(2)}
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${theme.badgeBg}`}>
+                        {results.nlratio > 3.0 ? "High Inflammatory Risk (> 3.0)" : results.nlratio < 1.0 ? "Low Ratio (< 1.0)" : "Normal Reference (1.0–3.0)"}
+                      </span>
+                      <div className={`p-3 rounded-xl border text-xs font-bold leading-relaxed text-center w-full ${theme.infoBox}`}>
+                        {results.nlratioInterpretation}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 pt-1">
+                      <p className="text-xs font-black glow-red-text flex items-center gap-1">
+                        <AlertCircle size={13} className="text-red-600 shrink-0" />
+                        <span>NLR Incomplete. Missing required differentials:</span>
+                      </p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {!formData.neutrophils && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Neutrophils %</span>}
+                        {!formData.lymphocytes && <span className="glow-red-badge px-2 py-0.5 rounded-lg text-[11px] font-black">● Lymphocytes %</span>}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
 
           {/* Local & AI Clinical Interpretation Panel */}

@@ -720,6 +720,8 @@ Convert the extracted items into a single flat JSON dictionary representing valu
           MCV: { type: Type.NUMBER, description: "Mean Corpuscular Volume in fL" },
           MCH: { type: Type.NUMBER, description: "Mean Corpuscular Hemoglobin in pg" },
           MCHC: { type: Type.NUMBER, description: "Mean Corpuscular Hemoglobin Concentration in g/dL" },
+          RDW: { type: Type.NUMBER, description: "Red Cell Distribution Width percentage" },
+          vitaminB12: { type: Type.NUMBER, description: "Vitamin B12 in pg/mL" },
           Neutrophils: { type: Type.NUMBER, description: "Neutrophils percentage" },
           Lymphocytes: { type: Type.NUMBER, description: "Lymphocytes percentage" },
         },

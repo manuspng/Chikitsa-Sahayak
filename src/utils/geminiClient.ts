@@ -825,6 +825,8 @@ Extract:
 - MCV (fL)
 - MCH (pg)
 - MCHC (g/dL)
+- RDW (% or fL)
+- Vitamin B12 (pg/mL or pmol/L)
 - Neutrophils (%)
 - Lymphocytes (%)
 - Monocytes (%)
@@ -846,6 +848,8 @@ ${rawOcrText ? `\n\nOCR Pre-scanned text:\n${rawOcrText}` : ""}`;
         MCV: { type: "NUMBER" },
         MCH: { type: "NUMBER" },
         MCHC: { type: "NUMBER" },
+        RDW: { type: "NUMBER", description: "Red Cell Distribution Width percentage" },
+        vitaminB12: { type: "NUMBER", description: "Serum Vitamin B12 in pg/mL" },
         Neutrophils: { type: "NUMBER" },
         Lymphocytes: { type: "NUMBER" },
         Monocytes: { type: "NUMBER" },

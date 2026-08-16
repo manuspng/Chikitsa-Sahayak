@@ -100,9 +100,11 @@ export function printClinicalReport(record: Partial<AnalysisRecord>) {
         { name: "Red Blood Cell (RBC) Count", val: c.rbc, ref: c.gender === "male" ? "4.5 - 5.9 x10^6/µL" : "4.1 - 5.1 x10^6/µL" },
         { name: "White Blood Cell (WBC) Count", val: c.wbc, ref: "4,500 - 11,000 /µL" },
         { name: "Platelets Count", val: c.platelets, ref: "150,000 - 450,000 /µL" },
-        { name: "Mean Corpuscular Volume (MCV)", val: c.mcv, ref: "80 - 96 fL" },
-        { name: "Mean Corpuscular Hemoglobin (MCH)", val: c.mch, ref: "27.5 - 33.2 pg" },
+        { name: "Mean Corpuscular Volume (MCV)", val: c.mcv, ref: "80 - 100 fL" },
+        { name: "Mean Corpuscular Hemoglobin (MCH)", val: c.mch, ref: "27.0 - 33.0 pg" },
         { name: "MCHC Concentration", val: c.mchc, ref: "32.0 - 36.0 g/dL" },
+        { name: "Red Cell Distribution Width (RDW)", val: c.rdw !== undefined ? `${c.rdw}%` : undefined, ref: "11.5% - 14.5%" },
+        { name: "Serum Vitamin B12 (Cobalamin)", val: c.vitaminB12 !== undefined ? `${c.vitaminB12} pg/mL` : undefined, ref: "200 - 900 pg/mL" },
         { name: "Neutrophils %", val: c.neutrophils, ref: "40.0% - 70.0%" },
         { name: "Lymphocytes %", val: c.lymphocytes, ref: "20.0% - 40.0%" }
       ];
@@ -224,8 +226,15 @@ export function printClinicalReport(record: Partial<AnalysisRecord>) {
       });
     } else if (record.type === "cbc") {
       const r = results as any;
+      const c = record.inputs as any;
       const indices = [
         { name: "Hemoglobin Evaluation", val: r.hemoglobinStatus || "Normal", note: r.anemiaType || "Oxygen capacity validation marker" },
+        { name: "Anemia Morphology Vector", val: r.morphologyClassification || "Normal Indices", note: r.morphologyDetails || "Balanced red cell sizing" },
+        { name: "MCV Volume & Sizing", val: `${c.mcv} fL (${r.mcvStatus || "Normal"})`, note: r.mcvInterpretation || "80–100 fL reference" },
+        { name: "MCH / MCHC Chromicity", val: `${c.mch} pg / ${c.mchc} g/dL`, note: `${r.mchStatus || "Normochromic"} · ${r.mchcStatus || "Optimal"}` },
+        ...(r.mentzerIndex !== undefined ? [{ name: "Mentzer Index (MCV/RBC)", val: String(r.mentzerIndex), note: r.mentzerInterpretation || "Microcytic differential index" }] : []),
+        ...(c.rdw !== undefined ? [{ name: "RDW Size Variation", val: `${c.rdw}% (${r.rdwStatus || "Normal"})`, note: r.rdwInterpretation || "Red cell distribution width" }] : []),
+        ...(c.vitaminB12 !== undefined ? [{ name: "Serum Vitamin B12", val: `${c.vitaminB12} pg/mL (${r.vitaminB12Status || "Normal"})`, note: r.vitaminB12Interpretation || "Cobalamin nutritional reserve" }] : []),
         { name: "WBC Proliferation Stage", val: r.wbcStatus || "Normal", note: r.infectionRisk || "Immunological response cycle evaluation" },
         { name: "Platelet Concentration", val: r.plateletStatus || "Normal", note: "Hemostatic activity and vascular repair index" },
         { name: "Neutrophil-to-Lymphocyte Ratio", val: r.nlratio?.toFixed(2) || "N/A", note: r.nlratioInterpretation || "Systemic micro-inflammatory diagnostic index" }
@@ -235,7 +244,7 @@ export function printClinicalReport(record: Partial<AnalysisRecord>) {
         rows += `
           <div class="index-grid-item">
             <div class="index-title">${i.name}</div>
-            <div class="index-value">${i.val}</div>
+            <div class="index-value font-mono">${i.val}</div>
             <div class="index-interpretation">${i.note}</div>
           </div>
         `;

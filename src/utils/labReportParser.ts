@@ -561,6 +561,8 @@ export interface ParsedCbc {
   MCV?: number;
   MCH?: number;
   MCHC?: number;
+  RDW?: number;
+  vitaminB12?: number;
   Neutrophils?: number;
   Lymphocytes?: number;
 }
@@ -619,6 +621,16 @@ export function parseCbcReport(text: string): ParsedCbc {
   result.MCHC = extractLabValue(text, [
     /(?:mchc)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
   ], ["mchc"]);
+
+  // RDW (Red Cell Distribution Width)
+  result.RDW = extractLabValue(text, [
+    /(?:rdw[\s\-_]?(?:cv|sd)?|red\s+cell\s+distribution\s+width)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
+  ], ["rdw-cv", "rdw-sd", "rdw cv", "rdw sd", "rdw", "red cell distribution width"]);
+
+  // Vitamin B12 (Cobalamin)
+  result.vitaminB12 = extractLabValue(text, [
+    /(?:vitamin\s+b[\s\-_]?12|vit\s+b[\s\-_]?12|b12|cobalamin|cyanocobalamin)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
+  ], ["vitamin b12", "vitamin b-12", "vit b12", "vit b-12", "b12", "cobalamin", "cyanocobalamin"]);
 
   result.Neutrophils = extractLabValue(text, [
     /(?:neutrophils|neut|neutr|granulocytes)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
