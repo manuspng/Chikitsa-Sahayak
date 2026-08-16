@@ -9,6 +9,8 @@ import Tesseract from "tesseract.js";
 import { preprocessImageForOcr } from "../utils/ocrPreprocessing";
 import { runGeminiAnalyze, runGeminiExtractReport, getProviderDisplayName, isProviderKeyMissing } from "../utils/geminiClient";
 import { parseLftReport } from "../utils/labReportParser";
+import { checkDecimalPlausibility, PlausibilityIssue } from "../utils/plausibilityCheck";
+import DecimalWarningBanner from "./DecimalWarningBanner";
 import WebcamCaptureModal from "./WebcamCaptureModal";
 
 function getOfflineLftSummary(inputs: LFTInputs, results: LFTResults): string {
@@ -137,6 +139,7 @@ export default function LftAnalyzer({ onAddRecord }: LftAnalyzerProps) {
   const currentProvider = selectedProvider;
   const [aiMeta, setAiMeta] = useState<{ providerUsed?: string; wasFallback?: boolean; modelUsed?: string } | null>(null);
   const [missingExtractedKeys, setMissingExtractedKeys] = useState<string[]>([]);
+  const [plausibilityIssues, setPlausibilityIssues] = useState<PlausibilityIssue[]>([]);
   
   // Input refs and files queue for Mobile & PC (Upload Report & Camera)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -153,7 +156,10 @@ export default function LftAnalyzer({ onAddRecord }: LftAnalyzerProps) {
   };
 
   const isFieldMissing = (val: any) => (extractMeta !== null || missingExtractedKeys.length > 0) && (val === undefined || val === null || val === "");
-  const getInputClass = (val: any, extraPadding = "pr-12") => {
+  const getInputClass = (val: any, extraPadding = "pr-12", fieldKey?: string) => {
+    if (fieldKey && plausibilityIssues.some(i => i.fieldKey === fieldKey)) {
+      return `w-full bg-amber-50/70 border-2 border-amber-500 rounded-xl px-3 py-2 text-sm text-slate-900 font-bold ${extraPadding} font-mono focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-xs`;
+    }
     if (isFieldMissing(val)) {
       return `w-full bg-rose-50/60 border-2 border-rose-500 rounded-xl px-3 py-2 text-sm text-slate-900 font-bold ${extraPadding} font-mono focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all shadow-xs`;
     }
@@ -167,12 +173,23 @@ export default function LftAnalyzer({ onAddRecord }: LftAnalyzerProps) {
   };
 
   const handleInputChange = (key: string, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [key]: value }));
+    setFormData(prev => {
+      const next = { ...prev, [key]: value };
+      const issues = checkDecimalPlausibility("lft", next);
+      setPlausibilityIssues(issues);
+      return next;
+    });
+    setMissingExtractedKeys(prev => prev.filter(k => !k.toLowerCase().includes(key.toLowerCase())));
     setResults(null); 
     setAiInsight(null);
     setIsSaved(false);
     setCurrentRecordId(null);
     setIsVerifiedCheck(false);
+  };
+
+  const handleApplyDecimalFix = (fieldKey: string, val: number) => {
+    handleInputChange(fieldKey, String(val));
+    setPlausibilityIssues(prev => prev.filter(i => i.fieldKey !== fieldKey));
   };
 
   const getLftInputs = (): LFTInputs => {
@@ -295,17 +312,12 @@ Offline Metabolic & Kidney Assessments:
 - NCEP ATP III Metabolic Syndrome Assessment: ${calculated.ncepMetabolicSyndrome ? calculated.ncepMetabolicSyndrome.conclusion : "Insufficient Data"}
 - Urine ACR Category: ${calculated.acrAssessment ? calculated.acrAssessment.category : "Insufficient Data"}
 
-Please write a comprehensive, expert clinical interpretation of these results formatted exactly according to the Indian report standards:
-1. Key Laboratory Findings
-2. Liver Function Summary
-3. Fibrosis and Liver Risk Scores (Explain each with its FULL NAME, value, risk category, and clinical interpretation)
-4. Metabolic Syndrome Assessment (NCEP ATP III evaluation - listing criteria met and criteria not met, final conclusion)
-5. Kidney Risk Assessment (interpreting Urine ACR if available - <30, 30-300, >300 mg/g, or specifying if insufficient data)
-6. Clinical Interpretation
-7. Suggested Follow-Up Discussions With Healthcare Provider
-8. Disclaimer
-
-Remember to maintain evidence-based medical terminology suited for RMPs and patient-friendly explanations. State that AI support is for educational purposes. Prefer Indian lab units and platelet formats in any metric discussions.`;
+Please provide a decisive, robust, and pinpointed clinical diagnostic assessment:
+1. Primary Clinical Impression & Risk Stratification (e.g. MASLD/NAFLD Steatosis vs MASH vs Cholestatic/Biliary Pattern vs Cirrhosis Risk)
+2. Driving Biomarkers & Pathophysiology (citing exact ALT/AST levels, De Ritis ratio, FLI, FIB-4, APRI, and metabolic criteria)
+3. Differential Diagnosis (Prioritized etiologies & conditions to rule out)
+4. Recommended Immediate Confirmatory Diagnostic Workup (e.g. FibroScan/VCTE, Abdominal Ultrasound, Viral Markers, Serum Ferritin)
+5. Actionable Therapeutic Strategy & Monitoring Timeline (Specific evidence-based medical and nutritional interventions)`;
 
       const provider = localStorage.getItem("selected_ai_provider") || "auto";
       const data = await runGeminiAnalyze("lft", prompt, provider);
@@ -416,6 +428,9 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
       if (!vals.patientName && !patientName) missing.push("Patient Name");
       if (!vals.patientAge && !next.age) missing.push("Patient Age");
       setMissingExtractedKeys(missing);
+
+      const issues = checkDecimalPlausibility("lft", next);
+      setPlausibilityIssues(issues);
 
       return next;
     });
@@ -786,6 +801,13 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
           </div>
         )}
 
+        {/* Potential Missing Decimal Point & Plausibility Warning */}
+        <DecimalWarningBanner 
+          issues={plausibilityIssues}
+          onApplyFix={handleApplyDecimalFix}
+          onDismiss={() => setPlausibilityIssues([])}
+        />
+
         {/* Mobile View: Exactly 1 single 'Upload Report' button */}
         <div className="block sm:hidden">
           <button
@@ -1024,7 +1046,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 placeholder="7-56"
                 value={formData.alt}
                 onChange={e => handleInputChange("alt", e.target.value)}
-                className={getInputClass(formData.alt, "pr-12")} 
+                className={getInputClass(formData.alt, "pr-12", "alt")} 
               />
               <span className="absolute right-3 top-2.5 text-xs font-black">U/L</span>
             </div>
@@ -1040,7 +1062,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 placeholder="10-40"
                 value={formData.ast}
                 onChange={e => handleInputChange("ast", e.target.value)}
-                className={getInputClass(formData.ast, "pr-12")} 
+                className={getInputClass(formData.ast, "pr-12", "ast")} 
               />
               <span className="absolute right-3 top-2.5 text-xs font-black">U/L</span>
             </div>
@@ -1056,7 +1078,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 placeholder="0.1-1.2"
                 value={formData.totalBilirubin}
                 onChange={e => handleInputChange("totalBilirubin", e.target.value)}
-                className={getInputClass(formData.totalBilirubin, "pr-14")} 
+                className={getInputClass(formData.totalBilirubin, "pr-14", "totalBilirubin")} 
               />
               <span className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
             </div>
@@ -1072,7 +1094,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                 placeholder="3.5-5.0"
                 value={formData.albumin}
                 onChange={e => handleInputChange("albumin", e.target.value)}
-                className={getInputClass(formData.albumin, "pr-12")} 
+                className={getInputClass(formData.albumin, "pr-12", "albumin")} 
               />
               <span className="absolute right-3 top-2.5 text-xs font-black">g/dL</span>
             </div>
@@ -1092,7 +1114,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                   placeholder="44-147"
                   value={formData.alp}
                   onChange={e => handleInputChange("alp", e.target.value)}
-                  className={getInputClass(formData.alp, "pr-12")} 
+                  className={getInputClass(formData.alp, "pr-12", "alp")} 
                 />
                 <span className="absolute right-3 top-2.5 text-xs font-black">U/L</span>
               </div>
@@ -1107,7 +1129,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                   placeholder="8-61"
                   value={formData.ggt}
                   onChange={e => handleInputChange("ggt", e.target.value)}
-                  className={getInputClass(formData.ggt, "pr-12")} 
+                  className={getInputClass(formData.ggt, "pr-12", "ggt")} 
                 />
                 <span className="absolute right-3 top-2.5 text-xs font-black">U/L</span>
               </div>
@@ -1122,7 +1144,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                   placeholder="0.0-0.3"
                   value={formData.directBilirubin}
                   onChange={e => handleInputChange("directBilirubin", e.target.value)}
-                  className={getInputClass(formData.directBilirubin, "pr-14")} 
+                  className={getInputClass(formData.directBilirubin, "pr-14", "directBilirubin")} 
                 />
                 <span className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
               </div>
@@ -1137,7 +1159,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                   placeholder="6.0-8.3"
                   value={formData.totalProtein}
                   onChange={e => handleInputChange("totalProtein", e.target.value)}
-                  className={getInputClass(formData.totalProtein, "pr-12")} 
+                  className={getInputClass(formData.totalProtein, "pr-12", "totalProtein")} 
                 />
                 <span className="absolute right-3 top-2.5 text-xs font-black">g/dL</span>
               </div>
@@ -1157,7 +1179,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                   placeholder="45"
                   value={formData.age}
                   onChange={e => handleInputChange("age", e.target.value)}
-                  className={getInputClass(formData.age, "pr-10")} 
+                  className={getInputClass(formData.age, "pr-10", "age")} 
                 />
                 <span className="absolute right-3 top-2.5 text-xs font-black">yrs</span>
               </div>
@@ -1171,7 +1193,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                   placeholder="150-400"
                   value={formData.platelets}
                   onChange={e => handleInputChange("platelets", e.target.value)}
-                  className={getInputClass(formData.platelets, "pr-14")} 
+                  className={getInputClass(formData.platelets, "pr-14", "platelets")} 
                 />
                 <span className="absolute right-3 top-2.5 text-[9px] font-black leading-tight">10^9/L</span>
               </div>
@@ -1190,7 +1212,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                   placeholder="kg"
                   value={formData.weight}
                   onChange={e => handleInputChange("weight", e.target.value)}
-                  className={getInputClass(formData.weight, "pr-10")} 
+                  className={getInputClass(formData.weight, "pr-10", "weight")} 
                 />
                 <span className="absolute right-3 top-2.5 text-xs font-black">kg</span>
               </div>
@@ -1204,7 +1226,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                   placeholder="cm"
                   value={formData.height}
                   onChange={e => handleInputChange("height", e.target.value)}
-                  className={getInputClass(formData.height, "pr-10")} 
+                  className={getInputClass(formData.height, "pr-10", "height")} 
                 />
                 <span className="absolute right-3 top-2.5 text-xs font-black">cm</span>
               </div>
@@ -1274,7 +1296,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                     placeholder="e.g., 94"
                     value={formData.waistCircumference}
                     onChange={e => handleInputChange("waistCircumference", e.target.value)}
-                    className={getInputClass(formData.waistCircumference, "pr-10")}
+                    className={getInputClass(formData.waistCircumference, "pr-10", "waistCircumference")}
                   />
                   <span className="absolute right-3 top-2.5 text-xs font-black">cm</span>
                 </div>
@@ -1288,7 +1310,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                     placeholder="e.g., 98"
                     value={formData.fastingBloodGlucose}
                     onChange={e => handleInputChange("fastingBloodGlucose", e.target.value)}
-                    className={getInputClass(formData.fastingBloodGlucose, "pr-14")}
+                    className={getInputClass(formData.fastingBloodGlucose, "pr-14", "fastingBloodGlucose")}
                   />
                   <span className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
                 </div>
@@ -1302,7 +1324,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                     placeholder="e.g., 145"
                     value={formData.triglycerides}
                     onChange={e => handleInputChange("triglycerides", e.target.value)}
-                    className={getInputClass(formData.triglycerides, "pr-14")}
+                    className={getInputClass(formData.triglycerides, "pr-14", "triglycerides")}
                   />
                   <span className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
                 </div>
@@ -1316,7 +1338,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                     placeholder="e.g., 45"
                     value={formData.hdlCholesterol}
                     onChange={e => handleInputChange("hdlCholesterol", e.target.value)}
-                    className={getInputClass(formData.hdlCholesterol, "pr-14")}
+                    className={getInputClass(formData.hdlCholesterol, "pr-14", "hdlCholesterol")}
                   />
                   <span className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
                 </div>
@@ -1330,7 +1352,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                     placeholder="e.g., 120"
                     value={formData.systolicBp}
                     onChange={e => handleInputChange("systolicBp", e.target.value)}
-                    className={getInputClass(formData.systolicBp, "pr-14")}
+                    className={getInputClass(formData.systolicBp, "pr-14", "systolicBp")}
                   />
                   <span className="absolute right-3 top-2.5 text-xs font-black">mmHg</span>
                 </div>
@@ -1344,7 +1366,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                     placeholder="e.g., 80"
                     value={formData.diastolicBp}
                     onChange={e => handleInputChange("diastolicBp", e.target.value)}
-                    className={getInputClass(formData.diastolicBp, "pr-14")}
+                    className={getInputClass(formData.diastolicBp, "pr-14", "diastolicBp")}
                   />
                   <span className="absolute right-3 top-2.5 text-xs font-black">mmHg</span>
                 </div>
@@ -1358,7 +1380,7 @@ Remember to maintain evidence-based medical terminology suited for RMPs and pati
                     placeholder="e.g., 24"
                     value={formData.urineAcr}
                     onChange={e => handleInputChange("urineAcr", e.target.value)}
-                    className={getInputClass(formData.urineAcr, "pr-14")}
+                    className={getInputClass(formData.urineAcr, "pr-14", "urineAcr")}
                   />
                   <span className="absolute right-3 top-2.5 text-xs font-black">mg/g</span>
                 </div>

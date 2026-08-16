@@ -9,6 +9,8 @@ import Tesseract from "tesseract.js";
 import { preprocessImageForOcr } from "../utils/ocrPreprocessing";
 import { runGeminiAnalyze, runGeminiExtractReport, getProviderDisplayName, isProviderKeyMissing } from "../utils/geminiClient";
 import { parseMetabolicReport } from "../utils/labReportParser";
+import { checkDecimalPlausibility, PlausibilityIssue } from "../utils/plausibilityCheck";
+import DecimalWarningBanner from "./DecimalWarningBanner";
 import WebcamCaptureModal from "./WebcamCaptureModal";
 
 function getOfflineMetabolicSummary(inputs: MetabolicInputs, results: MetabolicResults): string {
@@ -82,6 +84,7 @@ export default function MetabolicAnalyzer({ onAddRecord }: MetabolicAnalyzerProp
   const currentProvider = selectedProvider;
   const [aiMeta, setAiMeta] = useState<{ providerUsed?: string; wasFallback?: boolean; modelUsed?: string } | null>(null);
   const [missingExtractedKeys, setMissingExtractedKeys] = useState<string[]>([]);
+  const [plausibilityIssues, setPlausibilityIssues] = useState<PlausibilityIssue[]>([]);
 
   // Input refs for Mobile & PC (Upload Report & Camera)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -93,7 +96,10 @@ export default function MetabolicAnalyzer({ onAddRecord }: MetabolicAnalyzerProp
   const [extractMeta, setExtractMeta] = useState<{ providerUsed?: string; modelUsed?: string; wasFallback?: boolean } | null>(null);
 
   const isFieldMissing = (val: any) => (extractMeta !== null || missingExtractedKeys.length > 0) && (val === undefined || val === null || val === "");
-  const getInputClass = (val: any, extraPadding = "pr-12") => {
+  const getInputClass = (val: any, extraPadding = "pr-12", fieldKey?: string) => {
+    if (fieldKey && plausibilityIssues.some(i => i.fieldKey === fieldKey)) {
+      return `w-full bg-amber-50/70 border-2 border-amber-500 rounded-xl px-3 py-2 text-sm text-slate-900 font-bold ${extraPadding} font-mono focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-xs`;
+    }
     if (isFieldMissing(val)) {
       return `w-full bg-rose-50/60 border-2 border-rose-500 rounded-xl px-3 py-2 text-sm text-slate-900 font-bold ${extraPadding} font-mono focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all shadow-xs`;
     }
@@ -104,6 +110,11 @@ export default function MetabolicAnalyzer({ onAddRecord }: MetabolicAnalyzerProp
       return "w-full bg-rose-50/60 border-2 border-rose-500 rounded-xl px-3 py-2 text-sm text-slate-900 font-bold placeholder-rose-400 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all h-[42px] shadow-xs";
     }
     return "w-full bg-white border-2 border-slate-300 rounded-xl px-3 py-2 text-sm text-slate-900 font-bold placeholder-slate-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all h-[42px] shadow-xs";
+  };
+
+  const handleApplyDecimalFix = (fieldKey: string, val: number) => {
+    handleInputChange(fieldKey, String(val));
+    setPlausibilityIssues(prev => prev.filter(i => i.fieldKey !== fieldKey));
   };
 
   const handleWebcamCapture = (file: File) => {
@@ -292,8 +303,11 @@ export default function MetabolicAnalyzer({ onAddRecord }: MetabolicAnalyzerProp
           next.urineAcr = "";
         }
       }
+      const issues = checkDecimalPlausibility("metabolic", next);
+      setPlausibilityIssues(issues);
       return next;
     });
+    setMissingExtractedKeys(prev => prev.filter(k => !k.toLowerCase().includes(key.toLowerCase())));
     setResults(null);
     setAiInsight(null);
     setIsSaved(false);
@@ -381,7 +395,7 @@ export default function MetabolicAnalyzer({ onAddRecord }: MetabolicAnalyzerProp
         waistCircumference: formData.waistCircumference ? parseFloat(formData.waistCircumference) : undefined,
       };
 
-      const basePrompt = `Please evaluate the following patient data for Metabolic Syndrome and Diabetic Nephropathy Kidney Risk (Albumin to Creatinine Ratio context):
+      const basePrompt = `Please evaluate the following patient data for Metabolic Syndrome (NCEP ATP III) and Diabetic Nephropathy Kidney Risk (Urine ACR):
 
 PATIENT BIOLOGICAL PROFILE:
 - Name: ${patientName || "Anonymous Patient"}
@@ -401,7 +415,14 @@ METRIC REVIEWS:
 OFFLINE CRITERIA SYNTHESIS:
 - NCEP ATP III Status: ${results.ncepMetabolicSyndrome ? results.ncepMetabolicSyndrome.conclusion : "No Metabolic parameters provided"}
 - Urine ACR Risk Category: ${results.acrAssessment ? `${results.acrAssessment.category} (${results.acrAssessment.clinicalSignificance})` : "No Urine ACR provided"}
-- Aggregated Visceral/Renal Risk: ${results.riskLevel.toUpperCase()}`;
+- Aggregated Visceral/Renal Risk: ${results.riskLevel.toUpperCase()}
+
+Please provide a decisive, robust, and pinpointed clinical diagnostic assessment:
+1. Primary Clinical Impression & Cardiometabolic/Renal Risk Tier
+2. Driving Biomarkers & Pathophysiology (citing exact Glucose, Lipids, BP, and ACR values)
+3. Differential Diagnostics & Target Organ Complications
+4. Recommended Immediate Confirmatory Diagnostic Workup (e.g. HbA1c, eGFR/Serum Creatinine, Echocardiogram, 24-hr Ambulatory BP)
+5. Actionable Therapeutic Strategy & Monitoring Timeline (Cardioprotective/Renoprotective pharmacotherapy & lifestyle targets)`;
 
       const provider = localStorage.getItem("selected_ai_provider") || "auto";
       const data = await runGeminiAnalyze("metabolic", basePrompt, provider);
@@ -682,6 +703,13 @@ OFFLINE CRITERIA SYNTHESIS:
           </div>
         )}
 
+        {/* Potential Missing Decimal Point & Plausibility Warning */}
+        <DecimalWarningBanner 
+          issues={plausibilityIssues}
+          onApplyFix={handleApplyDecimalFix}
+          onDismiss={() => setPlausibilityIssues([])}
+        />
+
         {/* Mobile View: Exactly 1 single 'Upload Report' button */}
         <div className="block sm:hidden">
           <button
@@ -929,7 +957,7 @@ OFFLINE CRITERIA SYNTHESIS:
                   placeholder={formData.gender === "female" ? "e.g. 85" : "e.g. 95"}
                   value={formData.waistCircumference}
                   onChange={e => handleInputChange("waistCircumference", e.target.value)}
-                  className={getInputClass(formData.waistCircumference, "pr-12")} 
+                  className={getInputClass(formData.waistCircumference, "pr-12", "waistCircumference")} 
                 />
                 <span className="absolute right-3 top-2.5 text-xs font-black">cm</span>
               </div>
@@ -947,7 +975,7 @@ OFFLINE CRITERIA SYNTHESIS:
                   placeholder="e.g. 95"
                   value={formData.fastingBloodGlucose}
                   onChange={e => handleInputChange("fastingBloodGlucose", e.target.value)}
-                  className={getInputClass(formData.fastingBloodGlucose, "pr-14")} 
+                  className={getInputClass(formData.fastingBloodGlucose, "pr-14", "fastingBloodGlucose")} 
                 />
                 <span className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
               </div>
@@ -965,7 +993,7 @@ OFFLINE CRITERIA SYNTHESIS:
                   placeholder="e.g. 140"
                   value={formData.triglycerides}
                   onChange={e => handleInputChange("triglycerides", e.target.value)}
-                  className={getInputClass(formData.triglycerides, "pr-14")} 
+                  className={getInputClass(formData.triglycerides, "pr-14", "triglycerides")} 
                 />
                 <span className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
               </div>
@@ -983,7 +1011,7 @@ OFFLINE CRITERIA SYNTHESIS:
                   placeholder="e.g. 45"
                   value={formData.hdlCholesterol}
                   onChange={e => handleInputChange("hdlCholesterol", e.target.value)}
-                  className={getInputClass(formData.hdlCholesterol, "pr-14")} 
+                  className={getInputClass(formData.hdlCholesterol, "pr-14", "hdlCholesterol")} 
                 />
                 <span className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
               </div>
@@ -1001,7 +1029,7 @@ OFFLINE CRITERIA SYNTHESIS:
                   placeholder="e.g. 120"
                   value={formData.systolicBp}
                   onChange={e => handleInputChange("systolicBp", e.target.value)}
-                  className={getInputClass(formData.systolicBp, "pr-14")} 
+                  className={getInputClass(formData.systolicBp, "pr-14", "systolicBp")} 
                 />
                 <span className="absolute right-3 top-2.5 text-xs font-black">mmHg</span>
               </div>
@@ -1019,7 +1047,7 @@ OFFLINE CRITERIA SYNTHESIS:
                   placeholder="e.g. 80"
                   value={formData.diastolicBp}
                   onChange={e => handleInputChange("diastolicBp", e.target.value)}
-                  className={getInputClass(formData.diastolicBp, "pr-14")} 
+                  className={getInputClass(formData.diastolicBp, "pr-14", "diastolicBp")} 
                 />
                 <span className="absolute right-3 top-2.5 text-xs font-black">mmHg</span>
               </div>
@@ -1109,7 +1137,7 @@ OFFLINE CRITERIA SYNTHESIS:
                       placeholder="e.g. 30"
                       value={formData.urineAlbumin}
                       onChange={e => handleInputChange("urineAlbumin", e.target.value)}
-                      className={getInputClass(formData.urineAlbumin, "pr-14")} 
+                      className={getInputClass(formData.urineAlbumin, "pr-14", "urineAlbumin")} 
                     />
                     <span className="absolute right-3 top-2.5 text-xs font-black">mg/L</span>
                   </div>
@@ -1127,7 +1155,7 @@ OFFLINE CRITERIA SYNTHESIS:
                       placeholder="e.g. 100"
                       value={formData.urineCreatinine}
                       onChange={e => handleInputChange("urineCreatinine", e.target.value)}
-                      className={getInputClass(formData.urineCreatinine, "pr-14")} 
+                      className={getInputClass(formData.urineCreatinine, "pr-14", "urineCreatinine")} 
                     />
                     <span className="absolute right-3 top-2.5 text-xs font-black">mg/dL</span>
                   </div>
@@ -1191,7 +1219,7 @@ OFFLINE CRITERIA SYNTHESIS:
                   placeholder="e.g. 25"
                   value={formData.urineAcr}
                   onChange={e => handleInputChange("urineAcr", e.target.value)}
-                  className={getInputClass(formData.urineAcr, "pr-14")} 
+                  className={getInputClass(formData.urineAcr, "pr-14", "urineAcr")} 
                 />
                 <span className="absolute right-3 top-2.5 text-xs font-black">mg/g</span>
               </div>

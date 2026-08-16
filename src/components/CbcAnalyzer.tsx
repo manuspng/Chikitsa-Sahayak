@@ -9,6 +9,8 @@ import Tesseract from "tesseract.js";
 import { preprocessImageForOcr } from "../utils/ocrPreprocessing";
 import { runGeminiAnalyze, runGeminiExtractReport, getProviderDisplayName, isProviderKeyMissing } from "../utils/geminiClient";
 import { parseCbcReport } from "../utils/labReportParser";
+import { checkDecimalPlausibility, PlausibilityIssue } from "../utils/plausibilityCheck";
+import DecimalWarningBanner from "./DecimalWarningBanner";
 import WebcamCaptureModal from "./WebcamCaptureModal";
 
 function getOfflineCbcSummary(inputs: CBCInputs, results: CBCResults): string {
@@ -141,6 +143,7 @@ export default function CbcAnalyzer({ onAddRecord }: CbcAnalyzerProps) {
   const currentProvider = selectedProvider;
   const [aiMeta, setAiMeta] = useState<{ providerUsed?: string; wasFallback?: boolean; modelUsed?: string } | null>(null);
   const [missingExtractedKeys, setMissingExtractedKeys] = useState<string[]>([]);
+  const [plausibilityIssues, setPlausibilityIssues] = useState<PlausibilityIssue[]>([]);
 
   // Input refs for Mobile & PC (Upload Report & Camera)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -157,7 +160,10 @@ export default function CbcAnalyzer({ onAddRecord }: CbcAnalyzerProps) {
   };
 
   const isFieldMissing = (val: any) => (extractMeta !== null || missingExtractedKeys.length > 0) && (val === undefined || val === null || val === "");
-  const getInputClass = (val: any, extraPadding = "pr-12") => {
+  const getInputClass = (val: any, extraPadding = "pr-12", fieldKey?: string) => {
+    if (fieldKey && plausibilityIssues.some(i => i.fieldKey === fieldKey)) {
+      return `w-full bg-amber-50/70 border-2 border-amber-500 rounded-xl px-3 py-2 text-sm text-slate-900 font-bold ${extraPadding} font-mono focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all shadow-xs`;
+    }
     if (isFieldMissing(val)) {
       return `w-full bg-rose-50/60 border-2 border-rose-500 rounded-xl px-3 py-2 text-sm text-slate-900 font-bold ${extraPadding} font-mono focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all shadow-xs`;
     }
@@ -171,12 +177,23 @@ export default function CbcAnalyzer({ onAddRecord }: CbcAnalyzerProps) {
   };
 
   const handleInputChange = (key: string, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [key]: value }));
+    setFormData(prev => {
+      const next = { ...prev, [key]: value };
+      const issues = checkDecimalPlausibility("cbc", next);
+      setPlausibilityIssues(issues);
+      return next;
+    });
+    setMissingExtractedKeys(prev => prev.filter(k => !k.toLowerCase().includes(key.toLowerCase())));
     setResults(null);
     setAiInsight(null);
     setIsSaved(false);
     setCurrentRecordId(null);
     setIsVerifiedCheck(false);
+  };
+
+  const handleApplyDecimalFix = (fieldKey: string, val: number) => {
+    handleInputChange(fieldKey, String(val));
+    setPlausibilityIssues(prev => prev.filter(i => i.fieldKey !== fieldKey));
   };
 
   const getCbcInputs = (): CBCInputs => {
@@ -407,6 +424,9 @@ Please write an expert, professional clinical interpretation formatted clearly f
       if (!next.lymphocytes) missing.push("Lymphocytes % (for NLR)");
       if (!vals.patientName && !patientName) missing.push("Patient Name");
       setMissingExtractedKeys(missing);
+
+      const issues = checkDecimalPlausibility("cbc", next);
+      setPlausibilityIssues(issues);
 
       return next;
     });
@@ -765,6 +785,13 @@ Please write an expert, professional clinical interpretation formatted clearly f
           </div>
         )}
 
+        {/* Potential Missing Decimal Point & Plausibility Warning */}
+        <DecimalWarningBanner 
+          issues={plausibilityIssues}
+          onApplyFix={handleApplyDecimalFix}
+          onDismiss={() => setPlausibilityIssues([])}
+        />
+
         {/* Mobile View: Exactly 1 single 'Upload Report' button */}
         <div className="block sm:hidden">
           <button
@@ -1006,7 +1033,7 @@ Please write an expert, professional clinical interpretation formatted clearly f
                 placeholder={formData.gender === "male" ? "13.5-17.5" : "12.0-15.5"}
                 value={formData.hemoglobin}
                 onChange={e => handleInputChange("hemoglobin", e.target.value)}
-                className={getInputClass(formData.hemoglobin, "pr-12")} 
+                className={getInputClass(formData.hemoglobin, "pr-12", "hemoglobin")} 
               />
               <span className="absolute right-3 top-2.5 text-xs font-black">g/dL</span>
             </div>
@@ -1022,7 +1049,7 @@ Please write an expert, professional clinical interpretation formatted clearly f
                 placeholder={formData.gender === "male" ? "38-48" : "35-45"}
                 value={formData.hematocrit}
                 onChange={e => handleInputChange("hematocrit", e.target.value)}
-                className={getInputClass(formData.hematocrit, "pr-10")} 
+                className={getInputClass(formData.hematocrit, "pr-10", "hematocrit")} 
               />
               <span className="absolute right-3 top-2.5 text-xs font-black">%</span>
             </div>
@@ -1038,7 +1065,7 @@ Please write an expert, professional clinical interpretation formatted clearly f
                 placeholder={formData.gender === "male" ? "4.3-5.9" : "3.8-5.2"}
                 value={formData.rbc}
                 onChange={e => handleInputChange("rbc", e.target.value)}
-                className={getInputClass(formData.rbc, "pr-14")} 
+                className={getInputClass(formData.rbc, "pr-14", "rbc")} 
               />
               <span className="absolute right-3 top-2.5 text-[9px] font-black leading-tight">10^12/L</span>
             </div>
@@ -1054,7 +1081,7 @@ Please write an expert, professional clinical interpretation formatted clearly f
                 placeholder="4.5-11.0"
                 value={formData.wbc}
                 onChange={e => handleInputChange("wbc", e.target.value)}
-                className={getInputClass(formData.wbc, "pr-14")} 
+                className={getInputClass(formData.wbc, "pr-14", "wbc")} 
               />
               <span className="absolute right-3 top-2.5 text-[9px] font-black leading-tight">10^9/L</span>
             </div>
@@ -1085,7 +1112,7 @@ Please write an expert, professional clinical interpretation formatted clearly f
                   placeholder="80-100"
                   value={formData.mcv}
                   onChange={e => handleInputChange("mcv", e.target.value)}
-                  className={getInputClass(formData.mcv, "pr-10")} 
+                  className={getInputClass(formData.mcv, "pr-10", "mcv")} 
                 />
                 <span className="absolute right-3 top-2.5 text-xs font-black">fL</span>
               </div>
@@ -1101,7 +1128,7 @@ Please write an expert, professional clinical interpretation formatted clearly f
                   placeholder="27-33"
                   value={formData.mch}
                   onChange={e => handleInputChange("mch", e.target.value)}
-                  className={getInputClass(formData.mch, "pr-10")} 
+                  className={getInputClass(formData.mch, "pr-10", "mch")} 
                 />
                 <span className="absolute right-3 top-2.5 text-xs font-black">pg</span>
               </div>
@@ -1117,7 +1144,7 @@ Please write an expert, professional clinical interpretation formatted clearly f
                   placeholder="32-36"
                   value={formData.mchc}
                   onChange={e => handleInputChange("mchc", e.target.value)}
-                  className={getInputClass(formData.mchc, "pr-12")} 
+                  className={getInputClass(formData.mchc, "pr-12", "mchc")} 
                 />
                 <span className="absolute right-3 top-2.5 text-xs font-black">g/dL</span>
               </div>
@@ -1132,7 +1159,7 @@ Please write an expert, professional clinical interpretation formatted clearly f
                   placeholder="11.5-14.5"
                   value={formData.rdw}
                   onChange={e => handleInputChange("rdw", e.target.value)}
-                  className={getInputClass(formData.rdw, "pr-10")} 
+                  className={getInputClass(formData.rdw, "pr-10", "rdw")} 
                 />
                 <span className="absolute right-3 top-2.5 text-xs font-black">%</span>
               </div>
@@ -1147,7 +1174,7 @@ Please write an expert, professional clinical interpretation formatted clearly f
                   placeholder="200-900"
                   value={formData.vitaminB12}
                   onChange={e => handleInputChange("vitaminB12", e.target.value)}
-                  className={getInputClass(formData.vitaminB12, "pr-16")} 
+                  className={getInputClass(formData.vitaminB12, "pr-16", "vitaminB12")} 
                 />
                 <span className="absolute right-3 top-2.5 text-xs font-black">pg/mL</span>
               </div>
@@ -1171,7 +1198,7 @@ Please write an expert, professional clinical interpretation formatted clearly f
                   placeholder="150-400"
                   value={formData.platelets}
                   onChange={e => handleInputChange("platelets", e.target.value)}
-                  className={getInputClass(formData.platelets, "pr-14")} 
+                  className={getInputClass(formData.platelets, "pr-14", "platelets")} 
                 />
                 <span className="absolute right-3 top-2.5 text-[9px] font-black leading-tight">10^9/L</span>
               </div>
@@ -1190,7 +1217,7 @@ Please write an expert, professional clinical interpretation formatted clearly f
                   placeholder="40-70"
                   value={formData.neutrophils}
                   onChange={e => handleInputChange("neutrophils", e.target.value)}
-                  className={getInputClass(formData.neutrophils, "pr-10")} 
+                  className={getInputClass(formData.neutrophils, "pr-10", "neutrophils")} 
                 />
                 <span className="absolute right-3 top-2.5 text-xs font-black">%</span>
               </div>
@@ -1204,7 +1231,7 @@ Please write an expert, professional clinical interpretation formatted clearly f
                   placeholder="20-40"
                   value={formData.lymphocytes}
                   onChange={e => handleInputChange("lymphocytes", e.target.value)}
-                  className={getInputClass(formData.lymphocytes, "pr-10")} 
+                  className={getInputClass(formData.lymphocytes, "pr-10", "lymphocytes")} 
                 />
                 <span className="absolute right-3 top-2.5 text-xs font-black">%</span>
               </div>
