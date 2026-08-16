@@ -8,7 +8,7 @@ import MetricCard from "./MetricCard";
 import Tesseract from "tesseract.js";
 import { preprocessImageForOcr } from "../utils/ocrPreprocessing";
 import { runGeminiAnalyze, runGeminiExtractReport, getProviderDisplayName, isProviderKeyMissing } from "../utils/geminiClient";
-import { parseLftReport } from "../utils/labReportParser";
+import { parseLftReport, parseCbcReport, parseMetabolicReport } from "../utils/labReportParser";
 import { checkDecimalPlausibility, PlausibilityIssue } from "../utils/plausibilityCheck";
 import DecimalWarningBanner from "./DecimalWarningBanner";
 import WebcamCaptureModal from "./WebcamCaptureModal";
@@ -389,7 +389,47 @@ Please provide a decisive, robust, and pinpointed clinical diagnostic assessment
     });
   };
 
-  const applyLftOcrValues = (vals: any) => {
+  const [detectedReportMismatch, setDetectedReportMismatch] = useState<{ type: string; title: string; summary: string } | null>(null);
+
+  const applyLftOcrValues = (vals: any, rawAggregatedText?: string) => {
+    setDetectedReportMismatch(null);
+
+    // 1. Check if document is a CBC report uploaded in LFT section
+    const cbcCheck = (rawAggregatedText ? parseCbcReport(rawAggregatedText) : null) || vals;
+    const isCbc = (cbcCheck.Hemoglobin !== undefined || cbcCheck.WBC !== undefined || cbcCheck.Platelets !== undefined || cbcCheck.MCV !== undefined) &&
+                  (vals.ALT === undefined && vals.AST === undefined && vals["Total Bilirubin"] === undefined);
+
+    if (isCbc) {
+      setDetectedReportMismatch({
+        type: "cbc",
+        title: "Complete Blood Count (CBC)",
+        summary: `Hemoglobin: ${cbcCheck.Hemoglobin ?? "-"} g/dL, WBC: ${cbcCheck.WBC ?? "-"} k/uL, MCV: ${cbcCheck.MCV ?? "-"} fL, Platelets: ${cbcCheck.Platelets ?? "-"} k/uL`
+      });
+      setMissingExtractedKeys([]);
+      if (cbcCheck.patientName) setPatientName(cbcCheck.patientName);
+      if (cbcCheck.patientGender) setPatientGender(cbcCheck.patientGender);
+      if (cbcCheck.patientAge) setFormData(p => ({ ...p, age: cbcCheck.patientAge || p.age }));
+      return;
+    }
+
+    // 2. Check if document is a Metabolic report uploaded in LFT section
+    const metabolicCheck = (rawAggregatedText ? parseMetabolicReport(rawAggregatedText) : null) || vals;
+    const isMetabolic = (metabolicCheck.fastingBloodGlucose !== undefined || metabolicCheck.triglycerides !== undefined || metabolicCheck.hdlCholesterol !== undefined) &&
+                        (vals.ALT === undefined && vals.AST === undefined && vals["Total Bilirubin"] === undefined);
+
+    if (isMetabolic) {
+      setDetectedReportMismatch({
+        type: "metabolic",
+        title: "Metabolic & Lipid Panel",
+        summary: `Glucose: ${metabolicCheck.fastingBloodGlucose ?? "-"} mg/dL, Triglycerides: ${metabolicCheck.triglycerides ?? "-"} mg/dL`
+      });
+      setMissingExtractedKeys([]);
+      if (metabolicCheck.patientName) setPatientName(metabolicCheck.patientName);
+      if (metabolicCheck.patientGender) setPatientGender(metabolicCheck.patientGender);
+      if (metabolicCheck.patientAge) setFormData(p => ({ ...p, age: metabolicCheck.patientAge || p.age }));
+      return;
+    }
+
     if (vals.patientName) {
       setPatientName(vals.patientName);
     }
@@ -522,14 +562,14 @@ Please provide a decisive, robust, and pinpointed clinical diagnostic assessment
         if (foundValues.length === 0 && !extracted.patientName) {
           throw new Error("Unable to identify clinical metrics locally. Try adjusting lighting or use 'AI to Extract' for advanced recognition.");
         }
-        applyLftOcrValues(extracted);
+        applyLftOcrValues(extracted, aggregatedText);
         setExtractMeta({ providerUsed: "Local Tesseract OCR", modelUsed: "Offline Pattern Parser", wasFallback: false });
       } else {
         setOcrStatusText("Extracting with Clinical Multi-Agent AI...");
         const data = await runGeminiExtractReport(base64Contents, "lft", aggregatedText);
         
         if (data && data.values) {
-          applyLftOcrValues(data.values);
+          applyLftOcrValues(data.values, aggregatedText);
           setExtractMeta({
             providerUsed: data.providerUsed,
             modelUsed: data.modelUsed,
@@ -796,6 +836,35 @@ Please provide a decisive, robust, and pinpointed clinical diagnostic assessment
               title="Re-run AI extraction"
             >
               🔄 Re-extract
+            </button>
+          </div>
+        )}
+
+        {/* Report Type Mismatch Banner */}
+        {detectedReportMismatch && (
+          <div className="p-3.5 bg-indigo-50 dark:bg-indigo-950/40 border-2 border-indigo-400 dark:border-indigo-600 rounded-2xl space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-xs font-black text-indigo-950 dark:text-indigo-200">
+                <Sparkles size={15} className="text-indigo-600 dark:text-indigo-400 shrink-0" />
+                <span>Document Format Notice: {detectedReportMismatch.title} Uploaded</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDetectedReportMismatch(null)}
+                className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 hover:underline cursor-pointer"
+              >
+                Dismiss
+              </button>
+            </div>
+            <p className="text-xs text-indigo-900 dark:text-indigo-200 font-medium">
+              This document contains <strong>{detectedReportMismatch.title}</strong> parameters ({detectedReportMismatch.summary}), but you are currently in the <strong>Liver Function Test (LFT) Analyzer</strong>.
+            </p>
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent("switch-tab", { detail: detectedReportMismatch.type }))}
+              className="px-3 py-1.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded-xl text-xs font-black transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm"
+            >
+              <span>Open in {detectedReportMismatch.title} Analyzer →</span>
             </button>
           </div>
         )}

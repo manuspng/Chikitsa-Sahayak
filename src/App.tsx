@@ -230,12 +230,19 @@ export default function App() {
       const p = e.detail || localStorage.getItem("selected_ai_provider") || "auto";
       setSelectedProvider(p);
     };
+    const handleSwitchTab = (e: any) => {
+      if (e.detail && typeof e.detail === "string") {
+        setActiveTab(e.detail);
+      }
+    };
     window.addEventListener("open-ai-provider-modal", handleOpenProviderModal);
     window.addEventListener("ai-provider-changed", handleProviderChanged);
+    window.addEventListener("switch-tab", handleSwitchTab);
     window.addEventListener("storage", handleOpenProviderModal);
     return () => {
       window.removeEventListener("open-ai-provider-modal", handleOpenProviderModal);
       window.removeEventListener("ai-provider-changed", handleProviderChanged);
+      window.removeEventListener("switch-tab", handleSwitchTab);
       window.removeEventListener("storage", handleOpenProviderModal);
     };
   }, []);

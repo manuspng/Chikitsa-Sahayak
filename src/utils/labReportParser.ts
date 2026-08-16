@@ -588,21 +588,21 @@ export function parseCbcReport(text: string): ParsedCbc {
   if (age) result.patientAge = age;
 
   result.Hemoglobin = extractLabValue(text, [
-    /(?:hemoglobin|hb|hgb)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
-  ], ["hemoglobin", "hb", "hgb"]);
+    /(?:haemoglobin|hemoglobin|hb|hgb)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
+  ], ["haemoglobin", "hemoglobin", "hb", "hgb"]);
 
   result.Hematocrit = extractLabValue(text, [
-    /(?:hematocrit|hct|pcv|packed\s+cell\s+volume)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
-  ], ["hematocrit", "hct", "pcv", "packed cell"]);
+    /(?:haematocrit|hematocrit|hct|pcv|packed\s+cell\s+volume)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
+  ], ["haematocrit", "hematocrit", "hct", "pcv", "packed cell volume", "packed cell"]);
 
   result.RBC = extractLabValue(text, [
-    /(?:rbc|red\s+blood\s+cell|rbcs|erythrocyte|erythrocytes)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
-  ], ["rbc", "red blood", "erythrocyte"]);
+    /(?:total\s+rbc\s+count|rbc\s+count|red\s+blood\s+cell\s+count|red\s+blood\s+cells?|rbcs?|erythrocyte\s+count|erythrocytes?|r\.b\.c\.?)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
+  ], ["total rbc", "rbc count", "red blood cell", "rbc", "erythrocyte", "r.b.c"]);
 
   // WBC with cells/cu.mm (/uL) vs 10^9/L normalization
   const rawWbc = extractLabValue(text, [
-    /(?:total\s+(?:leukocyte|leucocyte|wbc)\s+count|wbc\s+count|white\s+blood\s+cells?|wbcs?|leucocytes?|leukocytes?|tlc)[\s:.\-\t=]*([0-9]+(?:[,.][0-9]+)?)/i
-  ], ["total leukocyte count", "total leucocyte count", "tlc", "wbc count", "wbc", "white blood", "leukocyte", "leucocyte"]);
+    /(?:total\s+(?:leukocyte|leucocyte|wbc)\s+count|wbc\s+count|white\s+blood\s+cells?|wbcs?|leucocytes?|leukocytes?|tlc|w\.b\.c\.?)[\s:.\-\t=]*([0-9]+(?:[,.][0-9]+)?)/i
+  ], ["total leukocyte count", "total leucocyte count", "tlc", "wbc count", "wbc", "white blood", "leukocyte", "leucocyte", "w.b.c"]);
 
   if (rawWbc !== undefined) {
     if (rawWbc > 100) {
@@ -614,8 +614,8 @@ export function parseCbcReport(text: string): ParsedCbc {
 
   // Platelets with Lakhs / Thousands normalization
   const rawPlt = extractLabValue(text, [
-    /(?:platelet\s+count|platelets|platelet|plt)[\s:.\-\t=]*([0-9]+(?:[,.][0-9]+)?)/i
-  ], ["platelet count", "platelets", "platelet", "plt"]);
+    /(?:total\s+platelet\s+count|platelet\s+count|platelets|platelet|plt|thrombocytes?)[\s:.\-\t=]*([0-9]+(?:[,.][0-9]+)?)/i
+  ], ["total platelet count", "platelet count", "platelets", "platelet", "plt", "thrombocyte"]);
 
   if (rawPlt !== undefined) {
     if (rawPlt > 1000) {
@@ -628,34 +628,34 @@ export function parseCbcReport(text: string): ParsedCbc {
   }
 
   result.MCV = extractLabValue(text, [
-    /(?:mcv|mean\s+corpuscular\s+volume)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
-  ], ["mcv", "mean corpuscular volume"]);
+    /(?:mean\s+corpuscular\s+volume|mcv|m\.c\.v\.?)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
+  ], ["mcv", "mean corpuscular volume", "m.c.v"]);
 
   result.MCH = extractLabValue(text, [
-    /(?:mch|mean\s+corpuscular\s+hemoglobin)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
-  ], ["mch", "mean corpuscular hemoglobin"]);
+    /(?:mean\s+corpuscular\s+(?:hemoglobin|haemoglobin)|mch|m\.c\.h\.?)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
+  ], ["mch", "mean corpuscular hemoglobin", "mean corpuscular haemoglobin", "m.c.h"]);
 
   result.MCHC = extractLabValue(text, [
-    /(?:mchc)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
-  ], ["mchc"]);
+    /(?:mean\s+corpuscular\s+(?:hemoglobin|haemoglobin)\s+concentration|mchc|m\.c\.h\.c\.?)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
+  ], ["mchc", "mean corpuscular hemoglobin concentration", "m.c.h.c"]);
 
   // RDW (Red Cell Distribution Width)
   result.RDW = extractLabValue(text, [
-    /(?:rdw[\s\-_]?(?:cv|sd)?|red\s+cell\s+distribution\s+width)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
-  ], ["rdw-cv", "rdw-sd", "rdw cv", "rdw sd", "rdw", "red cell distribution width"]);
+    /(?:red\s+cell\s+distribution\s+width|rdw[\s\-_]?(?:cv|sd)?|r\.d\.w\.?)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
+  ], ["rdw-cv", "rdw-sd", "rdw cv", "rdw sd", "rdw", "red cell distribution width", "r.d.w"]);
 
   // Vitamin B12 (Cobalamin)
   result.vitaminB12 = extractLabValue(text, [
-    /(?:vitamin\s+b[\s\-_]?12|vit\s+b[\s\-_]?12|b12|cobalamin|cyanocobalamin)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
-  ], ["vitamin b12", "vitamin b-12", "vit b12", "vit b-12", "b12", "cobalamin", "cyanocobalamin"]);
+    /(?:serum\s+vitamin\s+b[\s\-_]?12|vitamin\s+b[\s\-_]?12|vit\s+b[\s\-_]?12|cyanocobalamin|cobalamin|b12)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
+  ], ["vitamin b12", "vitamin b-12", "vit b12", "vit b-12", "cobalamin", "cyanocobalamin", "b12"]);
 
   result.Neutrophils = extractLabValue(text, [
-    /(?:neutrophils|neut|neutr|granulocytes)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
-  ], ["neutrophils", "neut", "granulocytes"]);
+    /(?:segmented\s+neutrophils?|neutrophils?|polymorphs?|neutr?|granulocytes?)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
+  ], ["neutrophils", "neutrophil", "polymorphs", "neut", "granulocytes"]);
 
   result.Lymphocytes = extractLabValue(text, [
-    /(?:lymphocytes|lymph|lym)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
-  ], ["lymphocytes", "lymph", "lym"]);
+    /(?:lymphocytes?|lymphs?|lym)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
+  ], ["lymphocytes", "lymphocyte", "lymphs", "lymph", "lym"]);
 
   return result;
 }

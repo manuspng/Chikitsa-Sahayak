@@ -8,7 +8,7 @@ import MetricCard from "./MetricCard";
 import Tesseract from "tesseract.js";
 import { preprocessImageForOcr } from "../utils/ocrPreprocessing";
 import { runGeminiAnalyze, runGeminiExtractReport, getProviderDisplayName, isProviderKeyMissing } from "../utils/geminiClient";
-import { parseCbcReport } from "../utils/labReportParser";
+import { parseCbcReport, parseLftReport, parseMetabolicReport } from "../utils/labReportParser";
 import { checkDecimalPlausibility, PlausibilityIssue } from "../utils/plausibilityCheck";
 import DecimalWarningBanner from "./DecimalWarningBanner";
 import WebcamCaptureModal from "./WebcamCaptureModal";
@@ -391,7 +391,47 @@ Please provide a decisive, robust, and pinpointed clinical diagnostic assessment
     });
   };
 
-  const applyCbcOcrValues = (vals: any) => {
+  const [detectedReportMismatch, setDetectedReportMismatch] = useState<{ type: string; title: string; summary: string } | null>(null);
+
+  const applyCbcOcrValues = (vals: any, rawAggregatedText?: string) => {
+    setDetectedReportMismatch(null);
+
+    // 1. Check if document is an LFT report uploaded in CBC section
+    const lftCheck = (rawAggregatedText ? parseLftReport(rawAggregatedText) : null) || vals;
+    const isLft = (lftCheck.ALT !== undefined || lftCheck.AST !== undefined || lftCheck["Total Bilirubin"] !== undefined || lftCheck.ALP !== undefined) &&
+                  (vals["Hemoglobin"] === undefined && vals["hemoglobin"] === undefined && vals["WBC"] === undefined && vals["wbc"] === undefined && vals["Platelets"] === undefined && vals["platelets"] === undefined);
+
+    if (isLft) {
+      setDetectedReportMismatch({
+        type: "lft",
+        title: "Liver Function Test (LFT)",
+        summary: `ALT: ${lftCheck.ALT ?? "-"} U/L, AST: ${lftCheck.AST ?? "-"} U/L, Bilirubin: ${lftCheck["Total Bilirubin"] ?? "-"} mg/dL, Protein: ${lftCheck["Total Protein"] ?? "-"} g/dL`
+      });
+      setMissingExtractedKeys([]);
+      if (lftCheck.patientName) setPatientName(lftCheck.patientName);
+      if (lftCheck.patientGender) handleInputChange("gender", lftCheck.patientGender);
+      if (lftCheck.patientAge) setPatientAge(lftCheck.patientAge);
+      return;
+    }
+
+    // 2. Check if document is a Metabolic report
+    const metabolicCheck = (rawAggregatedText ? parseMetabolicReport(rawAggregatedText) : null) || vals;
+    const isMetabolic = (metabolicCheck.fastingBloodGlucose !== undefined || metabolicCheck.triglycerides !== undefined || metabolicCheck.hdlCholesterol !== undefined) &&
+                        (vals["Hemoglobin"] === undefined && vals["hemoglobin"] === undefined && vals["WBC"] === undefined && vals["wbc"] === undefined);
+
+    if (isMetabolic) {
+      setDetectedReportMismatch({
+        type: "metabolic",
+        title: "Metabolic & Lipid Panel",
+        summary: `Glucose: ${metabolicCheck.fastingBloodGlucose ?? "-"} mg/dL, Triglycerides: ${metabolicCheck.triglycerides ?? "-"} mg/dL`
+      });
+      setMissingExtractedKeys([]);
+      if (metabolicCheck.patientName) setPatientName(metabolicCheck.patientName);
+      if (metabolicCheck.patientGender) handleInputChange("gender", metabolicCheck.patientGender);
+      if (metabolicCheck.patientAge) setPatientAge(metabolicCheck.patientAge);
+      return;
+    }
+
     if (vals.patientName) {
       setPatientName(vals.patientName);
     }
@@ -404,18 +444,18 @@ Please provide a decisive, robust, and pinpointed clinical diagnostic assessment
     setFormData(prev => {
       const next = {
         ...prev,
-        hemoglobin: vals["Hemoglobin"] !== undefined ? String(vals["Hemoglobin"]) : prev.hemoglobin,
-        hematocrit: vals["Hematocrit"] !== undefined ? String(vals["Hematocrit"]) : prev.hematocrit,
-        rbc: vals["RBC"] !== undefined ? String(vals["RBC"]) : prev.rbc,
-        wbc: vals["WBC"] !== undefined ? String(vals["WBC"]) : prev.wbc,
-        platelets: vals["Platelets"] !== undefined ? String(vals["Platelets"]) : prev.platelets,
-        mcv: vals["MCV"] !== undefined ? String(vals["MCV"]) : prev.mcv,
-        mch: vals["MCH"] !== undefined ? String(vals["MCH"]) : prev.mch,
-        mchc: vals["MCHC"] !== undefined ? String(vals["MCHC"]) : prev.mchc,
-        rdw: vals["RDW"] !== undefined ? String(vals["RDW"]) : prev.rdw,
-        vitaminB12: vals["vitaminB12"] !== undefined ? String(vals["vitaminB12"]) : prev.vitaminB12,
-        neutrophils: vals["Neutrophils"] !== undefined ? String(vals["Neutrophils"]) : prev.neutrophils,
-        lymphocytes: vals["Lymphocytes"] !== undefined ? String(vals["Lymphocytes"]) : prev.lymphocytes,
+        hemoglobin: vals["Hemoglobin"] !== undefined ? String(vals["Hemoglobin"]) : (vals["hemoglobin"] !== undefined ? String(vals["hemoglobin"]) : prev.hemoglobin),
+        hematocrit: vals["Hematocrit"] !== undefined ? String(vals["Hematocrit"]) : (vals["hematocrit"] !== undefined ? String(vals["hematocrit"]) : prev.hematocrit),
+        rbc: vals["RBC"] !== undefined ? String(vals["RBC"]) : (vals["rbc"] !== undefined ? String(vals["rbc"]) : prev.rbc),
+        wbc: vals["WBC"] !== undefined ? String(vals["WBC"]) : (vals["wbc"] !== undefined ? String(vals["wbc"]) : prev.wbc),
+        platelets: vals["Platelets"] !== undefined ? String(vals["Platelets"]) : (vals["platelets"] !== undefined ? String(vals["platelets"]) : prev.platelets),
+        mcv: vals["MCV"] !== undefined ? String(vals["MCV"]) : (vals["mcv"] !== undefined ? String(vals["mcv"]) : prev.mcv),
+        mch: vals["MCH"] !== undefined ? String(vals["MCH"]) : (vals["mch"] !== undefined ? String(vals["mch"]) : prev.mch),
+        mchc: vals["MCHC"] !== undefined ? String(vals["MCHC"]) : (vals["mchc"] !== undefined ? String(vals["mchc"]) : prev.mchc),
+        rdw: vals["RDW"] !== undefined ? String(vals["RDW"]) : (vals["rdw"] !== undefined ? String(vals["rdw"]) : prev.rdw),
+        vitaminB12: vals["vitaminB12"] !== undefined ? String(vals["vitaminB12"]) : (vals["VitaminB12"] !== undefined ? String(vals["VitaminB12"]) : (vals["b12"] !== undefined ? String(vals["b12"]) : prev.vitaminB12)),
+        neutrophils: vals["Neutrophils"] !== undefined ? String(vals["Neutrophils"]) : (vals["neutrophils"] !== undefined ? String(vals["neutrophils"]) : prev.neutrophils),
+        lymphocytes: vals["Lymphocytes"] !== undefined ? String(vals["Lymphocytes"]) : (vals["lymphocytes"] !== undefined ? String(vals["lymphocytes"]) : prev.lymphocytes),
       };
 
       const missing: string[] = [];
@@ -530,7 +570,7 @@ Please provide a decisive, robust, and pinpointed clinical diagnostic assessment
         }
 
         // Apply values
-        applyCbcOcrValues(extracted);
+        applyCbcOcrValues(extracted, aggregatedText);
         setExtractMeta({ providerUsed: "Local Tesseract OCR", modelUsed: "Offline Pattern Parser", wasFallback: false });
       } else {
         // AI extraction mode
@@ -538,7 +578,7 @@ Please provide a decisive, robust, and pinpointed clinical diagnostic assessment
         const data = await runGeminiExtractReport(base64Contents, "cbc", aggregatedText);
         
         if (data && data.values) {
-          applyCbcOcrValues(data.values);
+          applyCbcOcrValues(data.values, aggregatedText);
           setExtractMeta({
             providerUsed: data.providerUsed,
             modelUsed: data.modelUsed,
@@ -786,6 +826,35 @@ Please provide a decisive, robust, and pinpointed clinical diagnostic assessment
               title="Re-run AI extraction"
             >
               🔄 Re-extract
+            </button>
+          </div>
+        )}
+
+        {/* Report Type Mismatch Banner */}
+        {detectedReportMismatch && (
+          <div className="p-3.5 bg-indigo-50 dark:bg-indigo-950/40 border-2 border-indigo-400 dark:border-indigo-600 rounded-2xl space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-xs font-black text-indigo-950 dark:text-indigo-200">
+                <Sparkles size={15} className="text-indigo-600 dark:text-indigo-400 shrink-0" />
+                <span>Document Format Notice: {detectedReportMismatch.title} Uploaded</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDetectedReportMismatch(null)}
+                className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 hover:underline cursor-pointer"
+              >
+                Dismiss
+              </button>
+            </div>
+            <p className="text-xs text-indigo-900 dark:text-indigo-200 font-medium">
+              This document contains <strong>{detectedReportMismatch.title}</strong> parameters ({detectedReportMismatch.summary}), but you are currently in the <strong>Complete Blood Count (CBC) Analyzer</strong>.
+            </p>
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent("switch-tab", { detail: detectedReportMismatch.type }))}
+              className="px-3 py-1.5 bg-indigo-700 hover:bg-indigo-800 text-white rounded-xl text-xs font-black transition-colors cursor-pointer flex items-center gap-1.5 shadow-sm"
+            >
+              <span>Open in {detectedReportMismatch.title} Analyzer →</span>
             </button>
           </div>
         )}
