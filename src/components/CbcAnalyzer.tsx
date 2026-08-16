@@ -179,24 +179,31 @@ export default function CbcAnalyzer({ onAddRecord }: CbcAnalyzerProps) {
     setIsVerifiedCheck(false);
   };
 
-  const getCbcInputs = (): CBCInputs => ({
-    hemoglobin: parseFloat(formData.hemoglobin),
-    hematocrit: parseFloat(formData.hematocrit),
-    rbc: parseFloat(formData.rbc),
-    wbc: parseFloat(formData.wbc),
-    platelets: parseFloat(formData.platelets),
-    mcv: parseFloat(formData.mcv),
-    mch: parseFloat(formData.mch),
-    mchc: parseFloat(formData.mchc),
-    rdw: formData.rdw ? parseFloat(formData.rdw) : undefined,
-    vitaminB12: formData.vitaminB12 ? parseFloat(formData.vitaminB12) : undefined,
-    neutrophils: formData.neutrophils ? parseFloat(formData.neutrophils) : undefined,
-    lymphocytes: formData.lymphocytes ? parseFloat(formData.lymphocytes) : undefined,
-    monocytes: formData.monocytes ? parseFloat(formData.monocytes) : undefined,
-    eosinophils: formData.eosinophils ? parseFloat(formData.eosinophils) : undefined,
-    basophils: formData.basophils ? parseFloat(formData.basophils) : undefined,
-    gender: formData.gender,
-  });
+  const getCbcInputs = (): CBCInputs => {
+    let parsedWbc = parseFloat(formData.wbc);
+    if (!isNaN(parsedWbc) && parsedWbc > 100) {
+      parsedWbc = parseFloat((parsedWbc / 1000).toFixed(2));
+    }
+
+    return {
+      hemoglobin: parseFloat(formData.hemoglobin),
+      hematocrit: parseFloat(formData.hematocrit),
+      rbc: parseFloat(formData.rbc),
+      wbc: parsedWbc,
+      platelets: parseFloat(formData.platelets),
+      mcv: parseFloat(formData.mcv),
+      mch: parseFloat(formData.mch),
+      mchc: parseFloat(formData.mchc),
+      rdw: formData.rdw ? parseFloat(formData.rdw) : undefined,
+      vitaminB12: formData.vitaminB12 ? parseFloat(formData.vitaminB12) : undefined,
+      neutrophils: formData.neutrophils ? parseFloat(formData.neutrophils) : undefined,
+      lymphocytes: formData.lymphocytes ? parseFloat(formData.lymphocytes) : undefined,
+      monocytes: formData.monocytes ? parseFloat(formData.monocytes) : undefined,
+      eosinophils: formData.eosinophils ? parseFloat(formData.eosinophils) : undefined,
+      basophils: formData.basophils ? parseFloat(formData.basophils) : undefined,
+      gender: formData.gender,
+    };
+  };
 
   const handleCalculate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1051,6 +1058,13 @@ Please write an expert, professional clinical interpretation formatted clearly f
               />
               <span className="absolute right-3 top-2.5 text-[9px] font-black leading-tight">10^9/L</span>
             </div>
+            {formData.wbc && !isNaN(parseFloat(formData.wbc)) && (
+              <p style={{ color: "#065f46" }} className="text-xs font-black font-mono mt-1">
+                Equivalent: {parseFloat(formData.wbc) > 100 
+                  ? `${(parseFloat(formData.wbc) / 1000).toFixed(2)} ×10⁹/L` 
+                  : `${Math.round(parseFloat(formData.wbc) * 1000).toLocaleString()} cells/cu.mm (/µL)`}
+              </p>
+            )}
           </div>
         </div>
 
@@ -1252,14 +1266,21 @@ Please write an expert, professional clinical interpretation formatted clearly f
               description={results.hemoglobinStatus}
             />
 
-            <MetricCard 
-              label="White Blood Cells"
-              value={parseFloat(formData.wbc)}
-              unit="10^9/L"
-              minNormal={4.5}
-              maxNormal={11.0}
-              description={results.wbcStatus}
-            />
+            {(() => {
+              const rawWbc = parseFloat(formData.wbc);
+              const normWbc = rawWbc > 100 ? rawWbc / 1000 : rawWbc;
+              const cellsPerCumm = Math.round(normWbc * 1000).toLocaleString();
+              return (
+                <MetricCard 
+                  label="White Blood Cells (TLC)"
+                  value={normWbc}
+                  unit="10^9/L"
+                  minNormal={4.5}
+                  maxNormal={11.0}
+                  description={`${results.wbcStatus} | Equivalent to ${cellsPerCumm} cells/cu.mm (/µL)`}
+                />
+              );
+            })()}
 
             <MetricCard 
               label="Platelets"

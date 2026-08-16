@@ -591,9 +591,18 @@ export function parseCbcReport(text: string): ParsedCbc {
     /(?:rbc|red\s+blood\s+cell|rbcs|erythrocyte|erythrocytes)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
   ], ["rbc", "red blood", "erythrocyte"]);
 
-  result.WBC = extractLabValue(text, [
-    /(?:wbc|white\s+blood\s+cell|wbcs|leucocyte|leukocyte|leukocytes)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
-  ], ["wbc", "white blood", "leukocyte", "leucocyte"]);
+  // WBC with cells/cu.mm (/uL) vs 10^9/L normalization
+  const rawWbc = extractLabValue(text, [
+    /(?:total\s+(?:leukocyte|leucocyte|wbc)\s+count|wbc\s+count|white\s+blood\s+cells?|wbcs?|leucocytes?|leukocytes?|tlc)[\s:.\-\t=]*([0-9]+(?:[,.][0-9]+)?)/i
+  ], ["total leukocyte count", "total leucocyte count", "tlc", "wbc count", "wbc", "white blood", "leukocyte", "leucocyte"]);
+
+  if (rawWbc !== undefined) {
+    if (rawWbc > 100) {
+      result.WBC = parseFloat((rawWbc / 1000).toFixed(2));
+    } else {
+      result.WBC = rawWbc;
+    }
+  }
 
   // Platelets with Lakhs / Thousands normalization
   const rawPlt = extractLabValue(text, [

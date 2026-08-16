@@ -98,8 +98,8 @@ export function printClinicalReport(record: Partial<AnalysisRecord>) {
         { name: "Hemoglobin", val: c.hemoglobin, ref: c.gender === "male" ? "13.8 - 17.2 g/dL" : "12.1 - 15.1 g/dL" },
         { name: "Hematocrit", val: c.hematocrit, ref: c.gender === "male" ? "40.7% - 50.3%" : "36.1% - 44.3%" },
         { name: "Red Blood Cell (RBC) Count", val: c.rbc, ref: c.gender === "male" ? "4.5 - 5.9 x10^6/µL" : "4.1 - 5.1 x10^6/µL" },
-        { name: "White Blood Cell (WBC) Count", val: c.wbc, ref: "4,500 - 11,000 /µL" },
-        { name: "Platelets Count", val: c.platelets, ref: "150,000 - 450,000 /µL" },
+        { name: "White Blood Cell (WBC / TLC) Count", val: c.wbc, ref: "4.5 - 11.0 ×10⁹/L (4,500 - 11,000 /cu.mm)" },
+        { name: "Platelets Count", val: c.platelets, ref: "150 - 400 ×10⁹/L (1.50 - 4.00 lakh/µL)" },
         { name: "Mean Corpuscular Volume (MCV)", val: c.mcv, ref: "80 - 100 fL" },
         { name: "Mean Corpuscular Hemoglobin (MCH)", val: c.mch, ref: "27.0 - 33.0 pg" },
         { name: "MCHC Concentration", val: c.mchc, ref: "32.0 - 36.0 g/dL" },
@@ -115,6 +115,11 @@ export function printClinicalReport(record: Partial<AnalysisRecord>) {
           if (m.name.toLowerCase().includes("platelet")) {
             const lakhVal = (parseFloat(displayVal) / 100).toFixed(2);
             displayVal = `${displayVal} ×10⁹/L (${lakhVal} lakh/µL)`;
+          } else if (m.name.toLowerCase().includes("white blood cell") || m.name.toLowerCase().includes("wbc")) {
+            const raw = parseFloat(displayVal);
+            const norm = raw > 100 ? raw / 1000 : raw;
+            const cumm = Math.round(norm * 1000).toLocaleString();
+            displayVal = `${norm.toFixed(2)} ×10⁹/L (${cumm} cells/cu.mm)`;
           }
           rows += `
             <tr class="table-row">
