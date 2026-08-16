@@ -12,6 +12,7 @@ import { parseCbcReport } from "../utils/labReportParser";
 import { checkDecimalPlausibility, PlausibilityIssue } from "../utils/plausibilityCheck";
 import DecimalWarningBanner from "./DecimalWarningBanner";
 import WebcamCaptureModal from "./WebcamCaptureModal";
+import { isPdfFile, extractTextFromPdf, renderPdfPagesToImages } from "../utils/pdfExtractor";
 
 function getOfflineCbcSummary(inputs: CBCInputs, results: CBCResults): string {
   if (results.abnormalCount === 0) {
@@ -452,55 +453,69 @@ Please provide a decisive, robust, and pinpointed clinical diagnostic assessment
     setOcrError(null);
     setOcrErrorStack(null);
 
-    const hasPdf = filesList.some(f => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf"));
-    let mode: "offline" | "ai" = requestedMode || (hasPdf ? "ai" : "ai");
-
-    // If offline mode was explicitly requested but a PDF is included
-    if (hasPdf && requestedMode === "offline") {
-      if (navigator.onLine) {
-        mode = "ai";
-      } else {
-        setIsOcrLoading(false);
-        setOcrError("PDF documents require an internet connection for Clinical AI extraction. If offline, please take a photo or screenshot (JPEG/PNG) of the report.");
-        return;
-      }
-    }
+    const hasPdf = filesList.some(f => isPdfFile(f));
+    const mode: "offline" | "ai" = requestedMode || (hasPdf ? "ai" : "ai");
 
     setOcrStatusText(
-      mode === "offline" 
+      hasPdf 
+        ? "Processing PDF document with Clinical Engine..." 
+        : mode === "offline" 
         ? "Preprocessing images for offline scan..." 
-        : hasPdf 
-        ? "Processing PDF with Multi-Agent Clinical AI..." 
         : "Scanning report with Clinical AI..."
     );
 
     try {
-      // 1. Preprocess images locally
-      const preprocessedUrls = await Promise.all(
-        filesList.map(file => preprocessImageForOcr(file))
-      );
-
-      // 2. Perform local, offline OCR using Tesseract.js (skip for PDFs which are processed natively by AI)
       let aggregatedText = "";
-      let index = 0;
-      for (const dataUrl of preprocessedUrls) {
-        index++;
-        if (dataUrl.startsWith("data:application/pdf")) {
-          // In AI mode, skip Tesseract text scan since Gemini receives the PDF document directly
-          continue;
-        }
-        setOcrStatusText(`Page ${index}/${preprocessedUrls.length}: Starting analyzer...`);
-        const ocrResult = await Tesseract.recognize(dataUrl, "eng", {
-          logger: m => {
-            if (m.status === "recognizing text") {
-              const pct = Math.round(m.progress * 100);
-              setOcrStatusText(`Page ${index}/${preprocessedUrls.length}: Analyzing text (${pct}%)`);
-            } else if (m.status) {
-              setOcrStatusText(`Page ${index}/${preprocessedUrls.length}: ${m.status}...`);
+      const base64Contents: Array<{ base64: string; mimeType: string }> = [];
+
+      for (let i = 0; i < filesList.length; i++) {
+        const file = filesList[i];
+        if (isPdfFile(file)) {
+          setOcrStatusText(`Reading PDF document page(s)...`);
+          try {
+            const pdfText = await extractTextFromPdf(file);
+            if (pdfText && pdfText.trim().length > 10) {
+              aggregatedText += "\n" + pdfText;
+            }
+
+            const renderedImages = await renderPdfPagesToImages(file, 3);
+            for (const imgDataUrl of renderedImages) {
+              const base64 = imgDataUrl.split(",")[1];
+              base64Contents.push({ base64, mimeType: "image/jpeg" });
+
+              // If digital text wasn't found (scanned PDF), run Tesseract
+              if (!pdfText || pdfText.trim().length <= 10) {
+                setOcrStatusText(`Running OCR on scanned PDF page...`);
+                const ocrResult = await Tesseract.recognize(imgDataUrl, "eng");
+                aggregatedText += "\n" + (ocrResult.data?.text || "");
+              }
+            }
+          } catch (pdfErr) {
+            console.warn("PDF extraction fallback:", pdfErr);
+            const rawDataUrl = await preprocessImageForOcr(file);
+            if (rawDataUrl) {
+              const base64 = rawDataUrl.split(",")[1];
+              base64Contents.push({ base64, mimeType: "application/pdf" });
             }
           }
-        });
-        aggregatedText += "\n" + (ocrResult.data?.text || "");
+        } else {
+          setOcrStatusText(`Page ${i + 1}/${filesList.length}: Preprocessing image...`);
+          const preprocessedUrl = await preprocessImageForOcr(file);
+
+          setOcrStatusText(`Page ${i + 1}/${filesList.length}: Running OCR analysis...`);
+          const ocrResult = await Tesseract.recognize(preprocessedUrl, "eng", {
+            logger: m => {
+              if (m.status === "recognizing text") {
+                const pct = Math.round(m.progress * 100);
+                setOcrStatusText(`Page ${i + 1}/${filesList.length}: Scanning (${pct}%)`);
+              }
+            }
+          });
+          aggregatedText += "\n" + (ocrResult.data?.text || "");
+
+          const base64 = preprocessedUrl.split(",")[1];
+          base64Contents.push({ base64, mimeType: "image/jpeg" });
+        }
       }
 
       if (mode === "offline") {
@@ -519,22 +534,6 @@ Please provide a decisive, robust, and pinpointed clinical diagnostic assessment
         setExtractMeta({ providerUsed: "Local Tesseract OCR", modelUsed: "Offline Pattern Parser", wasFallback: false });
       } else {
         // AI extraction mode
-        setOcrStatusText("Encoding document for Clinical AI Engine...");
-        const base64Promises = filesList.map(file => {
-          return new Promise<{ base64: string, mimeType: string }>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-              const resultStr = reader.result as string;
-              const base64Content = resultStr.split(",")[1];
-              resolve({ base64: base64Content, mimeType: file.type || "image/jpeg" });
-            };
-            reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`));
-            reader.readAsDataURL(file);
-          });
-        });
-
-        const base64Contents = await Promise.all(base64Promises);
-
         setOcrStatusText("Extracting with Clinical Multi-Agent AI...");
         const data = await runGeminiExtractReport(base64Contents, "cbc", aggregatedText);
         

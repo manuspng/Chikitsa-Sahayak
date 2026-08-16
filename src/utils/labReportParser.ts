@@ -361,6 +361,7 @@ export function extractPatientAge(text: string): string | undefined {
 
   // 2. Date of Birth (DOB) pattern detection and current year age calculation
   const dobRegexes = [
+    /(?:dob|d\.o\.b|date\s+of\s+birth|birth\s*date|born)\s*[:\-\t/]*\s*([0-9]{1,4}[-/.][0-9]{1,2}[-/.][0-9]{1,4}|[A-Za-z]{3,9}\s+[0-9]{1,2},?\s+[0-9]{4}|[0-9]{1,2}\s+[A-Za-z]{3,9},?\s+[0-9]{4}|[0-9]{4})/i,
     /(?:dob|d\.o\.b|date\s+of\s+birth|birth\s*date|born)\s*[:\-\t/]*\s*([^\n\r,;|]+)/i,
     /(?:age\s*\/\s*dob|dob\s*\/\s*age)\s*[:\-\t/]*\s*([^\n\r,;|]+)/i
   ];
@@ -368,7 +369,14 @@ export function extractPatientAge(text: string): string | undefined {
   for (const dobRegex of dobRegexes) {
     const dobMatch = text.match(dobRegex);
     if (dobMatch && dobMatch[1]) {
-      const calculatedAge = calculateAgeFromDob(dobMatch[1]);
+      // Cut off at standard column headers if captured
+      let cleanDob = dobMatch[1].split(/\s{2,}|\t+|[|;\\/]+/)[0].trim();
+      const colMarkers = /\b(?:date|accession|sex|gender|time|collected|reported|mrn|sample)\b/i;
+      const mIdx = cleanDob.search(colMarkers);
+      if (mIdx !== -1) {
+        cleanDob = cleanDob.substring(0, mIdx).trim();
+      }
+      const calculatedAge = calculateAgeFromDob(cleanDob);
       if (calculatedAge) {
         return calculatedAge;
       }
@@ -490,12 +498,12 @@ export function parseLftReport(text: string): ParsedLft {
   ], ["ggt", "gamma glutamyl", "gamma-gt", "gamma"]);
 
   result["Total Bilirubin"] = extractLabValue(text, [
-    /(?:total\s+bilirubin|t\.?\s*bili|bilirubin\s+total)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
-  ], ["total bilirubin", "t. bili", "t bili", "bilirubin total"]);
+    /(?:bilirubin[,\s]+total|total[,\s]+bilirubin|t\.?\s*bili|s\.?\s*bilirubin\s*\(?total\)?|serum\s+bilirubin\s*\(?total\)?|bilirubin\s*\(\s*total\s*\))[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
+  ], ["bilirubin, total", "total bilirubin", "bilirubin total", "t. bili", "t bili", "bilirubin (total)"]);
 
   result["Direct Bilirubin"] = extractLabValue(text, [
-    /(?:direct\s+bilirubin|d\.?\s*bili|bilirubin\s+direct|conjugated\s+bilirubin)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
-  ], ["direct bilirubin", "d. bili", "d bili", "bilirubin direct"]);
+    /(?:bilirubin[,\s]+direct|direct[,\s]+bilirubin|d\.?\s*bili|conjugated\s+bilirubin|s\.?\s*bilirubin\s*\(?direct\)?|bilirubin\s*\(\s*direct\s*\))[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
+  ], ["bilirubin, direct", "direct bilirubin", "bilirubin direct", "d. bili", "d bili", "conjugated bilirubin"]);
 
   result.Albumin = extractLabValue(text, [
     /(?:albumin|alb)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
@@ -506,8 +514,8 @@ export function parseLftReport(text: string): ParsedLft {
   ], ["total protein", "t. protein", "protein total"]);
 
   result.INR = extractLabValue(text, [
-    /(?:inr|international\s+normalized\s+ratio)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
-  ], ["inr", "ratio"]);
+    /(?:pt\s*\/\s*inr|inr\s*\(?ratio\)?|international\s+normalized\s+ratio)[\s:.\-\t=]*([0-9]+(?:\.[0-9]+)?)/i
+  ], ["pt/inr", "inr", "international normalized"]);
 
   // Platelets with Lakhs / Thousands normalization
   const rawPlt = extractLabValue(text, [

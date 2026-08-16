@@ -12,6 +12,7 @@ import { parseMetabolicReport } from "../utils/labReportParser";
 import { checkDecimalPlausibility, PlausibilityIssue } from "../utils/plausibilityCheck";
 import DecimalWarningBanner from "./DecimalWarningBanner";
 import WebcamCaptureModal from "./WebcamCaptureModal";
+import { isPdfFile, extractTextFromPdf, renderPdfPagesToImages } from "../utils/pdfExtractor";
 
 function getOfflineMetabolicSummary(inputs: MetabolicInputs, results: MetabolicResults): string {
   const segments: string[] = [];
@@ -172,52 +173,71 @@ export default function MetabolicAnalyzer({ onAddRecord }: MetabolicAnalyzerProp
     setIsOcrLoading(true);
     setOcrError(null);
 
-    const hasPdf = filesToProcess.some(f => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf"));
-    let mode: "offline" | "ai" = requestedMode || (hasPdf ? "ai" : "ai");
-
-    if (hasPdf && requestedMode === "offline") {
-      if (navigator.onLine) {
-        mode = "ai";
-      } else {
-        setIsOcrLoading(false);
-        setOcrError("PDF documents require an internet connection for Clinical AI extraction. If offline, please take a photo or screenshot (JPEG/PNG) of the report.");
-        return;
-      }
-    }
+    const hasPdf = filesToProcess.some(f => isPdfFile(f));
+    const mode: "offline" | "ai" = requestedMode || (hasPdf ? "ai" : "ai");
 
     setOcrStatusText(
-      mode === "offline" 
+      hasPdf 
+        ? "Processing PDF document with Clinical Engine..." 
+        : mode === "offline" 
         ? "Preprocessing images for offline scan..." 
-        : hasPdf 
-        ? "Processing PDF with Multi-Agent Clinical AI..." 
         : "Scanning report with Clinical AI..."
     );
 
     try {
       let combinedOcrText = "";
+      const base64Contents: Array<{ base64: string; mimeType: string }> = [];
 
       for (let i = 0; i < filesToProcess.length; i++) {
         const file = filesToProcess[i];
-        const preprocessedImgSrc = await preprocessImageForOcr(file);
+        if (isPdfFile(file)) {
+          setOcrStatusText(`Reading PDF document page(s)...`);
+          try {
+            const pdfText = await extractTextFromPdf(file);
+            if (pdfText && pdfText.trim().length > 10) {
+              combinedOcrText += "\n" + pdfText;
+            }
 
-        if (preprocessedImgSrc.startsWith("data:application/pdf")) {
-          // In AI mode, skip Tesseract text scan since Gemini receives the PDF document directly
-          continue;
-        }
+            const renderedImages = await renderPdfPagesToImages(file, 3);
+            for (const imgDataUrl of renderedImages) {
+              const base64 = imgDataUrl.split(",")[1];
+              base64Contents.push({ base64, mimeType: "image/jpeg" });
 
-        setOcrStatusText(`Scanning report page ${i + 1} of ${filesToProcess.length}...`);
-        const result = await Tesseract.recognize(
-          preprocessedImgSrc,
-          "eng",
-          {
-            logger: m => {
-              if (m.status === "recognizing text") {
-                setOcrStatusText(`Scanning page ${i + 1}: ${(m.progress * 100).toFixed(0)}%`);
+              // If digital text wasn't found (scanned PDF), run Tesseract
+              if (!pdfText || pdfText.trim().length <= 10) {
+                setOcrStatusText(`Running OCR on scanned PDF page...`);
+                const ocrResult = await Tesseract.recognize(imgDataUrl, "eng");
+                combinedOcrText += "\n" + (ocrResult.data?.text || "");
               }
             }
+          } catch (pdfErr) {
+            console.warn("PDF extraction fallback:", pdfErr);
+            const rawDataUrl = await preprocessImageForOcr(file);
+            if (rawDataUrl) {
+              const base64 = rawDataUrl.split(",")[1];
+              base64Contents.push({ base64, mimeType: "application/pdf" });
+            }
           }
-        );
-        combinedOcrText += "\n" + result.data.text;
+        } else {
+          setOcrStatusText(`Scanning report page ${i + 1} of ${filesToProcess.length}...`);
+          const preprocessedImgSrc = await preprocessImageForOcr(file);
+
+          const result = await Tesseract.recognize(
+            preprocessedImgSrc,
+            "eng",
+            {
+              logger: m => {
+                if (m.status === "recognizing text") {
+                  setOcrStatusText(`Scanning page ${i + 1}: ${(m.progress * 100).toFixed(0)}%`);
+                }
+              }
+            }
+          );
+          combinedOcrText += "\n" + result.data.text;
+
+          const base64 = preprocessedImgSrc.split(",")[1];
+          base64Contents.push({ base64, mimeType: "image/jpeg" });
+        }
       }
 
       if (mode === "offline") {
@@ -226,21 +246,6 @@ export default function MetabolicAnalyzer({ onAddRecord }: MetabolicAnalyzerProp
         applyMetabolicOcrValues(parsedData);
         setExtractMeta({ providerUsed: "Local Tesseract OCR", modelUsed: "Offline Pattern Parser", wasFallback: false });
       } else {
-        setOcrStatusText("Encoding document for Clinical AI Engine...");
-        const base64Promises = filesToProcess.map(file => {
-          return new Promise<{ base64: string, mimeType: string }>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-              const resultStr = reader.result as string;
-              const base64Content = resultStr.split(",")[1];
-              resolve({ base64: base64Content, mimeType: file.type || "image/jpeg" });
-            };
-            reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`));
-            reader.readAsDataURL(file);
-          });
-        });
-
-        const base64Contents = await Promise.all(base64Promises);
         setOcrStatusText("Extracting with Clinical Multi-Agent AI...");
         const data = await runGeminiExtractReport(base64Contents, "metabolic", combinedOcrText);
         
