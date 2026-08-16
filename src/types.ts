@@ -127,6 +127,14 @@ export interface CBCResults {
   rdwInterpretation?: string;
   vitaminB12Status?: string;
   vitaminB12Interpretation?: string;
+  b12McvDiscordance?: {
+    isEarlyOrMasked: boolean;
+    pattern: "early_subclinical" | "masked_by_microcytosis" | "concordant_macrocytic" | "normal" | "elevated";
+    badgeText: string;
+    clinicalInsight: string;
+    earlyConsiderations: string;
+    confirmatoryWorkup: string;
+  };
   mentzerIndex?: number;
   mentzerInterpretation?: string;
   morphologyClassification?: string;

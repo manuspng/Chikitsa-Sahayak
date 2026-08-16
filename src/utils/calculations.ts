@@ -531,24 +531,98 @@ export function calculateCBC(inputs: CBCInputs): CBCResults {
     }
   }
 
-  // 2e. Vitamin B12 (Cobalamin: 200 - 900 pg/mL)
+  // 2e. Vitamin B12 (Cobalamin: 200 - 900 pg/mL) & MCV Kinetic Correlation
   let vitaminB12Status: string | undefined;
   let vitaminB12Interpretation: string | undefined;
+  let b12McvDiscordance: CBCResults["b12McvDiscordance"];
+
   if (vitaminB12 !== undefined && vitaminB12 > 0) {
     if (vitaminB12 < 200) {
       abnormalCount++;
       vitaminB12Status = "Deficient (< 200 pg/mL)";
-      vitaminB12Interpretation = `Low serum Vitamin B12 (${vitaminB12} pg/mL). High risk of megaloblastic macrocytic anemia, peripheral neuropathy, subacute combined spinal cord degeneration, and glossitis. Prompt therapeutic cobalamin replenishment indicated.`;
+      
+      if (mcv <= 100) {
+        if (mcv < 80) {
+          b12McvDiscordance = {
+            isEarlyOrMasked: true,
+            pattern: "masked_by_microcytosis",
+            badgeText: "B12 Deficiency Masked by Microcytosis",
+            clinicalInsight: `Low Vitamin B12 (${vitaminB12} pg/mL) with microcytic cells (MCV: ${mcv} fL). Expected macrocytic enlargement is suppressed or masked by concurrent iron deficiency or hemoglobinopathy.`,
+            earlyConsiderations: "Combined nutritional deficiency (Iron + B12). Correcting iron deficiency will gradually unmask underlying macrocytosis.",
+            confirmatoryWorkup: "Order Serum Ferritin, TIBC, Serum Methylmalonic Acid (MMA), Homocysteine, and Peripheral Blood Smear."
+          };
+          vitaminB12Interpretation = `Deficient Vitamin B12 (${vitaminB12} pg/mL) with microcytic indices (MCV: ${mcv} fL). Macrocytic reflection is masked by co-existing microcytic pathology (e.g. Iron Deficiency Anemia). Combined iron and B12 therapy indicated.`;
+        } else {
+          // MCV 80 - 100
+          b12McvDiscordance = {
+            isEarlyOrMasked: true,
+            pattern: "early_subclinical",
+            badgeText: "Early B12 Deficiency (MCV Lag Phase)",
+            clinicalInsight: `Serum Vitamin B12 is deficient (${vitaminB12} pg/mL), yet MCV remains normocytic (${mcv} fL). Macrocytic cell reflection is a late hematological manifestation requiring up to 120 days of erythrocyte replacement. Cellular or neurological deficiency occurs well before MCV rises.`,
+            earlyConsiderations: "Normal MCV must not rule out active B12 deficiency. Evaluate RDW (anisocytosis), peripheral blood smear (hypersegmented neutrophils), and neurological symptoms (numbness, tingling, cognitive fatigue).",
+            confirmatoryWorkup: "Order Serum Methylmalonic Acid (MMA), Homocysteine, and Active B12 (Holotranscobalamin) for early tissue-level confirmation."
+          };
+          vitaminB12Interpretation = `Deficient Vitamin B12 (${vitaminB12} pg/mL) with normocytic MCV (${mcv} fL). Represents early/subclinical B12 deficiency prior to macrocytic erythrocyte reflection (MCV lag due to 120-day red cell turnover) or early dimorphic shift. Neurological risk exists before macrocytosis develops.`;
+        }
+      } else {
+        // MCV > 100
+        b12McvDiscordance = {
+          isEarlyOrMasked: false,
+          pattern: "concordant_macrocytic",
+          badgeText: "Concordant Macrocytic B12 Depletion",
+          clinicalInsight: `Established Vitamin B12 deficiency (${vitaminB12} pg/mL) with fully reflected macrocytosis (MCV: ${mcv} fL). Indicates megaloblastic nuclear-cytoplasmic dyssynchrony.`,
+          earlyConsiderations: "Established megaloblastosis. Monitor for subacute combined degeneration and pancytopenia.",
+          confirmatoryWorkup: "Serum Folate, Reticulocyte Count, Serum MMA, and Anti-Intrinsic Factor Antibodies."
+        };
+        vitaminB12Interpretation = `Severe Vitamin B12 deficiency (${vitaminB12} pg/mL) with macrocytosis (MCV: ${mcv} fL). Classical megaloblastic hematopoiesis pattern. High risk of peripheral neuropathy, myelopathy, and glossitis. Therapeutic cobalamin indicated.`;
+      }
     } else if (vitaminB12 <= 300) {
       abnormalCount++;
       vitaminB12Status = "Borderline (200–300 pg/mL)";
-      vitaminB12Interpretation = `Borderline Vitamin B12 reserve (${vitaminB12} pg/mL). Marginal cellular stores; recommend evaluating serum methylmalonic acid (MMA) or homocysteine to identify early tissue deficiency.`;
+      
+      if (mcv <= 100) {
+        b12McvDiscordance = {
+          isEarlyOrMasked: true,
+          pattern: "early_subclinical",
+          badgeText: "Borderline B12 with Normocytic Indices",
+          clinicalInsight: `Borderline Vitamin B12 reserve (${vitaminB12} pg/mL) without red cell enlargement (MCV: ${mcv} fL). Subclinical tissue deficiency may be present before macrocytic morphological changes occur.`,
+          earlyConsiderations: "Erythrocyte indices take months to reflect borderline tissue depletion. Assess for early fatigue, cognitive haze, or paresthesias.",
+          confirmatoryWorkup: "Check Serum Methylmalonic Acid (MMA) and Homocysteine to detect functional tissue-level cobalamin deficiency."
+        };
+        vitaminB12Interpretation = `Borderline Vitamin B12 reserve (${vitaminB12} pg/mL) with normal MCV (${mcv} fL). Early metabolic depletion can precede hematological macrocytosis. Evaluate functional markers (MMA/Homocysteine).`;
+      } else {
+        b12McvDiscordance = {
+          isEarlyOrMasked: false,
+          pattern: "concordant_macrocytic",
+          badgeText: "Borderline B12 with Macrocytosis",
+          clinicalInsight: `Borderline B12 (${vitaminB12} pg/mL) with elevated MCV (${mcv} fL). Suggests active megaloblastic shift or concurrent folate deficiency/liver factors.`,
+          earlyConsiderations: "Assess dietary intake, red cell folate, and thyroid/hepatic function.",
+          confirmatoryWorkup: "Serum MMA, Homocysteine, Serum & RBC Folate."
+        };
+        vitaminB12Interpretation = `Borderline Vitamin B12 (${vitaminB12} pg/mL) with macrocytosis (${mcv} fL). Suggests active megaloblastic marrow response or mixed folate/B12 depletion.`;
+      }
     } else if (vitaminB12 > 900) {
       vitaminB12Status = "Elevated (> 900 pg/mL)";
-      vitaminB12Interpretation = `Elevated serum Vitamin B12 (${vitaminB12} pg/mL). May reflect high-dose cobalamin supplementation, acute hepatocellular damage/liver disease, renal insufficiency, or myeloproliferative disorders.`;
+      vitaminB12Interpretation = `Elevated serum Vitamin B12 (${vitaminB12} pg/mL). May reflect recent cobalamin supplementation, acute liver disease/hepatocellular clearance reduction, renal insufficiency, or myeloproliferative disorder.`;
+      b12McvDiscordance = {
+        isEarlyOrMasked: false,
+        pattern: "elevated",
+        badgeText: "Elevated Vitamin B12 Level",
+        clinicalInsight: `Serum B12 is elevated (${vitaminB12} pg/mL). Correlate with recent supplement intake, hepatic function, or renal clearance.`,
+        earlyConsiderations: "Rule out exogenous supplement excess vs hepatic enzyme release.",
+        confirmatoryWorkup: "Liver function panel, renal profile."
+      };
     } else {
       vitaminB12Status = "Normal (300–900 pg/mL)";
       vitaminB12Interpretation = `Normal physiological Vitamin B12 level (${vitaminB12} pg/mL).`;
+      b12McvDiscordance = {
+        isEarlyOrMasked: false,
+        pattern: "normal",
+        badgeText: "Balanced Vitamin B12 Reserve",
+        clinicalInsight: `Serum B12 (${vitaminB12} pg/mL) is within normal reference range with concordant erythrocyte indices.`,
+        earlyConsiderations: "Standard nutritional maintenance.",
+        confirmatoryWorkup: "Routine periodic health monitoring."
+      };
     }
   }
 
@@ -571,7 +645,11 @@ export function calculateCBC(inputs: CBCInputs): CBCResults {
 
   if (isAnemic) {
     if (mcv < 80) {
-      if (rdw !== undefined && rdw > 14.5) {
+      if (vitaminB12 !== undefined && vitaminB12 < 200) {
+        anemiaType = "Microcytic Anemia with Masked B12 Deficiency";
+        morphologyClassification = "Microcytic with Masked Vitamin B12 Deficiency";
+        morphologyDetails = `Microcytic erythrocytes (MCV: ${mcv} fL) with concurrent Vitamin B12 deficiency (${vitaminB12} pg/mL). The expected macrocytosis is masked by co-existing microcytic pathology (e.g. Iron Deficiency Anemia). Combined nutritional therapy required.`;
+      } else if (rdw !== undefined && rdw > 14.5) {
         anemiaType = "Microcytic Hypochromic Anemia (Iron Deficiency Pattern)";
         morphologyClassification = "Microcytic Hypochromic with Anisocytosis";
         morphologyDetails = `High likelihood of Iron Deficiency Anemia (IDA) evidenced by microcytosis (MCV: ${mcv} fL), hypochromia (MCH: ${mch} pg), and elevated RDW (${rdw}%).`;
@@ -599,17 +677,33 @@ export function calculateCBC(inputs: CBCInputs): CBCResults {
         morphologyDetails = `Elevated red cell volume (MCV: ${mcv} fL). Evaluate Vitamin B12, serum folate, thyroid function (TSH), hepatic profile, and alcohol history.`;
       }
     } else {
-      anemiaType = "Normocytic Normochromic Anemia";
-      morphologyClassification = "Normocytic Normochromic Profile";
-      morphologyDetails = `Normal erythrocyte size (MCV: ${mcv} fL) with depressed hemoglobin. Differential includes acute blood loss, hemolysis, anemia of chronic disease / inflammation, or renal impairment.`;
+      // MCV 80 - 100
+      if (vitaminB12 !== undefined && vitaminB12 < 200) {
+        anemiaType = "Normocytic Anemia with Early/Pre-Macrocytic B12 Deficiency";
+        morphologyClassification = "Normocytic with Early B12 Deficiency (MCV Lag Phase)";
+        morphologyDetails = `Depressed hemoglobin with normal red cell size (MCV: ${mcv} fL) despite severe B12 deficiency (${vitaminB12} pg/mL). Red cell enlargement takes up to 120 days to reflect in circulating blood. Treat early to prevent irreversible neurological sequelae.`;
+      } else if (vitaminB12 !== undefined && vitaminB12 <= 300) {
+        anemiaType = "Normocytic Anemia with Borderline B12";
+        morphologyClassification = "Normocytic with Borderline B12 Reserve";
+        morphologyDetails = `Normocytic anemia with borderline Vitamin B12 (${vitaminB12} pg/mL). Check serum MMA/homocysteine to rule out early tissue deficiency.`;
+      } else {
+        anemiaType = "Normocytic Normochromic Anemia";
+        morphologyClassification = "Normocytic Normochromic Profile";
+        morphologyDetails = `Normal erythrocyte size (MCV: ${mcv} fL) with depressed hemoglobin. Differential includes acute blood loss, hemolysis, anemia of chronic disease / inflammation, or renal impairment.`;
+      }
     }
   } else if (hemoglobin > hbMax) {
     anemiaType = "Polycythemia / Erythrocytosis";
     morphologyClassification = "Elevated Red Cell Mass";
     morphologyDetails = `Elevated hemoglobin (${hemoglobin} g/dL) and hematocrit (${hematocrit}%). Evaluate hydration status, hypoxemia, smoking, or myeloproliferative disorder (JAK2 mutation).`;
   } else {
-    morphologyClassification = "Normal Red Cell Indices";
-    morphologyDetails = `Red cell volume (MCV: ${mcv} fL), cellular hemoglobin (MCH: ${mch} pg), and concentration (MCHC: ${mchc} g/dL) are all balanced.`;
+    if (vitaminB12 !== undefined && vitaminB12 < 200 && mcv <= 100) {
+      morphologyClassification = "Normocytic Profile with Subclinical B12 Depletion";
+      morphologyDetails = `Normal red cell sizing (MCV: ${mcv} fL) despite low Vitamin B12 (${vitaminB12} pg/mL). Early subclinical deficiency prior to macrocytic erythrocyte turnover. Early supplementation indicated.`;
+    } else {
+      morphologyClassification = "Normal Red Cell Indices";
+      morphologyDetails = `Red cell volume (MCV: ${mcv} fL), cellular hemoglobin (MCH: ${mch} pg), and concentration (MCHC: ${mchc} g/dL) are all balanced.`;
+    }
   }
 
   // 3. WBC Assessment (White Blood Cells)
@@ -692,6 +786,7 @@ export function calculateCBC(inputs: CBCInputs): CBCResults {
     rdwInterpretation,
     vitaminB12Status,
     vitaminB12Interpretation,
+    b12McvDiscordance,
     mentzerIndex,
     mentzerInterpretation,
     morphologyClassification,

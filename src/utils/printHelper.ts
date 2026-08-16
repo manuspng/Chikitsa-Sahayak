@@ -240,6 +240,11 @@ export function printClinicalReport(record: Partial<AnalysisRecord>) {
         ...(r.mentzerIndex !== undefined ? [{ name: "Mentzer Index (MCV/RBC)", val: String(r.mentzerIndex), note: r.mentzerInterpretation || "Microcytic differential index" }] : []),
         ...(c.rdw !== undefined ? [{ name: "RDW Size Variation", val: `${c.rdw}% (${r.rdwStatus || "Normal"})`, note: r.rdwInterpretation || "Red cell distribution width" }] : []),
         ...(c.vitaminB12 !== undefined ? [{ name: "Serum Vitamin B12", val: `${c.vitaminB12} pg/mL (${r.vitaminB12Status || "Normal"})`, note: r.vitaminB12Interpretation || "Cobalamin nutritional reserve" }] : []),
+        ...(r.b12McvDiscordance ? [{
+          name: `B12 & MCV Kinetic Correlation (${r.b12McvDiscordance.badgeText})`,
+          val: r.b12McvDiscordance.isEarlyOrMasked ? "Early / Masked Deficiency Alert" : "Concordant Indices",
+          note: `${r.b12McvDiscordance.clinicalInsight} Early Consideration: ${r.b12McvDiscordance.earlyConsiderations} Workup: ${r.b12McvDiscordance.confirmatoryWorkup}`
+        }] : []),
         { name: "WBC Proliferation Stage", val: r.wbcStatus || "Normal", note: r.infectionRisk || "Immunological response cycle evaluation" },
         { name: "Platelet Concentration", val: r.plateletStatus || "Normal", note: "Hemostatic activity and vascular repair index" },
         { name: "Neutrophil-to-Lymphocyte Ratio", val: r.nlratio?.toFixed(2) || "N/A", note: r.nlratioInterpretation || "Systemic micro-inflammatory diagnostic index" }

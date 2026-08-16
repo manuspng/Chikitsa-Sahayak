@@ -58,6 +58,11 @@ function getOfflineCbcSummary(inputs: CBCInputs, results: CBCResults): string {
     segments.push(`Red Cell Indices & Biomarkers: ${indexAnomalies.join(", ")}.`);
   }
 
+  // Vitamin B12 & MCV Kinetic Correlation
+  if (results.b12McvDiscordance?.isEarlyOrMasked) {
+    segments.push(`B12 & MCV Discordance Alert (${results.b12McvDiscordance.badgeText}): ${results.b12McvDiscordance.clinicalInsight} Early Warning: ${results.b12McvDiscordance.earlyConsiderations} Workup: ${results.b12McvDiscordance.confirmatoryWorkup}`);
+  }
+
   // Mentzer Index
   if (results.mentzerIndex !== undefined && results.mentzerInterpretation) {
     segments.push(`Differential Sizing: ${results.mentzerInterpretation}`);
@@ -296,17 +301,19 @@ export default function CbcAnalyzer({ onAddRecord }: CbcAnalyzerProps) {
 Calculated Clinical Findings & Diagnostic Indexes:
 - Hemoglobin State: ${calculated.hemoglobinStatus} ${calculated.anemiaType ? `(${calculated.anemiaType})` : ""}
 - Morphology Classification: ${calculated.morphologyClassification ?? "N/A"} (${calculated.morphologyDetails ?? "N/A"})
+- Vitamin B12 & MCV Correlation: ${calculated.b12McvDiscordance ? `${calculated.b12McvDiscordance.badgeText} - ${calculated.b12McvDiscordance.clinicalInsight}` : "N/A"}
 - Mentzer Index (MCV/RBC): ${calculated.mentzerIndex ?? "N/A"} (${calculated.mentzerInterpretation ?? "N/A"})
 - Platelet Condition: ${calculated.plateletStatus}
 - WBC & Infection Context: ${calculated.infectionRisk}
 - Neutrophil-to-Lymphocyte Ratio (NLR): ${calculated.nlratio ?? "N/A"} (${calculated.nlratioInterpretation ?? "N/A"})
 - Total Out-of-Range Anomalies: ${calculated.abnormalCount}
 
-Please write an expert, professional clinical interpretation formatted clearly for primary care physicians:
-1. Red Cell Morphology & Anemia Etiology (Iron deficiency vs Thalassemia trait vs Megaloblastic/B12 deficiency)
-2. Immunological & Leukocyte Proliferation Findings (WBC & NLR)
-3. Platelet & Hemostatic Assessment
-4. Recommended Confirmatory Diagnostic Workup (e.g. Ferritin, TIBC, HPLC, Serum B12/MMA, Folate) & Lifestyle Guidance`;
+Please provide a decisive, robust, and pinpointed clinical diagnostic assessment:
+1. Primary Clinical Impression & Morphological Subtype (e.g. Microcytic IDA vs Thalassemia Trait vs Early/Subclinical B12 Deficiency with MCV reflection lag vs Megaloblastic Anemia)
+2. Driving Biomarkers & Kinetic Pathophysiology (Explain if B12 is deficient/borderline but MCV has not yet reflected macrocytosis due to 120-day erythrocyte turnover or concurrent iron deficiency masking)
+3. Differential Diagnostics & Neurological Vigilance (Neuropathy, paresthesias, myelopathy risk prior to overt macrocytosis)
+4. Recommended Immediate Confirmatory Diagnostic Workup (Serum Ferritin, TIBC, Serum Methylmalonic Acid / MMA, Homocysteine, Active B12, HPLC, Peripheral Blood Smear)
+5. Actionable Therapeutic Strategy & Monitoring Timeline`;
 
       const provider = localStorage.getItem("selected_ai_provider") || "auto";
       const data = await runGeminiAnalyze("cbc", prompt, provider);
@@ -1553,10 +1560,49 @@ Please write an expert, professional clinical interpretation formatted clearly f
                   {results.morphologyClassification || "Standard Morphology"}
                 </span>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2.5">
                 <p className="text-xs font-bold text-slate-800 leading-relaxed">
                   {results.morphologyDetails || results.anemiaType || "Normal red cell morphology and indices."}
                 </p>
+
+                {/* B12 & MCV Kinetic Discordance / Early Reflection Alert Box */}
+                {results.b12McvDiscordance && (
+                  <div className={`p-4 rounded-xl border-2 space-y-2 ${
+                    results.b12McvDiscordance.isEarlyOrMasked
+                      ? "bg-amber-50/90 border-amber-400 text-amber-950"
+                      : "bg-slate-100/90 border-slate-300 text-slate-900"
+                  }`}>
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <span className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 font-sans">
+                        <Sparkles size={14} className={results.b12McvDiscordance.isEarlyOrMasked ? "text-amber-700" : "text-slate-600"} />
+                        <span>B12 & MCV Kinetic Correlation:</span>
+                      </span>
+                      <span className={`text-[11px] font-black px-2.5 py-0.5 rounded-md border ${
+                        results.b12McvDiscordance.isEarlyOrMasked
+                          ? "bg-amber-200/80 text-amber-950 border-amber-500"
+                          : "bg-emerald-100 text-emerald-900 border-emerald-300"
+                      }`}>
+                        {results.b12McvDiscordance.badgeText}
+                      </span>
+                    </div>
+
+                    <p className="text-xs font-bold leading-relaxed">
+                      {results.b12McvDiscordance.clinicalInsight}
+                    </p>
+
+                    <div className="pt-1.5 border-t border-amber-300/60 grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px]">
+                      <div>
+                        <strong className="block text-amber-900">Early Considerations:</strong>
+                        <span>{results.b12McvDiscordance.earlyConsiderations}</span>
+                      </div>
+                      <div>
+                        <strong className="block text-amber-900">Recommended Early Workup:</strong>
+                        <span>{results.b12McvDiscordance.confirmatoryWorkup}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {results.mentzerIndex !== undefined && (
                   <div className="p-3 rounded-xl bg-cyan-50 border border-cyan-300 text-cyan-950 text-xs font-bold flex items-center justify-between gap-2 flex-wrap">
                     <span><strong>Mentzer Index (MCV / RBC):</strong> {results.mentzerIndex}</span>
